@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isDateStr } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
   const to = searchParams.get("to");
 
   const where =
-    from && to
+    isDateStr(from) && isDateStr(to)
       ? { createdAt: { gte: new Date(from + "T00:00:00"), lte: new Date(to + "T23:59:59") } }
       : undefined;
 

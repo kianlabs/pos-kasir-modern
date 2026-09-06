@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,8 @@ export async function GET() {
 
 // PATCH /api/settings { taxEnabled?, taxPct? }
 export async function PATCH(req: Request) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   if (body.taxEnabled !== undefined) {
     await prisma.setting.upsert({
       where: { key: "taxEnabled" },

@@ -26,8 +26,13 @@ export default function ShiftPage() {
   const [closingId, setClosingId] = useState<string | null>(null);
 
   async function load() {
-    const res = await fetch("/api/shifts");
-    setShifts(await res.json());
+    try {
+      const res = await fetch("/api/shifts");
+      if (!res.ok) throw new Error();
+      setShifts(await res.json());
+    } catch {
+      setError("Gagal memuat shift.");
+    }
   }
   useEffect(() => {
     load();
@@ -42,7 +47,8 @@ export default function ShiftPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ modalAwal: Number(modal || 0) }),
-    });
+    }).catch(() => null);
+    if (!res) return setError("Tidak bisa hubungi server.");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return setError(data.error ?? "Gagal buka shift.");
     setModal("");
@@ -55,7 +61,8 @@ export default function ShiftPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kasFisik: Number(kasFisik || 0) }),
-    });
+    }).catch(() => null);
+    if (!res) return setError("Tidak bisa hubungi server.");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return setError(data.error ?? "Gagal tutup shift.");
     setKasFisik("");

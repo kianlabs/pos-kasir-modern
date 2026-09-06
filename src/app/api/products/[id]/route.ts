@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
 export async function PATCH(req: Request, { params }: Params) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const data: { name?: string; price?: number; stock?: number; category?: string } = {};
   if (body.name !== undefined) {
     const name = String(body.name).trim();

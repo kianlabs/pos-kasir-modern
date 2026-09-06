@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,8 @@ type CartItem = { productId: string; qty: number };
 // payment: CASH | QRIS. total = subtotal - discount + pajak otomatis.
 // Pajak diambil dari pengaturan global (bukan input kasir).
 export async function POST(req: Request) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const rawItems = (body.items ?? []) as CartItem[];
   const cash = Number(body.cash);
   const payment = body.payment === "QRIS" ? "QRIS" : "CASH";

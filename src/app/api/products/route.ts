@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const name = String(body.name ?? "").trim();
   const price = Number(body.price);
   const stock = Number(body.stock ?? 0);

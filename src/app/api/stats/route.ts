@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isDateStr } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
 
   // Rentang kustom untuk filter laporan (inklusif)
   const range =
-    fromParam && toParam
+    isDateStr(fromParam) && isDateStr(toParam)
       ? { gte: new Date(fromParam + "T00:00:00"), lte: new Date(toParam + "T23:59:59") }
       : undefined;
 

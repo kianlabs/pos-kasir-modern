@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,8 @@ export async function GET() {
 
 // POST /api/shifts { modalAwal } → buka shift baru
 export async function POST(req: Request) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const modalAwal = Math.max(0, Math.floor(Number(body.modalAwal) || 0));
 
   const active = await prisma.shift.findFirst({ where: { status: "BUKA" } });

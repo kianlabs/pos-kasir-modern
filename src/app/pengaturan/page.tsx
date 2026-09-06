@@ -26,7 +26,8 @@ export default function PengaturanPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ taxEnabled: enabled, taxPct: Number(pct) || 0 }),
-    });
+    }).catch(() => null);
+    if (!res) return setError("Tidak bisa hubungi server.");
     if (!res.ok) return setError("Gagal menyimpan.");
     setSaved("Tersimpan ✓ Berlaku untuk struk berikutnya.");
   }

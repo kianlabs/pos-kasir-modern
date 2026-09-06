@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { rupiah } from "@/lib/rupiah";
 import { categoryIcon } from "@/lib/meta";
 
@@ -129,9 +130,9 @@ export default function KasirPage() {
   return (
     <div>
       {hasShift === false && (
-        <a href="/shift" className="mb-4 block rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
+        <Link href="/shift" className="mb-4 block rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
           ⚠️ Belum buka shift — transaksi tidak tercatat di rekap kas. Buka shift dulu →
-        </a>
+        </Link>
       )}
     <div className="grid items-start gap-5 xl:grid-cols-[1fr_360px]">
       {/* Kiri: katalog */}

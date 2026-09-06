@@ -67,10 +67,12 @@ export default async function StrukPage({ params }: { params: { id: string } }) 
           <span>{PAYMENT_LABEL[trx.payment] ?? trx.payment}</span>
           <span>{rupiah(trx.cash)}</span>
         </div>
-        <div className="flex justify-between">
-          <span>Kembali</span>
-          <span>{rupiah(trx.change)}</span>
-        </div>
+        {trx.payment === "CASH" && (
+          <div className="flex justify-between">
+            <span>Kembali</span>
+            <span>{rupiah(trx.change)}</span>
+          </div>
+        )}
         <div className="my-3 border-t-2 border-dashed" />
         <p className="text-center text-xs text-zinc-500">
           Terima kasih & sampai jumpa 🙏

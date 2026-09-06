@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readJson } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/shifts/[id]/close { kasFisik } → tutup shift + hitung selisih
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const body = await req.json();
+  const body = await readJson(req);
+  if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const kasFisik = Number(body.kasFisik);
 
   if (!Number.isInteger(kasFisik) || kasFisik < 0) {
