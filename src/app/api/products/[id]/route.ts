@@ -30,7 +30,19 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   try {
+    const before = await prisma.product.findUnique({ where: { id: params.id } });
+    if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
     const product = await prisma.product.update({ where: { id: params.id }, data });
+    // Catat selisih stok sebagai KOREKSI (kulakan manual lewat +/- juga masuk sini)
+    if (data.stock !== undefined && data.stock !== before.stock) {
+      await prisma.stockMove.create({
+        data: {
+          productId: product.id,
+          qty: data.stock - before.stock,
+          reason: data.stock > before.stock ? "KULAKAN" : "KOREKSI",
+        },
+      });
+    }
     return NextResponse.json(product);
   } catch {
     return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });

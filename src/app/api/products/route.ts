@@ -30,5 +30,10 @@ export async function POST(req: Request) {
   const product = await prisma.product.create({
     data: { name, price, stock, category },
   });
+  if (stock > 0) {
+    await prisma.stockMove.create({
+      data: { productId: product.id, qty: stock, reason: "STOK_AWAL" },
+    });
+  }
   return NextResponse.json(product, { status: 201 });
 }

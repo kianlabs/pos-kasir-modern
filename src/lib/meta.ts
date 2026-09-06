@@ -16,6 +16,7 @@ export function categoryIcon(cat: string): string {
 export const PAYMENT_LABEL: Record<string, string> = {
   CASH: "Tunai",
   QRIS: "QRIS",
+  HUTANG: "Hutang",
 };
 
 export function shortId(id: string): string {

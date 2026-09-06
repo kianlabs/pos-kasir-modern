@@ -3,11 +3,21 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const weekAgo = new Date(start);
   weekAgo.setDate(weekAgo.getDate() - 6);
+
+  // Rentang kustom untuk filter laporan (inklusif)
+  const range =
+    fromParam && toParam
+      ? { gte: new Date(fromParam + "T00:00:00"), lte: new Date(toParam + "T23:59:59") }
+      : undefined;
 
   const [today, count, lowStock, weekTrx, topItems] = await Promise.all([
     prisma.transaction.aggregate({
@@ -71,6 +81,25 @@ export async function GET() {
   const trxCount = today._count;
   const omzet = today._sum.total ?? 0;
 
+  // Ringkasan periode (untuk filter tanggal + export)
+  let rangeSummary = null;
+  if (range) {
+    const r = await prisma.transaction.aggregate({
+      _sum: { total: true },
+      _count: true,
+      where: { createdAt: range },
+    });
+    const rCount = r._count;
+    const rOmzet = r._sum.total ?? 0;
+    rangeSummary = {
+      from: fromParam,
+      to: toParam,
+      omzet: rOmzet,
+      trx: rCount,
+      rata2: rCount > 0 ? Math.round(rOmzet / rCount) : 0,
+    };
+  }
+
   return NextResponse.json({
     omzetHariIni: omzet,
     trxHariIni: trxCount,
@@ -79,6 +108,7 @@ export async function GET() {
     lowStock,
     weekly: days,
     top,
+    range: rangeSummary,
     recent: recent.map((t) => ({
       id: t.id,
       total: t.total,

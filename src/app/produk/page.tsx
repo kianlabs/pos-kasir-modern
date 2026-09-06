@@ -102,6 +102,9 @@ export default function ProdukPage() {
           <span className="rounded-lg bg-white px-3 py-1.5 font-semibold ring-1 ring-zinc-200">
             Nilai stok {rupiah(totalNilai)}
           </span>
+          <a href="/stok" className="rounded-lg bg-white px-3 py-1.5 font-semibold text-orange-700 ring-1 ring-zinc-200 hover:ring-orange-400">
+            📋 Riwayat stok
+          </a>
         </div>
       </div>
 

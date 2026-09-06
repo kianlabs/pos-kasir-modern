@@ -13,6 +13,7 @@ type Stats = {
   weekly: { label: string; total: number }[];
   top: { name: string; qty: number; omzet: number }[];
   recent: { id: string; total: number; payment: string; itemCount: number; createdAt: string }[];
+  range: { from: string; to: string; omzet: number; trx: number; rata2: number } | null;
 };
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -28,15 +29,23 @@ function Card({ label, value, sub }: { label: string; value: string; sub?: strin
 export default function LaporanPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [failed, setFailed] = useState(false);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
-  useEffect(() => {
-    fetch("/api/stats")
+  function loadStats(f?: string, t?: string) {
+    const q = f && t ? `?from=${f}&to=${t}` : "";
+    fetch(`/api/stats${q}`)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
       })
       .then(setStats)
       .catch(() => setFailed(true));
+  }
+
+  useEffect(() => {
+    loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (failed) return <p className="text-red-600">Gagal memuat laporan. Refresh halaman.</p>;
@@ -48,7 +57,34 @@ export default function LaporanPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-bold">Laporan</h1>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <h1 className="text-xl font-bold">Laporan</h1>
+        <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
+            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-orange-500" />
+          <span className="text-zinc-400">→</span>
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
+            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-orange-500" />
+          <button onClick={() => from && to && loadStats(from, to)}
+            className="rounded-lg bg-zinc-900 px-3.5 py-1.5 font-bold text-white hover:bg-zinc-700">
+            Terapkan
+          </button>
+          {from && to && (
+            <a href={`/api/export?from=${from}&to=${to}`}
+              className="rounded-lg bg-orange-600 px-3.5 py-1.5 font-bold text-white hover:bg-orange-700">
+              ⬇ CSV
+            </a>
+          )}
+        </div>
+      </div>
+
+      {stats?.range && (
+        <div className="mb-3 grid grid-cols-3 gap-3">
+          <Card label={`Omzet ${stats.range.from} → ${stats.range.to}`} value={rupiah(stats.range.omzet)} sub={`${stats.range.trx} transaksi`} />
+          <Card label="Transaksi periode" value={String(stats.range.trx)} />
+          <Card label="Rata-rata / struk" value={rupiah(stats.range.rata2)} />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card label="Omzet hari ini" value={rupiah(stats.omzetHariIni)} sub={`${stats.trxHariIni} transaksi`} />

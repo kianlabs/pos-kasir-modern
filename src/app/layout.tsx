@@ -49,6 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/">Kasir</Link>
                 <Link href="/produk">Produk</Link>
                 <Link href="/transaksi">Transaksi</Link>
+                <Link href="/kasbon">Kasbon</Link>
+                <Link href="/shift">Shift</Link>
+                <Link href="/stok">Stok</Link>
                 <Link href="/laporan">Laporan</Link>
               </div>
             </header>

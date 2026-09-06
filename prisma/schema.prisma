@@ -16,19 +16,30 @@ model Product {
   createdAt DateTime @default(now())
 
   items TransactionItem[]
+  moves StockMove[]
 
   @@map("products")
 }
 
 model Transaction {
-  id          String   @id @default(uuid())
-  total       Int
-  cash        Int
-  change      Int
-  payment     String   @default("CASH") // CASH | QRIS
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  subtotal   Int      @default(0)
+  discount   Int      @default(0)
+  tax        Int      @default(0)
+  total      Int
+  cash       Int
+  change     Int
+  payment    String   @default("CASH") // CASH | QRIS | HUTANG
+  createdAt  DateTime @default(now())
+
+  shiftId String?
+  shift   Shift?  @relation(fields: [shiftId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
 
   items TransactionItem[]
+  debts Debt[]
 
   @@map("transactions")
 }
@@ -43,4 +54,71 @@ model TransactionItem {
   price         Int // snapshot harga saat jual
 
   @@map("transaction_items")
+}
+
+// Shift kasir: modal awal vs kas akhir (rekonsiliasi)
+model Shift {
+  id        String    @id @default(uuid())
+  openedAt  DateTime  @default(now())
+  closedAt  DateTime?
+  modalAwal Int       @default(0)
+  kasFisik  Int?
+  status    String    @default("BUKA") // BUKA | TUTUP
+
+  transactions Transaction[]
+
+  @@map("shifts")
+}
+
+// Pelanggan kasbon
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+  debts        Debt[]
+
+  @@map("customers")
+}
+
+// Hutang per transaksi
+model Debt {
+  id            String   @id @default(uuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  transactionId String?  @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  total         Int
+  paid          Int      @default(0)
+  status        String   @default("BELUM") // BELUM | LUNAS
+  createdAt     DateTime @default(now())
+
+  payments DebtPayment[]
+
+  @@map("debts")
+}
+
+model DebtPayment {
+  id        String   @id @default(uuid())
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amount    Int
+  createdAt DateTime @default(now())
+
+  @@map("debt_payments")
+}
+
+// Kartu stok: semua perubahan stok tercatat
+model StockMove {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qty       Int // + masuk, - keluar
+  reason    String // PENJUALAN | KULAKAN | KOREKSI | STOK_AWAL
+  refId     String?
+  createdAt DateTime @default(now())
+
+  @@map("stock_moves")
 }
