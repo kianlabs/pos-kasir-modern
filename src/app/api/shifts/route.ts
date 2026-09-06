@@ -12,7 +12,6 @@ export type ShiftSummary = {
   status: string;
   tunai: number;
   qris: number;
-  hutang: number;
   trxCount: number;
   expected: number; // modal + tunai
   selisih: number | null; // kasFisik - expected (bila tutup)
@@ -29,7 +28,6 @@ export async function GET() {
   const out: ShiftSummary[] = shifts.map((s) => {
     const tunai = s.transactions.filter((t) => t.payment === "CASH").reduce((n, t) => n + t.total, 0);
     const qris = s.transactions.filter((t) => t.payment === "QRIS").reduce((n, t) => n + t.total, 0);
-    const hutang = s.transactions.filter((t) => t.payment === "HUTANG").reduce((n, t) => n + t.total, 0);
     const expected = s.modalAwal + tunai;
     return {
       id: s.id,
@@ -40,7 +38,6 @@ export async function GET() {
       status: s.status,
       tunai,
       qris,
-      hutang,
       trxCount: s.transactions.length,
       expected,
       selisih: s.kasFisik != null ? s.kasFisik - expected : null,

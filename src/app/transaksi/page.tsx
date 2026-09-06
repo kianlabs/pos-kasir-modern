@@ -45,11 +45,7 @@ export default async function TransaksiPage() {
                   </td>
                   <td className="p-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                      t.payment === "QRIS"
-                        ? "bg-violet-100 text-violet-700"
-                        : t.payment === "HUTANG"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-orange-100 text-orange-700"
+                      t.payment === "QRIS" ? "bg-violet-100 text-violet-700" : "bg-orange-100 text-orange-700"
                     }`}>
                       {PAYMENT_LABEL[t.payment] ?? t.payment}
                     </span>

@@ -21,10 +21,9 @@ export default function KasirPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<Cart>({});
   const [cash, setCash] = useState("");
-  const [payment, setPayment] = useState<"CASH" | "QRIS" | "HUTANG">("CASH");
+  const [payment, setPayment] = useState<"CASH" | "QRIS">("CASH");
   const [discount, setDiscount] = useState("");
-  const [taxPct, setTaxPct] = useState("");
-  const [customerName, setCustomerName] = useState("");
+  const [taxInfo, setTaxInfo] = useState({ enabled: true, pct: 10 });
   const [hasShift, setHasShift] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +45,10 @@ export default function KasirPage() {
       .then((r) => r.json())
       .then((s) => setHasShift(!!s))
       .catch(() => setHasShift(null));
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((s) => setTaxInfo({ enabled: !!s.taxEnabled, pct: Number(s.taxPct) || 0 }))
+      .catch(() => {});
   }, []);
 
   const categories = useMemo(
@@ -69,16 +72,12 @@ export default function KasirPage() {
   const subtotal = lines.reduce((n, l) => n + l.product.price * l.qty, 0);
   const itemCount = lines.reduce((n, l) => n + l.qty, 0);
   const discNum = Math.min(Number(discount) || 0, subtotal);
-  const taxNum = Math.round(((subtotal - discNum) * (Number(taxPct) || 0)) / 100);
+  const taxNum = taxInfo.enabled ? Math.round(((subtotal - discNum) * taxInfo.pct) / 100) : 0;
   const total = subtotal - discNum + taxNum;
   const cashNum = Number(cash) || 0;
   const kembalian = cashNum - total;
   const canPay =
-    lines.length > 0 &&
-    !loading &&
-    (payment === "QRIS" ||
-      (payment === "HUTANG" && customerName.trim() !== "") ||
-      (payment === "CASH" && cashNum >= total));
+    lines.length > 0 && !loading && (payment === "QRIS" || cashNum >= total);
 
   function add(id: string) {
     const p = products.find((x) => x.id === id);
@@ -101,8 +100,6 @@ export default function KasirPage() {
     if (lines.length === 0) return setError("Keranjang masih kosong.");
     if (payment === "CASH" && cashNum < total)
       return setError(`Uang kurang ${rupiah(total - cashNum)}.`);
-    if (payment === "HUTANG" && !customerName.trim())
-      return setError("Isi nama pelanggan untuk kasbon.");
     setLoading(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -113,8 +110,6 @@ export default function KasirPage() {
           cash: payment === "CASH" ? cashNum : total,
           payment,
           discount: discNum,
-          taxPct: Number(taxPct) || 0,
-          customerName: payment === "HUTANG" ? customerName.trim() : "",
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -254,19 +249,12 @@ export default function KasirPage() {
             <span>Subtotal</span>
             <span>{rupiah(subtotal)}</span>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2">
             <input
               value={discount}
               onChange={(e) => setDiscount(e.target.value.replace(/\D/g, ""))}
               inputMode="numeric"
-              placeholder="Diskon Rp"
-              className="w-full rounded-lg border bg-white px-2.5 py-1.5 text-sm outline-none focus:border-orange-500"
-            />
-            <input
-              value={taxPct}
-              onChange={(e) => setTaxPct(e.target.value.replace(/[^\d.]/g, "").slice(0, 5))}
-              inputMode="decimal"
-              placeholder="Pajak %"
+              placeholder="Diskon Rp (opsional)"
               className="w-full rounded-lg border bg-white px-2.5 py-1.5 text-sm outline-none focus:border-orange-500"
             />
           </div>
@@ -280,7 +268,7 @@ export default function KasirPage() {
               )}
               {taxNum > 0 && (
                 <div className="flex justify-between">
-                  <span>Pajak ({taxPct}%)</span>
+                  <span>Pajak otomatis ({taxInfo.pct}%)</span>
                   <span>+{rupiah(taxNum)}</span>
                 </div>
               )}
@@ -291,7 +279,7 @@ export default function KasirPage() {
             <span>{rupiah(total)}</span>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 text-sm font-bold">
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-bold">
             <button onClick={() => setPayment("CASH")}
               className={`rounded-lg border py-2 ${payment === "CASH" ? "border-orange-600 bg-orange-600 text-white" : "bg-white"}`}>
               💵 Tunai
@@ -300,20 +288,7 @@ export default function KasirPage() {
               className={`rounded-lg border py-2 ${payment === "QRIS" ? "border-orange-600 bg-orange-600 text-white" : "bg-white"}`}>
               📱 QRIS
             </button>
-            <button onClick={() => setPayment("HUTANG")}
-              className={`rounded-lg border py-2 ${payment === "HUTANG" ? "border-orange-600 bg-orange-600 text-white" : "bg-white"}`}>
-              📒 Hutang
-            </button>
           </div>
-
-          {payment === "HUTANG" && (
-            <input
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Nama pelanggan…"
-              className="mt-3 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-orange-500"
-            />
-          )}
 
           {payment === "CASH" ? (
             <>

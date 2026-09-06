@@ -1,14 +1,17 @@
 # 🧾 KasirKu — POS Kasir Modern
 
-Aplikasi kasir modern single-codebase: **Next.js 14 + TypeScript + Tailwind + Prisma + SQLite**.
+Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwind + Prisma + SQLite**.
 
 ## Fitur
 
-- **Kasir** (`/`) — kategori, cari produk, keranjang +/−, bayar Tunai (numpad + kembalian) / QRIS
+- **Kasir** (`/`) — kategori, cari produk, keranjang +/−, diskon Rp, pajak otomatis, bayar Tunai (numpad + kembalian) / QRIS
 - **Produk** (`/produk`) — tambah, edit, hapus, stepper stok, nilai total stok
 - **Transaksi** (`/transaksi`) — riwayat 50 transaksi terakhir + link struk
+- **Shift** (`/shift`) — buka/tutup shift, rekap modal vs kas fisik + selisih
+- **Stok** (`/stok`) — kartu stok: tiap penjualan/kulakan/koreksi tercatat
 - **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
-- **Laporan** (`/laporan`) — omzet hari ini, rata-rata/struk, grafik 7 hari, produk terlaris, stok menipis
+- **Laporan** (`/laporan`) — filter tanggal, export CSV, grafik 7 hari, produk terlaris, stok menipis
+- **Pengaturan** (`/pengaturan`) — pajak otomatis on/off + tarif
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
 
 ## Cara jalan
@@ -17,7 +20,7 @@ Aplikasi kasir modern single-codebase: **Next.js 14 + TypeScript + Tailwind + Pr
 cd pos-kasir-modern
 npm install --ignore-scripts
 npx prisma migrate dev   # buat DB SQLite
-npx tsx prisma/seed.ts   # isi 8 produk contoh (sekali saja)
+npx tsx prisma/seed.ts   # isi 38 menu warung (dilewati bila sudah ada transaksi)
 npm run dev              # buka http://localhost:3000
 ```
 
@@ -28,26 +31,32 @@ npm run dev              # buka http://localhost:3000
 ```
 src/app/
   layout.tsx + SidebarNav.tsx → sidebar + topbar mobile
-  page.tsx            → kasir
+  page.tsx            → kasir (diskon, pajak otomatis, shift banner)
   produk/page.tsx     → CRUD produk + stepper stok
   transaksi/page.tsx  → riwayat transaksi (query langsung)
-  laporan/page.tsx    → dashboard
+  shift/page.tsx      → buka/tutup + selisih kas
+  stok/page.tsx       → kartu stok
+  laporan/page.tsx    → dashboard + filter tanggal + export CSV
   struk/[id]/page.tsx → struk + cetak (PrintButton.tsx)
+  pengaturan/page.tsx → pajak otomatis
   api/
     products/         → GET + POST
     products/[id]/    → PATCH + DELETE
-    checkout/         → POST (transaksi atomik)
-    stats/            → GET (omzet hari ini)
-src/lib/              → prisma client + format rupiah + ikon kategori
+    checkout/         → POST (transaksi atomik + pajak otomatis)
+    stats/            → GET (omzet, range tanggal)
+    shifts/           → GET + POST, /active, /[id]/close
+    stock-moves/      → GET kartu stok
+    settings/         → GET + PATCH pajak
+    export/           → GET CSV transaksi
+src/lib/              → prisma client + format rupiah + ikon kategori + pajak
 prisma/
-  schema.prisma       → Product, Transaction, TransactionItem
-  seed.ts             → 38 menu warung (jalan sekali; dilewati bila sudah ada transaksi)
+  schema.prisma       → Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting
+  seed.ts             → 38 menu warung + pajak default 10%
 ```
 
 ## Ide pengembangan lanjut
 
 - Login kasir/admin (NextAuth) + hak akses
-- Diskon / pajak per transaksi
-- Export laporan ke CSV/Excel
 - Mode barcode scanner (input keyboard wedge)
-- Dark mode + mode kios fullscreen
+- Mode kios fullscreen
+- Deploy live (Vercel + Postgres)

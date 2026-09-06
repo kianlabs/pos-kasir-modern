@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTaxSetting } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 type CartItem = { productId: string; qty: number };
 
-// POST /api/checkout { items, cash, payment, discount, taxPct, customerName }
-// payment: CASH | QRIS | HUTANG (hutang wajib sertakan customerName)
-// total = subtotal - discount + tax. Kasir shift aktif ditempel bila ada.
+// POST /api/checkout { items, cash, payment, discount }
+// payment: CASH | QRIS. total = subtotal - discount + pajak otomatis.
+// Pajak diambil dari pengaturan global (bukan input kasir).
 export async function POST(req: Request) {
   const body = await req.json();
   const rawItems = (body.items ?? []) as CartItem[];
   const cash = Number(body.cash);
-  const payment = body.payment === "QRIS" ? "QRIS" : body.payment === "HUTANG" ? "HUTANG" : "CASH";
+  const payment = body.payment === "QRIS" ? "QRIS" : "CASH";
   const discount = Math.max(0, Math.floor(Number(body.discount) || 0));
-  const taxPct = Math.min(100, Math.max(0, Number(body.taxPct) || 0));
-  const customerName = String(body.customerName ?? "").trim();
 
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     return NextResponse.json({ error: "Keranjang kosong." }, { status: 400 });
@@ -32,9 +31,6 @@ export async function POST(req: Request) {
 
   if (payment === "CASH" && (!Number.isInteger(cash) || cash < 0)) {
     return NextResponse.json({ error: "Nominal tunai tidak valid." }, { status: 400 });
-  }
-  if (payment === "HUTANG" && !customerName) {
-    return NextResponse.json({ error: "Nama pelanggan wajib untuk kasbon." }, { status: 400 });
   }
 
   try {
@@ -54,24 +50,17 @@ export async function POST(req: Request) {
       }
 
       const disc = Math.min(discount, subtotal);
-      const tax = Math.round(((subtotal - disc) * taxPct) / 100);
+      const taxCfg = await getTaxSetting(tx);
+      const tax = taxCfg.enabled ? Math.round(((subtotal - disc) * taxCfg.pct) / 100) : 0;
       const total = subtotal - disc + tax;
 
-      const paid = payment === "CASH" ? cash : payment === "QRIS" ? total : 0;
-      if (payment !== "HUTANG" && paid < total) throw new Error(`Uang kurang ${total - paid}.`);
+      const paid = payment === "CASH" ? cash : total;
+      if (paid < total) throw new Error(`Uang kurang ${total - paid}.`);
 
       const shift = await tx.shift.findFirst({
         where: { status: "BUKA" },
         orderBy: { openedAt: "desc" },
       });
-
-      let customerId: string | null = null;
-      if (payment === "HUTANG") {
-        const found = await tx.customer.findFirst({ where: { name: customerName } });
-        customerId =
-          found?.id ??
-          (await tx.customer.create({ data: { name: customerName } })).id;
-      }
 
       const created = await tx.transaction.create({
         data: {
@@ -80,10 +69,9 @@ export async function POST(req: Request) {
           tax,
           total,
           cash: paid,
-          change: payment === "HUTANG" ? 0 : paid - total,
+          change: paid - total,
           payment,
           shiftId: shift?.id ?? null,
-          customerId,
         },
       });
 
@@ -98,12 +86,6 @@ export async function POST(req: Request) {
         });
         await tx.stockMove.create({
           data: { productId: p.id, qty: -qty, reason: "PENJUALAN", refId: created.id },
-        });
-      }
-
-      if (payment === "HUTANG" && customerId) {
-        await tx.debt.create({
-          data: { customerId, transactionId: created.id, total },
         });
       }
 

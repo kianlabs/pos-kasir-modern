@@ -49,10 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/">Kasir</Link>
                 <Link href="/produk">Produk</Link>
                 <Link href="/transaksi">Transaksi</Link>
-                <Link href="/kasbon">Kasbon</Link>
                 <Link href="/shift">Shift</Link>
                 <Link href="/stok">Stok</Link>
                 <Link href="/laporan">Laporan</Link>
+                <Link href="/pengaturan">⚙️</Link>
               </div>
             </header>
             <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">

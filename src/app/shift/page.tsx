@@ -13,7 +13,6 @@ type Shift = {
   status: string;
   tunai: number;
   qris: number;
-  hutang: number;
   trxCount: number;
   expected: number;
   selisih: number | null;

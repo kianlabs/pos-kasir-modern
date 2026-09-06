@@ -7,10 +7,10 @@ const NAV = [
   { href: "/", label: "Kasir", icon: "🛒" },
   { href: "/produk", label: "Produk", icon: "📦" },
   { href: "/transaksi", label: "Transaksi", icon: "🧾" },
-  { href: "/kasbon", label: "Kasbon", icon: "📒" },
   { href: "/shift", label: "Shift", icon: "⏰" },
   { href: "/stok", label: "Stok", icon: "📋" },
   { href: "/laporan", label: "Laporan", icon: "📊" },
+  { href: "/pengaturan", label: "Pengaturan", icon: "⚙️" },
 ];
 
 export default function SidebarNav() {

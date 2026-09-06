@@ -29,17 +29,13 @@ model Transaction {
   total      Int
   cash       Int
   change     Int
-  payment    String   @default("CASH") // CASH | QRIS | HUTANG
+  payment    String   @default("CASH") // CASH | QRIS
   createdAt  DateTime @default(now())
 
   shiftId String?
   shift   Shift?  @relation(fields: [shiftId], references: [id])
 
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id])
-
   items TransactionItem[]
-  debts Debt[]
 
   @@map("transactions")
 }
@@ -70,44 +66,12 @@ model Shift {
   @@map("shifts")
 }
 
-// Pelanggan kasbon
-model Customer {
-  id        String   @id @default(uuid())
-  name      String
-  phone     String?
-  createdAt DateTime @default(now())
+// Pengaturan global (key-value): pajak otomatis, dll.
+model Setting {
+  key   String @id
+  value String
 
-  transactions Transaction[]
-  debts        Debt[]
-
-  @@map("customers")
-}
-
-// Hutang per transaksi
-model Debt {
-  id            String   @id @default(uuid())
-  customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
-  transactionId String?  @unique
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
-  total         Int
-  paid          Int      @default(0)
-  status        String   @default("BELUM") // BELUM | LUNAS
-  createdAt     DateTime @default(now())
-
-  payments DebtPayment[]
-
-  @@map("debts")
-}
-
-model DebtPayment {
-  id        String   @id @default(uuid())
-  debtId    String
-  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
-  amount    Int
-  createdAt DateTime @default(now())
-
-  @@map("debt_payments")
+  @@map("settings")
 }
 
 // Kartu stok: semua perubahan stok tercatat

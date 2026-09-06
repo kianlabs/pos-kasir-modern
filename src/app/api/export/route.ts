@@ -16,12 +16,12 @@ export async function GET(req: Request) {
   const trx = await prisma.transaction.findMany({
     where,
     orderBy: { createdAt: "asc" },
-    include: { items: { include: { product: true } }, customer: true },
+    include: { items: { include: { product: true } } },
   });
 
   const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
   const rows = [
-    "id,waktu,item,subtotal,diskon,pajak,total,cara,bayar,kembali,pelanggan",
+    "id,waktu,item,subtotal,diskon,pajak,total,cara,bayar,kembali",
     ...trx.map((t) =>
       [
         t.id,
@@ -34,7 +34,6 @@ export async function GET(req: Request) {
         t.payment,
         t.cash,
         t.change,
-        t.customer?.name ?? "",
       ]
         .map(esc)
         .join(",")
