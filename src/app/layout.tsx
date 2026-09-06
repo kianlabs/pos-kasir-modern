@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import SidebarNav from "./SidebarNav";
 import "./globals.css";
 
@@ -45,10 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur md:hidden print:hidden">
               <div className="flex items-center gap-4 overflow-x-auto px-4 py-3 text-sm font-semibold">
                 <span className="mr-auto">🧾 KasirKu</span>
-                <a href="/">Kasir</a>
-                <a href="/produk">Produk</a>
-                <a href="/transaksi">Transaksi</a>
-                <a href="/laporan">Laporan</a>
+                <Link href="/">Kasir</Link>
+                <Link href="/produk">Produk</Link>
+                <Link href="/transaksi">Transaksi</Link>
+                <Link href="/laporan">Laporan</Link>
               </div>
             </header>
             <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">

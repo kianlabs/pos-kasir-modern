@@ -27,19 +27,21 @@ npm run dev              # buka http://localhost:3000
 
 ```
 src/app/
+  layout.tsx + SidebarNav.tsx → sidebar + topbar mobile
   page.tsx            → kasir
-  produk/page.tsx     → CRUD produk
+  produk/page.tsx     → CRUD produk + stepper stok
+  transaksi/page.tsx  → riwayat transaksi (query langsung)
   laporan/page.tsx    → dashboard
-  struk/[id]/page.tsx → struk + cetak
+  struk/[id]/page.tsx → struk + cetak (PrintButton.tsx)
   api/
     products/         → GET + POST
     products/[id]/    → PATCH + DELETE
     checkout/         → POST (transaksi atomik)
     stats/            → GET (omzet hari ini)
-src/lib/              → prisma client + format rupiah
+src/lib/              → prisma client + format rupiah + ikon kategori
 prisma/
   schema.prisma       → Product, Transaction, TransactionItem
-  seed.ts             → 8 produk warung contoh
+  seed.ts             → 38 menu warung (jalan sekali; dilewati bila sudah ada transaksi)
 ```
 
 ## Ide pengembangan lanjut

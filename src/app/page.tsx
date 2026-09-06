@@ -28,8 +28,13 @@ export default function KasirPage() {
   const [category, setCategory] = useState("Semua");
 
   async function load() {
-    const res = await fetch("/api/products");
-    setProducts(await res.json());
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error();
+      setProducts(await res.json());
+    } catch {
+      setError("Gagal memuat produk. Cek koneksi lalu refresh halaman.");
+    }
   }
   useEffect(() => {
     load();
@@ -92,13 +97,15 @@ export default function KasirPage() {
           payment,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "Gagal checkout.");
         load(); // stok mungkin berubah
         return;
       }
       router.push(`/struk/${data.id}`);
+    } catch {
+      setError("Tidak bisa hubungi server. Coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -125,7 +132,7 @@ export default function KasirPage() {
               onClick={() => setCategory(c)}
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 category === c
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-orange-600 text-white"
                   : "bg-white text-zinc-600 ring-1 ring-zinc-200 hover:ring-zinc-400"
               }`}
             >
@@ -145,7 +152,7 @@ export default function KasirPage() {
                 key={p.id}
                 onClick={() => add(p.id)}
                 disabled={p.stock === 0}
-                className="group rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
+                className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 <div className="flex items-start justify-between">
                   <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-100 text-2xl">

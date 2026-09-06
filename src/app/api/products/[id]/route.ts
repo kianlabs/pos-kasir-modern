@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 type Params = { params: { id: string } };
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -13,7 +15,7 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (body.price !== undefined) {
     const price = Number(body.price);
-    if (!Number.isFinite(price) || price <= 0)
+    if (!Number.isInteger(price) || price <= 0)
       return NextResponse.json({ error: "Harga harus > 0." }, { status: 400 });
     data.price = price;
   }
@@ -23,7 +25,9 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json({ error: "Stok harus >= 0." }, { status: 400 });
     data.stock = stock;
   }
-  if (body.category !== undefined) data.category = String(body.category);
+  if (body.category !== undefined) {
+    data.category = String(body.category).trim() || "Umum";
+  }
 
   try {
     const product = await prisma.product.update({ where: { id: params.id }, data });
@@ -34,6 +38,15 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
+  const used = await prisma.transactionItem.count({
+    where: { productId: params.id },
+  });
+  if (used > 0) {
+    return NextResponse.json(
+      { error: "Produk sudah ada di riwayat penjualan, tidak bisa dihapus. Habiskan stoknya saja." },
+      { status: 400 }
+    );
+  }
   try {
     await prisma.product.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });

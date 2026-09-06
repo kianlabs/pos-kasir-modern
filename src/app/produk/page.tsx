@@ -16,8 +16,13 @@ export default function ProdukPage() {
   const [search, setSearch] = useState("");
 
   async function load() {
-    const res = await fetch("/api/products");
-    setProducts(await res.json());
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error();
+      setProducts(await res.json());
+    } catch {
+      setError("Gagal memuat produk.");
+    }
   }
   useEffect(() => {
     load();
@@ -55,9 +60,10 @@ export default function ProdukPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }
-    );
-    const data = await res.json();
-    if (!res.ok) return setError(data.error);
+    ).catch(() => null);
+    if (!res) return setError("Tidak bisa hubungi server.");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return setError(data.error ?? "Gagal menyimpan.");
     cancelEdit();
     load();
   }
@@ -65,11 +71,12 @@ export default function ProdukPage() {
   async function adjustStock(p: Product, delta: number) {
     const next = p.stock + delta;
     if (next < 0) return;
-    await fetch(`/api/products/${p.id}`, {
+    const res = await fetch(`/api/products/${p.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stock: next }),
-    });
+    }).catch(() => null);
+    if (!res || !res.ok) return setError("Gagal update stok.");
     load();
   }
 

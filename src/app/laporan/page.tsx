@@ -27,10 +27,19 @@ function Card({ label, value, sub }: { label: string; value: string; sub?: strin
 
 export default function LaporanPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    fetch("/api/stats").then((r) => r.json()).then(setStats);
+    fetch("/api/stats")
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(setStats)
+      .catch(() => setFailed(true));
   }, []);
+
+  if (failed) return <p className="text-red-600">Gagal memuat laporan. Refresh halaman.</p>;
 
   if (!stats) return <p className="text-zinc-500">Memuat laporan…</p>;
 

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  const products = await prisma.product.findMany({ orderBy: { name: "asc" } });
+  const products = await prisma.product.findMany({
+    orderBy: [{ category: "asc" }, { name: "asc" }],
+  });
   return NextResponse.json(products);
 }
 
@@ -13,7 +17,7 @@ export async function POST(req: Request) {
   const stock = Number(body.stock ?? 0);
   const category = String(body.category ?? "Umum").trim() || "Umum";
 
-  if (!name || !Number.isFinite(price) || price <= 0) {
+  if (!name || !Number.isInteger(price) || price <= 0) {
     return NextResponse.json(
       { error: "Nama dan harga (>0) wajib diisi." },
       { status: 400 }
