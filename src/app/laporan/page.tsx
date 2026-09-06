@@ -7,10 +7,23 @@ import { rupiah } from "@/lib/rupiah";
 type Stats = {
   omzetHariIni: number;
   trxHariIni: number;
+  rataRata: number;
   totalProduk: number;
   lowStock: { id: string; name: string; stock: number }[];
+  weekly: { label: string; total: number }[];
+  top: { name: string; qty: number; omzet: number }[];
   recent: { id: string; total: number; payment: string; itemCount: number; createdAt: string }[];
 };
+
+function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className="mt-1 text-2xl font-extrabold">{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-zinc-500">{sub}</div>}
+    </div>
+  );
+}
 
 export default function LaporanPage() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -19,50 +32,103 @@ export default function LaporanPage() {
     fetch("/api/stats").then((r) => r.json()).then(setStats);
   }, []);
 
-  if (!stats) return <p>Memuat…</p>;
+  if (!stats) return <p className="text-zinc-500">Memuat laporan…</p>;
+
+  const maxWeek = Math.max(1, ...stats.weekly.map((d) => d.total));
+  const maxTop = Math.max(1, ...stats.top.map((t) => t.qty));
 
   return (
-    <div className="grid gap-4">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded border bg-white p-4">
-          <div className="text-xs text-zinc-500">Omzet hari ini</div>
-          <div className="text-2xl font-bold">{rupiah(stats.omzetHariIni)}</div>
+    <div>
+      <h1 className="mb-4 text-xl font-bold">Laporan</h1>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Card label="Omzet hari ini" value={rupiah(stats.omzetHariIni)} sub={`${stats.trxHariIni} transaksi`} />
+        <Card label="Transaksi hari ini" value={String(stats.trxHariIni)} />
+        <Card label="Rata-rata / struk" value={rupiah(stats.rataRata)} />
+        <Card label="Total produk" value={String(stats.totalProduk)} />
+      </div>
+
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+        {/* Grafik 7 hari */}
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="mb-3 font-bold">📈 Omzet 7 hari terakhir</h2>
+          <div className="flex h-40 items-end gap-2">
+            {stats.weekly.map((d) => (
+              <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
+                <span className="text-[10px] font-bold text-zinc-600">
+                  {d.total > 0 ? `${Math.round(d.total / 1000)}rb` : ""}
+                </span>
+                <div
+                  className="w-full rounded-t-md bg-orange-500"
+                  style={{ height: `${Math.max(4, (d.total / maxWeek) * 100)}%` }}
+                  title={rupiah(d.total)}
+                />
+                <span className="text-[11px] font-semibold text-zinc-500">{d.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="rounded border bg-white p-4">
-          <div className="text-xs text-zinc-500">Transaksi hari ini</div>
-          <div className="text-2xl font-bold">{stats.trxHariIni}</div>
-        </div>
-        <div className="rounded border bg-white p-4">
-          <div className="text-xs text-zinc-500">Total produk</div>
-          <div className="text-2xl font-bold">{stats.totalProduk}</div>
+
+        {/* Terlaris */}
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="mb-3 font-bold">🏆 Produk terlaris</h2>
+          {stats.top.length === 0 ? (
+            <p className="text-sm text-zinc-500">Belum ada penjualan.</p>
+          ) : (
+            stats.top.map((t) => (
+              <div key={t.name} className="mb-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-semibold">{t.name}</span>
+                  <span className="text-zinc-500">{t.qty} terjual • {rupiah(t.omzet)}</span>
+                </div>
+                <div className="mt-1 h-2 rounded-full bg-zinc-100">
+                  <div
+                    className="h-2 rounded-full bg-amber-500"
+                    style={{ width: `${(t.qty / maxTop) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
-      <div className="rounded border bg-white p-4">
-        <h2 className="mb-2 font-bold">⚠️ Stok menipis (≤ 5)</h2>
-        {stats.lowStock.length === 0 ? (
-          <p className="text-sm text-zinc-500">Semua stok aman.</p>
-        ) : (
-          stats.lowStock.map((p) => (
-            <div key={p.id} className="flex justify-between border-b py-1 text-sm last:border-0">
-              <span>{p.name}</span>
-              <b className="text-red-600">sisa {p.stock}</b>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div className="rounded border bg-white p-4">
-        <h2 className="mb-2 font-bold">Transaksi terakhir</h2>
-        {stats.recent.map((t) => (
-          <Link key={t.id} href={`/struk/${t.id}`}
-            className="flex justify-between border-b py-2 text-sm last:border-0 hover:bg-zinc-50">
-            <span>
-              {new Date(t.createdAt).toLocaleString("id-ID")} • {t.itemCount} item • {t.payment}
-            </span>
-            <b>{rupiah(t.total)}</b>
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="mb-2 font-bold">⚠️ Stok menipis (≤ 5)</h2>
+          {stats.lowStock.length === 0 ? (
+            <p className="text-sm text-zinc-500">Semua stok aman. ✅</p>
+          ) : (
+            stats.lowStock.map((p) => (
+              <div key={p.id} className="flex justify-between border-b py-1.5 text-sm last:border-0">
+                <span className="font-medium">{p.name}</span>
+                <b className="text-red-600">sisa {p.stock}</b>
+              </div>
+            ))
+          )}
+          <Link href="/produk" className="mt-2 inline-block text-sm font-semibold text-orange-700 hover:underline">
+            Kelola stok di Produk →
           </Link>
-        ))}
+        </div>
+
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <h2 className="mb-2 font-bold">🧾 Transaksi terakhir</h2>
+          {stats.recent.map((t) => (
+            <Link key={t.id} href={`/struk/${t.id}`}
+              className="flex justify-between border-b py-2 text-sm last:border-0 hover:bg-zinc-50">
+              <span>
+                {new Date(t.createdAt).toLocaleString("id-ID", {
+                  day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                })}
+                {" "}• {t.itemCount} item • {t.payment}
+              </span>
+              <b>{rupiah(t.total)}</b>
+            </Link>
+          ))}
+          <Link href="/transaksi" className="mt-2 inline-block text-sm font-semibold text-orange-700 hover:underline">
+            Semua transaksi →
+          </Link>
+        </div>
       </div>
     </div>
   );

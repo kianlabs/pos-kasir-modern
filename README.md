@@ -4,10 +4,11 @@ Aplikasi kasir modern single-codebase: **Next.js 14 + TypeScript + Tailwind + Pr
 
 ## Fitur
 
-- **Kasir** (`/`) — cari produk, keranjang +/−, bayar Tunai (hitung kembalian) / QRIS
-- **Produk** (`/produk`) — tambah & hapus produk, tabel harga/stok
-- **Struk** (`/struk/[id]`) — struk transaksi + tombol cetak (print CSS)
-- **Laporan** (`/laporan`) — omzet & transaksi hari ini, peringatan stok menipis, 10 transaksi terakhir
+- **Kasir** (`/`) — kategori, cari produk, keranjang +/−, bayar Tunai (numpad + kembalian) / QRIS
+- **Produk** (`/produk`) — tambah, edit, hapus, stepper stok, nilai total stok
+- **Transaksi** (`/transaksi`) — riwayat 50 transaksi terakhir + link struk
+- **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
+- **Laporan** (`/laporan`) — omzet hari ini, rata-rata/struk, grafik 7 hari, produk terlaris, stok menipis
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
 
 ## Cara jalan
