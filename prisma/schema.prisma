@@ -13,6 +13,7 @@ model Product {
   price     Int // rupiah, tanpa desimal
   stock     Int      @default(0)
   category  String   @default("Umum")
+  icon      String   @default("") // emoji per produk, fallback ikon kategori
   createdAt DateTime @default(now())
 
   items TransactionItem[]

@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const price = Number(body.price);
   const stock = Number(body.stock ?? 0);
   const category = String(body.category ?? "Umum").trim() || "Umum";
+  const icon = String(body.icon ?? "").trim().slice(0, 16);
 
   if (!name || !Number.isInteger(price) || price <= 0) {
     return NextResponse.json(
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   const product = await prisma.product.create({
-    data: { name, price, stock, category },
+    data: { name, price, stock, category, icon },
   });
   if (stock > 0) {
     await prisma.stockMove.create({

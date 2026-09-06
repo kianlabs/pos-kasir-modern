@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { rupiah } from "@/lib/rupiah";
-import { categoryIcon } from "@/lib/meta";
+import { productIcon } from "@/lib/meta";
 
-type Product = { id: string; name: string; price: number; stock: number; category: string };
+type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 type Cart = Record<string, number>;
 
 const QUICK_CASH = [10000, 20000, 50000, 100000];
@@ -177,8 +177,8 @@ export default function KasirPage() {
                 className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 <div className="flex items-start justify-between">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-100 text-2xl">
-                    {categoryIcon(p.category)}
+                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-orange-50 text-2xl">
+                    {productIcon(p)}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${stockStyle(p.stock)}`}>
                     {p.stock === 0 ? "Habis" : `Stok ${p.stock}`}

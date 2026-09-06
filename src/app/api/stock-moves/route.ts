@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     where: productId ? { productId } : undefined,
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: { product: { select: { name: true, category: true } } },
+    include: { product: { select: { name: true, category: true, icon: true } } },
   });
   return NextResponse.json(moves);
 }

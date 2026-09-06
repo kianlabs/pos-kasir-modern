@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { rupiah } from "@/lib/rupiah";
-import { categoryIcon } from "@/lib/meta";
+import { productIcon, ICON_CHOICES } from "@/lib/meta";
 
-type Product = { id: string; name: string; price: number; stock: number; category: string };
+type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 
-const EMPTY = { name: "", price: "", stock: "", category: "Umum" };
+const EMPTY = { name: "", price: "", stock: "", category: "Umum", icon: "" };
 
 export default function ProdukPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,7 +35,7 @@ export default function ProdukPage() {
 
   function startEdit(p: Product) {
     setEditingId(p.id);
-    setForm({ name: p.name, price: String(p.price), stock: String(p.stock), category: p.category });
+    setForm({ name: p.name, price: String(p.price), stock: String(p.stock), category: p.category, icon: p.icon ?? "" });
     setError("");
   }
   function cancelEdit() {
@@ -52,6 +52,7 @@ export default function ProdukPage() {
       price: Number(form.price),
       stock: Number(form.stock || 0),
       category: form.category || "Umum",
+      icon: form.icon,
     };
     const res = await fetch(
       editingId ? `/api/products/${editingId}` : "/api/products",
@@ -129,6 +130,23 @@ export default function ProdukPage() {
           <label className="mb-1 block text-xs font-semibold text-zinc-500">Kategori</label>
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
             placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500" />
+          <label className="mb-1 block text-xs font-semibold text-zinc-500">
+            Ikon {form.icon && <span className="text-base">{form.icon}</span>}
+          </label>
+          <div className="mb-2 flex flex-wrap gap-1 rounded-lg border bg-zinc-50 p-2">
+            {ICON_CHOICES.map((ic) => (
+              <button
+                type="button"
+                key={ic}
+                onClick={() => setForm({ ...form, icon: form.icon === ic ? "" : ic })}
+                className={`rounded-md px-1.5 py-0.5 text-lg hover:bg-white ${
+                  form.icon === ic ? "bg-white ring-2 ring-orange-500" : ""
+                }`}
+              >
+                {ic}
+              </button>
+            ))}
+          </div>
           {error && <p className="mb-2 text-sm text-red-600">⚠️ {error}</p>}
           <div className="flex gap-2">
             <button className="flex-1 rounded-lg bg-orange-600 py-2 text-sm font-bold text-white hover:bg-orange-700">
@@ -164,8 +182,8 @@ export default function ProdukPage() {
                 {filtered.map((p) => (
                   <tr key={p.id} className={`border-b last:border-0 hover:bg-zinc-50 ${editingId === p.id ? "bg-orange-50" : ""}`}>
                     <td className="p-3">
-                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-lg">
-                        {categoryIcon(p.category)}
+                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-lg">
+                        {productIcon(p)}
                       </span>
                       <span className="font-semibold">{p.name}</span>
                     </td>

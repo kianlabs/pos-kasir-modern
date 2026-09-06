@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { categoryIcon } from "@/lib/meta";
+import { productIcon } from "@/lib/meta";
 
 type Move = {
   id: string;
@@ -9,7 +9,7 @@ type Move = {
   reason: string;
   refId: string | null;
   createdAt: string;
-  product: { name: string; category: string };
+  product: { name: string; category: string; icon: string };
 };
 
 const REASON_LABEL: Record<string, string> = {
@@ -64,7 +64,7 @@ export default function StokPage() {
                     })}
                   </td>
                   <td className="p-3 font-medium">
-                    <span className="mr-2">{categoryIcon(m.product.category)}</span>
+                    <span className="mr-2">{productIcon(m.product)}</span>
                     {m.product.name}
                   </td>
                   <td className="p-3">

@@ -9,7 +9,7 @@ type Params = { params: { id: string } };
 export async function PATCH(req: Request, { params }: Params) {
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
-  const data: { name?: string; price?: number; stock?: number; category?: string } = {};
+  const data: { name?: string; price?: number; stock?: number; category?: string; icon?: string } = {};
   if (body.name !== undefined) {
     const name = String(body.name).trim();
     if (!name) return NextResponse.json({ error: "Nama kosong." }, { status: 400 });
@@ -29,6 +29,9 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (body.category !== undefined) {
     data.category = String(body.category).trim() || "Umum";
+  }
+  if (body.icon !== undefined) {
+    data.icon = String(body.icon).trim().slice(0, 16);
   }
 
   try {
