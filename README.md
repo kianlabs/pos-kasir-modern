@@ -18,13 +18,13 @@ Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwin
 
 ```bash
 cd pos-kasir-modern
-npm install --ignore-scripts
+npm install              # otomatis menjalankan prisma generate via postinstall
 npx prisma migrate dev   # buat DB SQLite
 npx tsx prisma/seed.ts   # isi 38 menu warung (dilewati bila sudah ada transaksi)
 npm run dev              # buka http://localhost:3000
 ```
 
-> Catatan: project ini pakai `npm install --ignore-scripts` karena policy `allow-scripts` di mesin ini. Prisma dipakai versi 6 (stabil, perintah `migrate dev`).
+> Catatan: `npm install` sudah otomatis men-generate Prisma Client (via script `postinstall: prisma generate`) — tidak perlu menjalankan `npx prisma generate` secara terpisah. Prisma dipakai versi 6 (stabil, perintah `migrate dev`).
 
 ## Struktur
 
