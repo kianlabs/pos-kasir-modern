@@ -7,6 +7,7 @@ Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwin
 - **Kasir** (`/`) — kategori, cari produk, keranjang +/−, diskon Rp, pajak otomatis, bayar Tunai (numpad + kembalian) / QRIS
 - **Produk** (`/produk`) — tambah, edit, hapus, stepper stok, nilai total stok
 - **Transaksi** (`/transaksi`) — riwayat 50 transaksi terakhir + link struk
+- **Meja** (`/meja`) — peta 10 meja (status KOSONG/TERISI di-derive dari bill DRAFT terbuka), bill per meja: tambah item, diskon, bayar, batal, gabung/pisah bill
 - **Shift** (`/shift`) — buka/tutup shift, rekap modal vs kas fisik + selisih
 - **Stok** (`/stok`) — kartu stok: tiap penjualan/kulakan/koreksi tercatat
 - **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
@@ -14,6 +15,18 @@ Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwin
 - **Pengaturan** (`/pengaturan`) — pajak otomatis on/off + tarif
 - **Auth & RBAC** (`/masuk/[slug]`) — login multi-role: owner (email + password) & kasir (PIN); session HMAC cookie; kasir dibatasi (403 di `/produk`, `/laporan`, `/pengaturan`)
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
+
+### Perilaku stok pada bill meja (disengaja)
+
+Bill meja disimpan sebagai `Transaction{status: DRAFT}`. **Stok baru berkurang saat bill
+dibayar (`DRAFT → LUNAS`), bukan saat bill dibuka atau item ditambahkan.** Karena itu:
+
+- Buka/ubah item/batal/gabung/pisah bill **tidak** menyentuh `Product.stock` maupun `StockMove`.
+- Karena DRAFT tidak mengurangi stok, dua bill terbuka boleh sama-sama memuat qty melebihi
+  stok tersedia. Yang **bayar lebih dulu menang**; bill kedua gagal dengan pesan stok kurang.
+  Ini konsisten dengan PRD §12 (stok minus sementara saat offline, konflik ditandai untuk review owner).
+- Reservasi stok sementara **ditolak** secara desain: menambah kompleksitas pembatalan & offline.
+- Menutup shift **diblokir (409)** bila masih ada bill terbuka — uang tak boleh menggantung lintas shift.
 
 ## Menjalankan
 
@@ -56,7 +69,9 @@ src/app/
   layout.tsx + SidebarNav.tsx → sidebar + topbar mobile
   page.tsx            → kasir (diskon, pajak otomatis, shift banner)
   produk/page.tsx     → CRUD produk + stepper stok
-  transaksi/page.tsx  → riwayat transaksi (query langsung)
+  transaksi/page.tsx  → riwayat transaksi (query langsung, hanya LUNAS)
+  meja/page.tsx       → peta meja (KOSONG/TERISI, derive dari bill DRAFT)
+  meja/[id]/page.tsx  → bill DRAFT satu meja + BillPanel (aksi bill)
   shift/page.tsx      → buka/tutup + selisih kas
   stok/page.tsx       → kartu stok
   laporan/page.tsx    → dashboard + filter tanggal + export CSV
@@ -65,7 +80,12 @@ src/app/
   api/
     products/         → GET + POST
     products/[id]/    → PATCH + DELETE
-    checkout/         → POST (transaksi atomik + pajak otomatis)
+    checkout/         → POST (transaksi atomik + pajak otomatis; mejaId opsional)
+    meja/[id]/bill/   → POST buka bill DRAFT di meja
+    bills/[id]/       → PATCH tambah/ubah item + diskon, DELETE batal bill
+    bills/[id]/bayar/ → POST bayar DRAFT → LUNAS (kurangi stok + StockMove)
+    bills/[id]/gabung/→ POST gabung bill sumber ke bill ini
+    bills/[id]/pisah/ → POST pisah item ke meja lain (pindah, bukan salin)
     stats/            → GET (omzet, range tanggal)
     shifts/           → GET + POST, /active, /[id]/close
     stock-moves/      → GET kartu stok
