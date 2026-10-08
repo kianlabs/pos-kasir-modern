@@ -177,9 +177,16 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+// Hanya jalankan seed otomatis bila file ini dieksekusi langsung
+// (`npx tsx prisma/seed.ts`). Tanpa guard ini, `import { seedWarung }` dari
+// test akan ikut menjalankan main() sebagai efek samping.
+const dijalankanLangsung = process.argv[1]?.replace(/\\/g, "/").endsWith("prisma/seed.ts");
+
+if (dijalankanLangsung) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}
