@@ -97,17 +97,19 @@ export default function LaporanPage() {
         {/* Grafik 7 hari */}
         <div className="rounded-xl border bg-white p-4 shadow-sm">
           <h2 className="mb-3 font-bold">📈 Omzet 7 hari terakhir</h2>
-          <div className="flex h-40 items-end gap-2">
+          <div className="flex h-40 items-stretch gap-2">
             {stats.weekly.map((d) => (
               <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
                 <span className="text-[10px] font-bold text-zinc-600">
                   {d.total > 0 ? `${Math.round(d.total / 1000)}rb` : ""}
                 </span>
-                <div
-                  className="w-full rounded-t-md bg-orange-500"
-                  style={{ height: `${Math.max(4, (d.total / maxWeek) * 100)}%` }}
-                  title={rupiah(d.total)}
-                />
+                <div className="flex w-full flex-1 items-end">
+                  <div
+                    className="w-full rounded-t-md bg-orange-500"
+                    style={{ height: `${Math.max(4, (d.total / maxWeek) * 100)}%` }}
+                    title={rupiah(d.total)}
+                  />
+                </div>
                 <span className="text-[11px] font-semibold text-zinc-500">{d.label}</span>
               </div>
             ))}
