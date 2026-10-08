@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
-import { currentWarungId } from "@/lib/warung";
+import { catat } from "@/lib/audit";
+import { currentWarungId, currentKasirId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/shifts/[id]/close { kasFisik } → tutup shift + hitung selisih
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const warungId = await currentWarungId();
+  const kasirId = await currentKasirId(warungId);
 
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
@@ -37,6 +39,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const closed = await prisma.shift.update({
     where: { id: params.id },
     data: { status: "TUTUP", closedAt: new Date(), kasFisik },
+  });
+  await catat({
+    warungId,
+    userId: kasirId,
+    action: "SHIFT_CLOSE",
+    meta: { kasFisik, selisih: kasFisik - expected },
   });
   return NextResponse.json({ ...closed, expected, selisih: kasFisik - expected });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
+import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +80,13 @@ export async function POST(req: Request) {
           modalAwal,
         },
       });
+    });
+
+    await catat({
+      warungId,
+      userId: cashierId,
+      action: "SHIFT_OPEN",
+      meta: { modalAwal },
     });
 
     return NextResponse.json(shift, { status: 201 });
