@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KRING! - Kelola Shift &amp; Rekonsiliasi Kasir</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "danger": "#C52A2A",
+            "surface-container-lowest": "#ffffff",
+            "ink-700": "#404040",
+            "surface-bright": "#f9f9f9",
+            "outline": "#747878",
+            "inverse-surface": "#2f3131",
+            "on-primary-container": "#858383",
+            "secondary": "#5e5e5e",
+            "on-secondary-container": "#646464",
+            "surface-container-low": "#f3f3f3",
+            "primary-container": "#1c1b1b",
+            "on-surface": "#1a1c1c",
+            "on-tertiary-fixed-variant": "#484645",
+            "surface-container": "#eeeeee",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#1c1b1a",
+            "inverse-primary": "#c8c6c5",
+            "surface-container-high": "#e8e8e8",
+            "primary-fixed": "#e5e2e1",
+            "surface-container-highest": "#e2e2e2",
+            "error-container": "#ffdad6",
+            "on-background": "#1a1c1c",
+            "surface-variant": "#e2e2e2",
+            "ink-950": "#171717",
+            "surface-dim": "#dadada",
+            "tertiary": "#000000",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed": "#1c1b1a",
+            "background": "#f9f9f9",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#c4c7c7",
+            "on-error-container": "#93000a",
+            "ink-100": "#F5F5F5",
+            "on-surface-variant": "#444748",
+            "ink-200": "#E5E5E5",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#e6e2df",
+            "ink-500": "#737373",
+            "canvas": "#FAFAFA",
+            "on-secondary-fixed-variant": "#464747",
+            "secondary-container": "#e3e2e2",
+            "secondary-fixed": "#e3e2e2",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-primary-fixed-variant": "#474746",
+            "primary-fixed-dim": "#c8c6c5",
+            "on-primary-fixed": "#1c1b1b",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#cac6c4",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface": "#FFFFFF",
+            "ink-300": "#D4D4D4",
+            "primary": "#000000",
+            "on-tertiary-container": "#868382",
+            "inverse-on-surface": "#f0f1f1",
+            "surface-tint": "#5f5e5e",
+            "success": "#16803A"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "gutter-mobile": "0.75rem",
+            "space-xl": "2rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin": "1.5rem",
+            "gutter": "1rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Geist", "sans-serif"],
+            "numeral-hero-mobile": ["Geist", "sans-serif"],
+            "display-hero": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "numeral-md": ["Geist", "sans-serif"],
+            "body-lg": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "numeral-hero": ["Geist", "sans-serif"],
+            "display-hero-mobile": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "label-lg": ["Geist", "sans-serif"],
+            "numeral-lg": ["Geist", "sans-serif"],
+            "caption": ["Geist", "sans-serif"],
+            "label-md": ["Geist", "sans-serif"]
+          },
+          "fontSize": {
+            "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "numeral-hero-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "numeral-md": ["15px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "numeral-hero": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "numeral-lg": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+            "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-canvas text-ink-950 font-body-md text-body-md antialiased min-h-screen flex flex-col selection:bg-ink-200">
+<!-- TOP APP BAR (Shared Components JSON Executed) -->
+<header class="flex justify-between items-center w-full px-space-md h-16 border-b border-ink-200 bg-surface sticky top-0 z-50">
+<!-- Brand & Left Cluster -->
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="text-headline-md font-headline-md font-bold text-ink-950 tracking-tight">KRING!</span>
+<span class="text-caption font-caption text-ink-500 bg-ink-100 px-2 py-0.5 rounded border border-ink-200">POS UMKM</span>
+</div>
+<!-- Navigation Links from JSON: Kasir, Daftar Meja, Riwayat Transaksi, Kelola Menu -->
+<nav class="hidden md:flex items-center gap-space-md h-16 pt-2">
+<a class="text-ink-500 font-label-md text-label-md pb-2 hover:text-ink-950 transition-colors duration-150" href="#">Kasir</a>
+<a class="text-ink-500 font-label-md text-label-md pb-2 hover:text-ink-950 transition-colors duration-150" href="#">Daftar Meja</a>
+<a class="text-ink-500 font-label-md text-label-md pb-2 hover:text-ink-950 transition-colors duration-150" href="#">Riwayat Transaksi</a>
+<!-- Active Tab for shift & management context -->
+<a class="text-ink-950 font-label-md text-label-md border-b-2 border-ink-950 pb-2" href="#">Kelola Menu</a>
+</nav>
+</div>
+<!-- Active Shift Status Anchor -->
+<div class="hidden lg:flex items-center bg-ink-100 border border-ink-200 px-space-md py-1.5 rounded-lg gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-ink-950 animate-pulse"></span>
+<span class="font-label-md text-label-md text-ink-950">Shift Pagi #02 • Kasir Budi Santoso • Dimulai 07:00 WIB</span>
+</div>
+<!-- Trailing Actions & User Context -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1 border-r border-ink-200 pr-space-sm mr-1">
+<button aria-label="Status Cloud" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-ink-100 transition-colors text-ink-700" title="Sinkronisasi Selesai">
+<span class="material-symbols-outlined text-[20px]" data-icon="cloud_done">cloud_done</span>
+</button>
+<button aria-label="Notifikasi" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-ink-100 transition-colors text-ink-700" title="Notifikasi">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Pengaturan" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-ink-100 transition-colors text-ink-700" title="Pengaturan">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Current Cashier Badge -->
+<div class="flex items-center gap-space-sm pl-1">
+<div class="w-9 h-9 rounded-full bg-ink-950 text-surface flex items-center justify-center font-label-md text-label-md font-bold">
+          BS
+        </div>
+<div class="text-left hidden sm:block">
+<p class="font-label-md text-label-md text-ink-950 leading-tight">Budi Santoso</p>
+<p class="font-caption text-caption text-ink-500">Shift Pagi #02</p>
+</div>
+</div>
+</div>
+</header>
+<!-- SUBHEADER BAR: Context Title & Action -->
+<div class="bg-surface border-b border-ink-200 px-space-xl py-3 flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="p-2 bg-ink-100 rounded-lg border border-ink-200 text-ink-950">
+<span class="material-symbols-outlined text-[24px]" data-icon="point_of_sale">point_of_sale</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-ink-950 font-bold">Kelola Shift &amp; Rekonsiliasi Kasir</h1>
+<p class="font-caption text-caption text-ink-500">Warung Bu Kris • Cabang Tebet • Terminal POS Utama #01</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-100 border border-ink-200 font-label-md text-label-md text-ink-950">
+<span class="w-2 h-2 rounded-full bg-ink-950"></span>
+        Shift Sedang Berjalan (Shift Pagi #02)
+      </span>
+<button class="h-10 px-4 rounded-xl border border-ink-200 bg-surface hover:bg-ink-100 active:scale-[0.98] transition-all font-label-md text-label-md text-ink-950 flex items-center gap-2" onclick="triggerDrawerAnimation()">
+<span class="material-symbols-outlined text-[18px]" data-icon="lock_open">lock_open</span>
+        Buka Laci Kasir (Cash Drawer)
+      </button>
+</div>
+</div>
+<!-- MAIN CANVAS: Optimized for Tablet Landscape (1280x800) -->
+<main class="flex-1 max-w-[1280px] w-full mx-auto p-space-lg lg:p-space-xl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- ================= KOLOM KIRI (5 Kolom): RINGKASAN PENJUALAN SHIFT ================= -->
+<section aria-labelledby="sales-summary-heading" class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Header Ringkasan Shift -->
+<div class="bg-surface border border-ink-200 rounded-2xl p-space-lg">
+<div class="flex items-center justify-between pb-space-sm border-b border-ink-200 mb-space-md">
+<div>
+<span class="text-caption font-caption text-ink-500 tracking-wider">REGISTER OPERASIONAL</span>
+<h2 class="font-headline-sm text-headline-sm text-ink-950" id="sales-summary-heading">Ringkasan Penjualan Shift Pagi Ini</h2>
+</div>
+<span class="px-2.5 py-1 bg-ink-100 text-ink-700 rounded font-caption text-caption border border-ink-200">
+              07:00 - Sekarang
+            </span>
+</div>
+<!-- Total Omzet Shift Hero Card -->
+<div class="bg-ink-100 rounded-xl p-space-md border border-ink-200 mb-space-md">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-caption text-caption text-ink-500">Total Omzet Penjualan Shift</p>
+<p class="font-numeral-hero text-numeral-hero text-ink-950 tracking-tight mt-0.5">Rp3.095.000</p>
+</div>
+<span class="px-2.5 py-1 bg-surface rounded-lg border border-ink-200 font-label-md text-label-md text-ink-950">
+                30 Transaksi
+              </span>
+</div>
+</div>
+<!-- Metrik Breakdown List -->
+<div class="space-y-space-sm">
+<!-- Modal Awal Kas -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-ink-200 bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-950 border border-ink-200">
+<span class="material-symbols-outlined text-[18px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</span>
+<div>
+<p class="font-label-md text-label-md text-ink-950">Modal Awal Kas (Laci Kasir)</p>
+<p class="font-caption text-caption text-ink-500">Saldo dasar saat Buka Shift</p>
+</div>
+</div>
+<span class="font-numeral-md text-numeral-md text-ink-950">Rp300.000</span>
+</div>
+<!-- Penjualan Tunai -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-ink-200 bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-950 border border-ink-200">
+<span class="material-symbols-outlined text-[18px]" data-icon="payments">payments</span>
+</span>
+<div>
+<p class="font-label-md text-label-md text-ink-950">Total Penjualan Tunai</p>
+<p class="font-caption text-caption text-ink-500">18 Transaksi</p>
+</div>
+</div>
+<div class="text-right">
+<span class="font-numeral-md text-numeral-md text-ink-950 block">+ Rp1.850.000</span>
+</div>
+</div>
+<!-- Penjualan QRIS / Non-Tunai -->
+<div class="flex items-center justify-between p-3 rounded-xl border border-ink-200 bg-surface">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-950 border border-ink-200">
+<span class="material-symbols-outlined text-[18px]" data-icon="qr_code_scanner">qr_code_scanner</span>
+</span>
+<div>
+<p class="font-label-md text-label-md text-ink-950">Total QRIS / Non-Tunai</p>
+<p class="font-caption text-caption text-ink-500">12 Transaksi (Masuk ke Rekening)</p>
+</div>
+</div>
+<div class="text-right">
+<span class="font-numeral-md text-numeral-md text-ink-700 block">Rp1.245.000</span>
+</div>
+</div>
+<!-- Divider -->
+<div class="border-t border-ink-200 my-space-sm pt-space-xs"></div>
+<!-- Kas Seharusnya di Laci (Kunci Rekonsiliasi) -->
+<div class="p-space-md rounded-xl bg-ink-950 text-surface flex items-center justify-between">
+<div>
+<p class="font-caption text-caption text-ink-300">Target Kas Fisik di Laci</p>
+<p class="font-headline-sm text-headline-sm font-bold text-surface">Kas Seharusnya di Laci</p>
+<p class="font-caption text-caption text-ink-300 mt-0.5">Modal Awal (Rp300rb) + Tunai (Rp1.85jt)</p>
+</div>
+<div class="text-right">
+<span class="font-numeral-hero text-numeral-hero text-surface">Rp2.150.000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Kartu Rekapitulasi Pembayaran & Void / Koreksi -->
+<div class="bg-surface border border-ink-200 rounded-2xl p-space-lg">
+<div class="flex items-center justify-between pb-space-xs border-b border-ink-200 mb-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-ink-950">Catatan Void &amp; Pembatalan</h3>
+<span class="font-caption text-caption text-danger border border-danger px-2 py-0.5 rounded">1 Catatan</span>
+</div>
+<div class="flex items-start justify-between p-3 rounded-xl border border-ink-200 bg-surface-bright">
+<div class="flex items-start gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-danger border border-ink-200 mt-0.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="block">block</span>
+</span>
+<div>
+<p class="font-label-md text-label-md text-ink-950">1 Transaksi Void (Dibatalkan)</p>
+<p class="font-caption text-caption text-ink-500">Order #TB-0042 • Meja 04 • Alasan: Salah input meja pelanggan</p>
+<span class="text-caption font-caption text-ink-500 mt-1 inline-block">Diotorisasi: Budi Santoso (09:14 WIB)</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-numeral-md text-numeral-md text-danger">Rp64.000</span>
+<span class="block font-caption text-caption text-ink-500">Dibatalkan</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= KOLOM KANAN (7 Kolom): FORM TUTUP SHIFT & PENGHITUNGAN KAS FISIK ================= -->
+<section aria-labelledby="reconciliation-heading" class="lg:col-span-7 bg-surface border border-ink-200 rounded-2xl p-space-lg flex flex-col gap-space-lg">
+<!-- Form Header -->
+<div class="border-b border-ink-200 pb-space-sm flex justify-between items-start">
+<div>
+<h2 class="font-headline-md text-headline-md text-ink-950" id="reconciliation-heading">Penghitungan Kas Fisik Laci</h2>
+<p class="font-body-md text-body-md text-ink-500 mt-0.5">Hitung dan masukkan uang fisik aktual di laci kasir.</p>
+</div>
+<button class="text-ink-700 hover:text-ink-950 font-label-md text-label-md flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-ink-200 hover:bg-ink-100 transition-colors" id="toggle-breakdown" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="calculate">calculate</span>
+<span id="toggle-text">Rincian Pecahan Uang</span>
+</button>
+</div>
+<!-- Input Uang Fisik Aktual Hero Input Field -->
+<div>
+<label class="block font-label-md text-label-md text-ink-950 mb-1.5" for="actual-cash-input">
+            Total Uang Fisik Aktual di Laci (Rp)
+          </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ink-500 font-numeral-lg text-numeral-lg">
+              Rp
+            </div>
+<input class="w-full h-14 pl-12 pr-4 bg-surface border-2 border-ink-950 rounded-xl font-numeral-hero text-numeral-hero text-ink-950 focus:outline-none focus:ring-0 tracking-tight" id="actual-cash-input" oninput="updateReconciliation(this.value)" placeholder="0" type="text" value="2.150.000"/>
+</div>
+<p class="font-caption text-caption text-ink-500 mt-1.5">Masukkan jumlah total rupiah aktual yang dihitung di dalam cash drawer.</p>
+</div>
+<!-- Breakdown Pecahan Uang (Collapsible Section) -->
+<div class="border border-ink-200 rounded-xl p-space-md bg-canvas" id="breakdown-container">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-md text-label-md text-ink-950">Rincian Lembar &amp; Keping Pecahan</span>
+<span class="font-caption text-caption text-ink-500">Otomatis menjumlahkan</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-space-sm">
+<!-- 100.000 -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp100.000</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="100000" min="0" type="number" value="15"/>
+<span class="text-caption font-caption text-ink-500">lbr</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp1.500.000</span>
+</div>
+<!-- 50.000 -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp50.000</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="50000" min="0" type="number" value="8"/>
+<span class="text-caption font-caption text-ink-500">lbr</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp400.000</span>
+</div>
+<!-- 20.000 -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp20.000</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="20000" min="0" type="number" value="7"/>
+<span class="text-caption font-caption text-ink-500">lbr</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp140.000</span>
+</div>
+<!-- 10.000 -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp10.000</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="10000" min="0" type="number" value="8"/>
+<span class="text-caption font-caption text-ink-500">lbr</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp80.000</span>
+</div>
+<!-- 5.000 -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp5.000</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="5000" min="0" type="number" value="4"/>
+<span class="text-caption font-caption text-ink-500">lbr</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp20.000</span>
+</div>
+<!-- 2.000 / Koin -->
+<div class="bg-surface p-2.5 rounded-lg border border-ink-200">
+<label class="block font-caption text-caption text-ink-500 mb-1">Rp2.000 / Koin</label>
+<div class="flex items-center gap-1">
+<input class="denom-input w-full h-10 px-2 text-right border border-ink-200 rounded font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" data-value="2000" min="0" type="number" value="5"/>
+<span class="text-caption font-caption text-ink-500">kpg</span>
+</div>
+<span class="denom-subtotal block text-right font-caption text-caption text-ink-700 mt-1">Rp10.000</span>
+</div>
+</div>
+</div>
+<!-- Box Status Selisih Kas Eksplisit (Monokrom Tegas) -->
+<div class="p-space-md rounded-xl border-2 border-ink-950 bg-ink-100 flex items-center justify-between" id="diff-status-box">
+<div class="flex items-center gap-space-sm">
+<span class="w-10 h-10 rounded-lg bg-ink-950 text-surface flex items-center justify-center" id="diff-icon">
+<span class="material-symbols-outlined text-[24px]" data-icon="check_circle">check_circle</span>
+</span>
+<div>
+<p class="font-caption text-caption text-ink-500">Status Rekonsiliasi Kas</p>
+<h3 class="font-headline-sm text-headline-sm text-ink-950 font-bold" id="diff-title">Selisih Kas: Rp0 (Pas / Sesuai)</h3>
+</div>
+</div>
+<div class="text-right">
+<span class="px-3 py-1 bg-ink-950 text-surface rounded-full font-label-md text-label-md" id="diff-badge">
+              Sesuai Pembukuan
+            </span>
+</div>
+</div>
+<!-- Field Tambahan: Kasir Pengganti & Catatan -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Kasir Pengganti Dropdown -->
+<div>
+<label class="block font-label-md text-label-md text-ink-950 mb-1" for="next-cashier">
+              Kasir Pengganti (Shift Sore)
+            </label>
+<div class="relative">
+<select class="w-full h-12 bg-surface border border-ink-200 rounded-xl px-4 text-ink-950 font-body-md text-body-md focus:border-ink-950 focus:ring-0 appearance-none" id="next-cashier">
+<option selected="" value="siti">Siti Rahma (Shift Sore 15:00 - 23:00)</option>
+<option value="agus">Agus Wijaya (Kasir Pengganti)</option>
+<option value="none">Tanpa Kasir Pengganti (Tutup Toko)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-ink-500" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Laci Kasir Lanjutan -->
+<div>
+<label class="block font-label-md text-label-md text-ink-950 mb-1" for="starting-next">
+              Tinggalkan Kas Modal Shift Sore
+            </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-ink-500 font-label-md text-label-md">
+                Rp
+              </div>
+<input class="w-full h-12 pl-10 pr-4 bg-surface border border-ink-200 rounded-xl font-numeral-md text-numeral-md text-ink-950 focus:border-ink-950 focus:ring-0" id="starting-next" type="text" value="300.000"/>
+</div>
+</div>
+<!-- Catatan Shift -->
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-ink-950 mb-1" for="shift-notes">
+              Catatan Shift (Opsional)
+            </label>
+<textarea class="w-full bg-surface border border-ink-200 rounded-xl p-3 text-ink-950 font-body-md text-body-md focus:border-ink-950 focus:ring-0 resize-none" id="shift-notes" placeholder="Catatan kasir pergantian shift (misal: stok struk kertas hampir habis, uang kembalian Rp2.000 banyak)." rows="2"></textarea>
+</div>
+</div>
+<!-- TOMBOL AKSI DOMINAN (Primary 56px height, Solid #171717) -->
+<div class="pt-space-sm border-t border-ink-200 flex flex-col sm:flex-row items-center gap-space-md">
+<button class="w-full sm:flex-1 h-14 bg-ink-950 text-surface rounded-xl font-label-lg text-label-lg font-bold hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-none" onclick="openConfirmationModal()" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock">lock</span>
+            KONFIRMASI &amp; TUTUP SHIFT
+          </button>
+<button class="w-full sm:w-auto h-14 px-6 bg-surface border border-ink-200 text-ink-950 rounded-xl font-label-lg text-label-lg hover:bg-ink-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2" onclick="window.print()" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="print">print</span>
+            Cetak Struk Shift
+          </button>
+</div>
+</section>
+</div>
+</main>
+<!-- MODAL KONFIRMASI PENUTUPAN SHIFT (Touch Dialog) -->
+<div class="fixed inset-0 bg-ink-950/60 z-50 hidden items-center justify-center p-space-md" id="modal-confirm">
+<div class="bg-surface w-full max-w-md rounded-2xl border border-ink-200 p-space-lg shadow-xl animate-in fade-in zoom-in-95 duration-150">
+<div class="flex items-center gap-space-sm pb-space-sm border-b border-ink-200">
+<span class="w-10 h-10 rounded-xl bg-ink-100 flex items-center justify-center text-ink-950">
+<span class="material-symbols-outlined text-[22px]" data-icon="verified">verified</span>
+</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-ink-950 font-bold">Verifikasi Tutup Shift</h3>
+<p class="font-caption text-caption text-ink-500">Shift Pagi #02 • Budi Santoso</p>
+</div>
+</div>
+<div class="my-space-md space-y-space-sm">
+<div class="p-3 bg-ink-100 rounded-xl border border-ink-200 text-ink-950">
+<div class="flex justify-between text-body-md font-body-md py-1">
+<span class="text-ink-500">Kas Aktual Dihitung:</span>
+<span class="font-numeral-md text-numeral-md text-ink-950 font-bold" id="modal-actual-val">Rp2.150.000</span>
+</div>
+<div class="flex justify-between text-body-md font-body-md py-1">
+<span class="text-ink-500">Kas Seharusnya:</span>
+<span class="font-numeral-md text-numeral-md text-ink-950 font-bold">Rp2.150.000</span>
+</div>
+<div class="flex justify-between text-body-md font-body-md py-1 border-t border-ink-200 mt-1 pt-1">
+<span class="text-ink-950 font-bold">Selisih Kas:</span>
+<span class="font-numeral-md text-numeral-md text-ink-950 font-bold" id="modal-diff-val">Rp0 (Sesuai)</span>
+</div>
+</div>
+<p class="font-caption text-caption text-ink-500">
+          Setelah shift ditutup, seluruh rekonsiliasi akan dicatat permanen ke server dan dialihkan ke Siti Rahma.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="flex-1 h-12 bg-surface border border-ink-200 text-ink-950 rounded-xl font-label-md text-label-md hover:bg-ink-100 active:scale-[0.98] transition-all" onclick="closeConfirmationModal()" type="button">
+          Periksa Kembali
+        </button>
+<button class="flex-1 h-12 bg-ink-950 text-surface rounded-xl font-label-md text-label-md font-bold hover:opacity-90 active:scale-[0.98] transition-all" onclick="finishShift()" type="button">
+          Selesaikan &amp; Kunci
+        </button>
+</div>
+</div>
+</div>
+<!-- NOTIFIKASI TOAST (Hardware Action Feedback) -->
+<div class="fixed bottom-6 right-6 bg-ink-950 text-surface px-5 py-3 rounded-xl border border-ink-700 flex items-center gap-3 shadow-lg transform translate-y-20 opacity-0 transition-all duration-200 z-50" id="toast-drawer">
+<span class="material-symbols-outlined text-[20px] text-surface" data-icon="check_circle">check_circle</span>
+<span class="font-label-md text-label-md" id="toast-text">Sinyal pulsa dikirim: Laci kasir fisik terbuka.</span>
+</div>
+<!-- INTERACTIVE VANILLA JAVASCRIPT FOR POS RECONCILIATION -->
+<script>
+    const EXPECTED_CASH = 2150000;
+
+    function parseRupiah(valStr) {
+      if (!valStr) return 0;
+      const clean = valStr.toString().replace(/[^0-9]/g, '');
+      return parseInt(clean, 10) || 0;
+    }
+
+    function formatRupiah(num) {
+      return 'Rp' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function updateReconciliation(valInput) {
+      const actual = parseRupiah(valInput);
+      const diff = actual - EXPECTED_CASH;
+      
+      const statusBox = document.getElementById('diff-status-box');
+      const diffTitle = document.getElementById('diff-title');
+      const diffBadge = document.getElementById('diff-badge');
+      const diffIcon = document.getElementById('diff-icon');
+
+      if (diff === 0) {
+        diffTitle.textContent = "Selisih Kas: Rp0 (Pas / Sesuai)";
+        diffBadge.textContent = "Sesuai Pembukuan";
+        diffBadge.className = "px-3 py-1 bg-ink-950 text-surface rounded-full font-label-md text-label-md";
+        statusBox.className = "p-space-md rounded-xl border-2 border-ink-950 bg-ink-100 flex items-center justify-between";
+        diffIcon.className = "w-10 h-10 rounded-lg bg-ink-950 text-surface flex items-center justify-center";
+      } else if (diff > 0) {
+        diffTitle.textContent = "Selisih Kas: +" + formatRupiah(diff) + " (Lebih Kas)";
+        diffBadge.textContent = "Kelebihan Uang Fisik";
+        diffBadge.className = "px-3 py-1 bg-ink-950 text-surface rounded-full font-label-md text-label-md";
+        statusBox.className = "p-space-md rounded-xl border-2 border-ink-700 bg-surface flex items-center justify-between";
+        diffIcon.className = "w-10 h-10 rounded-lg bg-ink-700 text-surface flex items-center justify-center";
+      } else {
+        diffTitle.textContent = "Selisih Kas: -" + formatRupiah(Math.abs(diff)) + " (Kurang Kas)";
+        diffBadge.textContent = "Kekurangan Uang Fisik";
+        diffBadge.className = "px-3 py-1 bg-danger text-surface rounded-full font-label-md text-label-md";
+        statusBox.className = "p-space-md rounded-xl border-2 border-danger bg-surface flex items-center justify-between";
+        diffIcon.className = "w-10 h-10 rounded-lg bg-danger text-surface flex items-center justify-center";
+      }
+    }
+
+    // Denomination breakdown recalculation
+    const denomInputs = document.querySelectorAll('.denom-input');
+    denomInputs.forEach(input => {
+      input.addEventListener('input', function() {
+        let totalDenom = 0;
+        denomInputs.forEach(item => {
+          const count = parseInt(item.value, 10) || 0;
+          const nominal = parseInt(item.getAttribute('data-value'), 10);
+          const subtotal = count * nominal;
+          item.parentElement.nextElementSibling.textContent = formatRupiah(subtotal);
+          totalDenom += subtotal;
+        });
+
+        // Set to main input
+        const actualInput = document.getElementById('actual-cash-input');
+        actualInput.value = totalDenom.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        updateReconciliation(actualInput.value);
+      });
+    });
+
+    // Toggle Breakdown visibility
+    const toggleBtn = document.getElementById('toggle-breakdown');
+    const breakdownCont = document.getElementById('breakdown-container');
+    let isBreakdownOpen = true;
+
+    toggleBtn.addEventListener('click', () => {
+      isBreakdownOpen = !isBreakdownOpen;
+      if (isBreakdownOpen) {
+        breakdownCont.style.display = 'block';
+        document.getElementById('toggle-text').textContent = 'Sembunyikan Rincian';
+      } else {
+        breakdownCont.style.display = 'none';
+        document.getElementById('toggle-text').textContent = 'Rincian Pecahan Uang';
+      }
+    });
+
+    // Drawer open simulation
+    function triggerDrawerAnimation() {
+      const toast = document.getElementById('toast-drawer');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = "Sinyal pulsa ESC/POS dikirim: Laci kasir terbuka.";
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Modal Confirmation
+    function openConfirmationModal() {
+      const actualVal = document.getElementById('actual-cash-input').value;
+      const actualNum = parseRupiah(actualVal);
+      const diff = actualNum - EXPECTED_CASH;
+
+      document.getElementById('modal-actual-val').textContent = formatRupiah(actualNum);
+      if (diff === 0) {
+        document.getElementById('modal-diff-val').textContent = "Rp0 (Pas / Sesuai)";
+      } else if (diff > 0) {
+        document.getElementById('modal-diff-val').textContent = "+" + formatRupiah(diff) + " (Lebih)";
+      } else {
+        document.getElementById('modal-diff-val').textContent = "-" + formatRupiah(Math.abs(diff)) + " (Kurang)";
+      }
+
+      const modal = document.getElementById('modal-confirm');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeConfirmationModal() {
+      const modal = document.getElementById('modal-confirm');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function finishShift() {
+      closeConfirmationModal();
+      const toast = document.getElementById('toast-drawer');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = "Shift Pagi #02 berhasil ditutup. Mengalihkan ke Siti Rahma...";
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  </script>
+</body></html>

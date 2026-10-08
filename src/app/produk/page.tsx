@@ -103,7 +103,7 @@ export default function ProdukPage() {
           <span className="rounded-lg bg-white px-3 py-1.5 font-semibold ring-1 ring-zinc-200">
             Nilai stok {rupiah(totalNilai)}
           </span>
-          <a href="/stok" className="rounded-lg bg-white px-3 py-1.5 font-semibold text-orange-700 ring-1 ring-zinc-200 hover:ring-orange-400">
+          <a href="/stok" className="rounded-lg bg-white px-3 py-1.5 font-semibold text-primary ring-1 ring-zinc-200 hover:ring-primary">
             📋 Riwayat stok
           </a>
         </div>
@@ -114,22 +114,22 @@ export default function ProdukPage() {
           <h2 className="mb-3 font-bold">{editingId ? "✏️ Edit produk" : "➕ Tambah produk"}</h2>
           <label className="mb-1 block text-xs font-semibold text-zinc-500">Nama</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="mis. Ayam Goreng" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500" />
+            placeholder="mis. Ayam Goreng" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-1 block text-xs font-semibold text-zinc-500">Harga (Rp)</label>
               <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value.replace(/\D/g, "") })}
-                placeholder="10000" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500" />
+                placeholder="10000" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-zinc-500">Stok</label>
               <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value.replace(/\D/g, "") })}
-                placeholder="20" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500" />
+                placeholder="20" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
             </div>
           </div>
           <label className="mb-1 block text-xs font-semibold text-zinc-500">Kategori</label>
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-            placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500" />
+            placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
           <label className="mb-1 block text-xs font-semibold text-zinc-500">
             Ikon {form.icon && <span className="text-base">{form.icon}</span>}
           </label>
@@ -140,16 +140,16 @@ export default function ProdukPage() {
                 key={ic}
                 onClick={() => setForm({ ...form, icon: form.icon === ic ? "" : ic })}
                 className={`rounded-md px-1.5 py-0.5 text-lg hover:bg-white ${
-                  form.icon === ic ? "bg-white ring-2 ring-orange-500" : ""
+                  form.icon === ic ? "bg-white ring-2 ring-primary" : ""
                 }`}
               >
                 {ic}
               </button>
             ))}
           </div>
-          {error && <p className="mb-2 text-sm text-red-600">⚠️ {error}</p>}
+          {error && <p className="mb-2 text-sm text-danger">⚠️ {error}</p>}
           <div className="flex gap-2">
-            <button className="flex-1 rounded-lg bg-orange-600 py-2 text-sm font-bold text-white hover:bg-orange-700">
+            <button className="flex-1 rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-primary-hover">
               {editingId ? "Simpan" : "Tambah"}
             </button>
             {editingId && (
@@ -165,7 +165,7 @@ export default function ProdukPage() {
           <div className="border-b p-3">
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="🔍 Cari produk…"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500 sm:max-w-xs" />
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary sm:max-w-xs" />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
@@ -180,9 +180,9 @@ export default function ProdukPage() {
               </thead>
               <tbody>
                 {filtered.map((p) => (
-                  <tr key={p.id} className={`border-b last:border-0 hover:bg-zinc-50 ${editingId === p.id ? "bg-orange-50" : ""}`}>
+                  <tr key={p.id} className={`border-b last:border-0 hover:bg-zinc-50 ${editingId === p.id ? "bg-accent-bg" : ""}`}>
                     <td className="p-3">
-                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-lg">
+                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent-bg text-lg">
                         {productIcon(p)}
                       </span>
                       <span className="font-semibold">{p.name}</span>
@@ -197,7 +197,7 @@ export default function ProdukPage() {
                       <span className="flex items-center justify-center gap-1">
                         <button onClick={() => adjustStock(p, -1)}
                           className="h-6 w-6 rounded bg-zinc-100 font-bold hover:bg-zinc-200">−</button>
-                        <span className={`w-10 text-center font-bold ${p.stock <= 5 ? "text-red-600" : ""}`}>
+                        <span className={`w-10 text-center font-bold ${p.stock <= 5 ? "text-danger" : ""}`}>
                           {p.stock}
                         </span>
                         <button onClick={() => adjustStock(p, 1)}
@@ -206,9 +206,9 @@ export default function ProdukPage() {
                     </td>
                     <td className="p-3 text-right">
                       <button onClick={() => startEdit(p)}
-                        className="mr-3 font-semibold text-orange-700 hover:underline">Edit</button>
+                        className="mr-3 font-semibold text-primary hover:underline">Edit</button>
                       <button onClick={() => hapus(p.id, p.name)}
-                        className="font-semibold text-red-600 hover:underline">Hapus</button>
+                        className="font-semibold text-danger hover:underline">Hapus</button>
                     </td>
                   </tr>
                 ))}

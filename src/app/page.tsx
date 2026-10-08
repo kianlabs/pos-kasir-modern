@@ -143,7 +143,7 @@ export default function KasirPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 Cari produk…"
-            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 sm:ml-auto sm:max-w-xs"
+            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary sm:ml-auto sm:max-w-xs"
           />
         </div>
 
@@ -154,7 +154,7 @@ export default function KasirPage() {
               onClick={() => setCategory(c)}
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${
                 category === c
-                  ? "bg-orange-600 text-white"
+                  ? "bg-primary text-white"
                   : "bg-white text-zinc-600 ring-1 ring-zinc-200 hover:ring-zinc-400"
               }`}
             >
@@ -177,7 +177,7 @@ export default function KasirPage() {
                 className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 <div className="flex items-start justify-between">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-orange-50 text-2xl">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-bg text-2xl">
                     {productIcon(p)}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${stockStyle(p.stock)}`}>
@@ -186,7 +186,7 @@ export default function KasirPage() {
                 </div>
                 <div className="mt-2 truncate text-sm font-semibold">{p.name}</div>
                 <div className="text-[11px] text-zinc-500">{p.category}</div>
-                <div className="mt-1 font-bold text-orange-700">{rupiah(p.price)}</div>
+                <div className="mt-1 font-bold text-primary">{rupiah(p.price)}</div>
                 {cart[p.id] ? (
                   <div className="mt-1 text-[11px] font-bold text-zinc-900">
                     di keranjang: {cart[p.id]} ✓
@@ -207,7 +207,7 @@ export default function KasirPage() {
           {lines.length > 0 && (
             <button
               onClick={() => setCart({})}
-              className="text-xs font-semibold text-red-600 hover:underline"
+              className="text-xs font-semibold text-danger hover:underline"
             >
               Hapus semua
             </button>
@@ -256,7 +256,7 @@ export default function KasirPage() {
               onChange={(e) => setDiscount(e.target.value.replace(/\D/g, ""))}
               inputMode="numeric"
               placeholder="Diskon Rp (opsional)"
-              className="w-full rounded-lg border bg-white px-2.5 py-1.5 text-sm outline-none focus:border-orange-500"
+              className="w-full rounded-lg border bg-white px-2.5 py-1.5 text-sm outline-none focus:border-primary"
             />
           </div>
           {(discNum > 0 || taxNum > 0) && (
@@ -282,11 +282,11 @@ export default function KasirPage() {
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-bold">
             <button onClick={() => setPayment("CASH")}
-              className={`rounded-lg border py-2 ${payment === "CASH" ? "border-orange-600 bg-orange-600 text-white" : "bg-white"}`}>
+              className={`rounded-lg border py-2 ${payment === "CASH" ? "border-primary bg-primary text-white" : "bg-white"}`}>
               💵 Tunai
             </button>
             <button onClick={() => setPayment("QRIS")}
-              className={`rounded-lg border py-2 ${payment === "QRIS" ? "border-orange-600 bg-orange-600 text-white" : "bg-white"}`}>
+              className={`rounded-lg border py-2 ${payment === "QRIS" ? "border-primary bg-primary text-white" : "bg-white"}`}>
               📱 QRIS
             </button>
           </div>
@@ -295,7 +295,7 @@ export default function KasirPage() {
             <>
               <div className="mt-3 grid grid-cols-4 gap-1.5">
                 <button onClick={() => setCash(String(total))}
-                  className="rounded-md bg-orange-100 py-1.5 text-xs font-bold text-orange-800 hover:bg-orange-200">
+                  className="rounded-md bg-accent-bg py-1.5 text-xs font-bold text-primary hover:bg-primary/10">
                   Uang pas
                 </button>
                 {QUICK_CASH.map((v) => (
@@ -310,11 +310,11 @@ export default function KasirPage() {
                 onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
                 inputMode="numeric"
                 placeholder="Nominal diterima…"
-                className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-right text-lg font-bold outline-none focus:border-orange-500"
+                className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-right text-lg font-bold outline-none focus:border-primary"
               />
               <div className="mt-1.5 flex justify-between text-sm font-semibold">
                 <span className="text-zinc-500">Kembalian</span>
-                <span className={kembalian < 0 ? "text-red-600" : "text-orange-700"}>
+                <span className={kembalian < 0 ? "text-danger" : "text-secondary"}>
                   {cash ? rupiah(Math.max(0, kembalian)) : "—"}
                 </span>
               </div>
@@ -335,7 +335,7 @@ export default function KasirPage() {
           <button
             onClick={bayar}
             disabled={!canPay}
-            className="mt-3 w-full rounded-lg bg-orange-600 py-3 font-bold text-white shadow hover:bg-orange-700 disabled:opacity-40"
+            className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
           >
             {loading ? "Memproses…" : `Bayar ${rupiah(total)}`}
           </button>

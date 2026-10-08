@@ -5,20 +5,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#c2410c",
-        "primary-hover": "#9a3412",
-        "primary-bright": "#ea580c",
+        primary: "#a0522d",
+        "primary-hover": "#7a3e20",
+        "primary-bright": "#c4703f",
         secondary: "#18181b",
         tertiary: "#15803d",
         neutral: "#faf6f0",
         surface: "#ffffff",
-        "text-muted": "#71717a",
+        "text-muted": "#6b6560",
         "success-bg": "#dcfce7",
         warning: "#92400e",
         "warning-bg": "#fef3c7",
         danger: "#b91c1c",
         "danger-bg": "#fef2f2",
-        "accent-bg": "#fff7ed",
+        "accent-bg": "#f5efe8",
       },
       fontFamily: {
         h1: ["Inter"],

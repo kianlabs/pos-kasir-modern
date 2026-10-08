@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KRING! - Masuk &amp; Pilih Peran</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "danger": "#C52A2A",
+            "surface-container-lowest": "#ffffff",
+            "ink-700": "#404040",
+            "surface-bright": "#f9f9f9",
+            "outline": "#747878",
+            "inverse-surface": "#2f3131",
+            "on-primary-container": "#858383",
+            "secondary": "#5e5e5e",
+            "on-secondary-container": "#646464",
+            "surface-container-low": "#f3f3f3",
+            "primary-container": "#1c1b1b",
+            "on-surface": "#1a1c1c",
+            "on-tertiary-fixed-variant": "#484645",
+            "surface-container": "#eeeeee",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#1c1b1a",
+            "inverse-primary": "#c8c6c5",
+            "surface-container-high": "#e8e8e8",
+            "primary-fixed": "#e5e2e1",
+            "surface-container-highest": "#e2e2e2",
+            "error-container": "#ffdad6",
+            "on-background": "#1a1c1c",
+            "surface-variant": "#e2e2e2",
+            "ink-950": "#171717",
+            "surface-dim": "#dadada",
+            "tertiary": "#000000",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed": "#1c1b1a",
+            "background": "#f9f9f9",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#c4c7c7",
+            "on-error-container": "#93000a",
+            "ink-100": "#F5F5F5",
+            "on-surface-variant": "#444748",
+            "ink-200": "#E5E5E5",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#e6e2df",
+            "ink-500": "#737373",
+            "canvas": "#FAFAFA",
+            "on-secondary-fixed-variant": "#464747",
+            "secondary-container": "#e3e2e2",
+            "secondary-fixed": "#e3e2e2",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-primary-fixed-variant": "#474746",
+            "primary-fixed-dim": "#c8c6c5",
+            "on-primary-fixed": "#1c1b1b",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#cac6c4",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface": "#FFFFFF",
+            "ink-300": "#D4D4D4",
+            "primary": "#000000",
+            "on-tertiary-container": "#868382",
+            "inverse-on-surface": "#f0f1f1",
+            "surface-tint": "#5f5e5e",
+            "success": "#16803A"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "20": "20px",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "gutter-mobile": "0.75rem",
+            "space-xl": "2rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin": "1.5rem",
+            "gutter": "1rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Geist"],
+            "numeral-hero-mobile": ["Geist"],
+            "display-hero": ["Geist"],
+            "headline-lg": ["Geist"],
+            "numeral-md": ["Geist"],
+            "body-lg": ["Geist"],
+            "headline-sm": ["Geist"],
+            "numeral-hero": ["Geist"],
+            "display-hero-mobile": ["Geist"],
+            "headline-md": ["Geist"],
+            "label-lg": ["Geist"],
+            "numeral-lg": ["Geist"],
+            "caption": ["Geist"],
+            "label-md": ["Geist"]
+          },
+          "fontSize": {
+            "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "numeral-hero-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "numeral-md": ["15px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "numeral-hero": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "numeral-lg": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+            "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Prevent text selection during fast numpad touches */
+    .touch-target {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="bg-canvas text-ink-950 font-body-md min-h-screen flex flex-col items-center justify-center p-4 md:p-6 antialiased selection:bg-ink-200">
+<!-- Tablet Shell Layout (1280x800 optimized container) -->
+<main class="w-full max-w-[520px] flex flex-col items-center my-auto">
+<!-- Header Branding -->
+<header class="text-center mb-6">
+<div class="inline-flex items-center justify-center gap-2 mb-1.5">
+<span class="material-symbols-outlined text-ink-950 text-3xl font-bold" data-icon="point_of_sale">point_of_sale</span>
+<h1 class="font-display-hero text-display-hero text-ink-950 tracking-tight leading-none">KRING!</h1>
+</div>
+<p class="font-body-md text-body-md text-ink-500">Kring! Kasir bunyi, cuan masuk.</p>
+</header>
+<!-- Main Card Container -->
+<div class="w-full bg-surface border border-ink-200 rounded-[20px] p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+<!-- Role Toggle (Kasir vs Owner) -->
+<section aria-label="Pilih Peran" class="grid grid-cols-2 gap-2 p-1.5 bg-ink-100 border border-ink-200 rounded-xl mb-6">
+<!-- Kasir Tab (Active) -->
+<button class="flex items-center justify-center gap-2 h-12 bg-ink-950 text-surface rounded-lg font-label-lg text-label-lg transition-transform active:scale-[0.98]" id="btnRoleKasir" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="badge">badge</span>
+<span>Kasir</span>
+</button>
+<!-- Owner Tab (Inactive) -->
+<button class="flex items-center justify-center gap-2 h-12 bg-transparent text-ink-500 hover:text-ink-950 rounded-lg font-label-lg text-label-lg transition-colors" id="btnRoleOwner" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span>Owner</span>
+</button>
+</section>
+<!-- Cashier Selection Dropdown -->
+<div class="mb-5">
+<label class="block font-label-md text-label-md text-ink-700 mb-2" for="cashierSelect">
+          Kasir Bertugas
+        </label>
+<div class="relative">
+<select class="w-full h-12 bg-surface border border-ink-200 rounded-xl px-3.5 pr-10 font-body-md text-body-md text-ink-950 appearance-none focus:outline-none focus:border-ink-950 cursor-pointer" id="cashierSelect">
+<option selected="" value="budi">Budi Santoso (Shift Pagi)</option>
+<option value="siti">Siti Rahma (Shift Siang)</option>
+<option value="agus">Agus Pratama (Shift Malam)</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-ink-700">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- PIN Input Area -->
+<div class="mb-6 text-center">
+<div class="flex items-center justify-between mb-3 px-1">
+<span class="font-label-md text-label-md text-ink-700">Masukkan PIN Kasir (4 Digit)</span>
+<span class="font-caption text-caption text-ink-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]" data-icon="lock">lock</span>
+            Terenkripsi
+          </span>
+</div>
+<!-- 4-Digit PIN Indicator (Pre-filled 3 digits for high-fidelity state: ● ● ● ○) -->
+<div class="flex justify-center items-center gap-4 py-2">
+<!-- Digit 1: Filled -->
+<div class="pin-dot w-4 h-4 rounded-full bg-ink-950 transition-all duration-150 ring-2 ring-ink-950"></div>
+<!-- Digit 2: Filled -->
+<div class="pin-dot w-4 h-4 rounded-full bg-ink-950 transition-all duration-150 ring-2 ring-ink-950"></div>
+<!-- Digit 3: Filled -->
+<div class="pin-dot w-4 h-4 rounded-full bg-ink-950 transition-all duration-150 ring-2 ring-ink-950"></div>
+<!-- Digit 4: Empty -->
+<div class="pin-dot w-4 h-4 rounded-full bg-ink-100 border border-ink-300 transition-all duration-150"></div>
+</div>
+</div>
+<!-- Tablet Ergonomic Numpad Grid (min touch target 60px) -->
+<div class="grid grid-cols-3 gap-2.5 mb-6">
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">1</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">2</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">3</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">4</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">5</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">6</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">7</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">8</button>
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">9</button>
+<!-- Clear (C) Key -->
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-label-lg text-label-lg text-ink-700 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" id="btnClearPin" type="button">C</button>
+<!-- 0 Key -->
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl font-numeral-lg text-numeral-lg text-ink-950 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" type="button">0</button>
+<!-- Backspace Key -->
+<button class="numpad-key touch-target h-[60px] bg-surface hover:bg-ink-100 active:bg-ink-200 border border-ink-200 rounded-xl text-ink-700 flex items-center justify-center transition-all duration-100 active:scale-[0.98]" id="btnBackspacePin" type="button">
+<span class="material-symbols-outlined text-[24px]" data-icon="backspace">backspace</span>
+</button>
+</div>
+<!-- Primary Action CTA Button -->
+<button class="w-full h-14 bg-ink-950 hover:opacity-90 active:scale-[0.98] text-surface font-headline-sm text-headline-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-none" id="btnLogin" type="button">
+<span>MASUK SEBAGAI KASIR</span>
+<span class="material-symbols-outlined text-[22px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Microcopy Help Footer -->
+<footer class="mt-5 text-center">
+<p class="font-caption text-caption text-ink-500">
+        Lupa PIN kasir? Hubungi Owner atau Supervisor outlet.
+      </p>
+<div class="mt-3 flex items-center justify-center gap-4 text-ink-500 font-caption text-caption">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="wifi">wifi</span>
+          Terminal Terhubung
+        </span>
+<span>•</span>
+<span>Versi POS 2.4.0 (Tablet)</span>
+</div>
+</footer>
+</main>
+<!-- Interactive Logic for PIN demonstration -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let pin = "123"; // starts with 3 digits as requested (● ● ● ○)
+      const pinDots = document.querySelectorAll('.pin-dot');
+      const numpadKeys = document.querySelectorAll('.numpad-key');
+      const btnClear = document.getElementById('btnClearPin');
+      const btnBackspace = document.getElementById('btnBackspacePin');
+      const cashierSelect = document.getElementById('cashierSelect');
+      const loginButton = document.getElementById('btnLogin');
+      const btnRoleKasir = document.getElementById('btnRoleKasir');
+      const btnRoleOwner = document.getElementById('btnRoleOwner');
+
+      function updateDots() {
+        pinDots.forEach((dot, index) => {
+          if (index < pin.length) {
+            dot.className = "pin-dot w-4 h-4 rounded-full bg-ink-950 transition-all duration-150 ring-2 ring-ink-950";
+          } else {
+            dot.className = "pin-dot w-4 h-4 rounded-full bg-ink-100 border border-ink-300 transition-all duration-150";
+          }
+        });
+      }
+
+      numpadKeys.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const text = btn.innerText.trim();
+          if (text >= '0' && text <= '9') {
+            if (pin.length < 4) {
+              pin += text;
+              updateDots();
+            }
+          }
+        });
+      });
+
+      btnClear.addEventListener('click', () => {
+        pin = "";
+        updateDots();
+      });
+
+      btnBackspace.addEventListener('click', () => {
+        if (pin.length > 0) {
+          pin = pin.slice(0, -1);
+          updateDots();
+        }
+      });
+
+      loginButton.addEventListener('click', () => {
+        const kasirName = cashierSelect.options[cashierSelect.selectedIndex].text.split('(')[0].trim();
+        if (pin.length < 4) {
+          alert(`Silakan lengkapi 4 digit PIN untuk kasir ${kasirName}`);
+        } else {
+          alert(`Berhasil masuk sebagai ${kasirName}. Membuka register POS KRING!...`);
+        }
+      });
+
+      btnRoleOwner.addEventListener('click', () => {
+        alert("Mengalihkan ke layar masuk Owner KRING!...");
+      });
+    });
+  </script>
+</body></html>

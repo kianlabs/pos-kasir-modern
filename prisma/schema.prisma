@@ -7,83 +7,237 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Product {
+// ── Master tenant ──────────────────────────────────────────────
+model Warung {
   id        String   @id @default(uuid())
-  name      String
-  price     Int // rupiah, tanpa desimal
-  stock     Int      @default(0)
-  category  String   @default("Umum")
-  icon      String   @default("") // emoji per produk, fallback ikon kategori
+  nama      String
+  slug      String   // unik — URL login kasir /masuk/<slug> (v1.2 koreksi #7); bukan rahasia
+  alamat    String?
+  telepon   String?
+
+  // --- langganan (v1.2 koreksi #3, gating PRD §5b) ---
+  status      String    @default("TRIAL") // TRIAL | ACTIVE | SUSPENDED (const union, bukan enum)
+  trialEndsAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  users           User[]
+  products        Product[]
+  transactions    Transaction[]
+  transactionItems TransactionItem[] // v1.2: back-relation utk kolom warungId
+  shifts          Shift[]
+  stockMoves      StockMove[]
+  settings        Setting[]
+  mejas           Meja[]
+  insights        Insight[]   // dari lampiran AI (PRD-lampiran-ai.md §5)
+  auditLogs       AuditLog[]
+
+  @@unique([slug])
+  @@map("warungs")
+}
+
+model User {
+  id       String @id @default(uuid())
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  name     String
+  email    String? // owner: wajib & unik per warung; kasir: null
+  password String? // hash Argon2/bcrypt — owner saja
+  pin      String? // hash PIN 4-6 digit — kasir saja. Login = pilih nama
+                   // dari daftar → input PIN → verifikasi hash server-side
+                   // (hash+salt tidak bisa di-lookup, jadi wajib alur ini)
+  role     String   // OWNER | KASIR (const union — lihat konsesi tipe di atas)
+  aktif    Boolean  @default(true) // false = kasir di-PHK-kan, login ditolak
+  createdAt DateTime @default(now())
+
+  transactions Transaction[] @relation("TransaksiOleh")
+  shifts       Shift[]       @relation("ShiftOleh")
+  auditLogs    AuditLog[]
+
+  @@unique([warungId, email]) // NULL tidak dianggap duplikat di Postgres:
+                              // kasir tanpa email tetap aman
+  @@index([warungId])
+  @@map("users")
+}
+
+model Product {
+  id       String @id @default(uuid())
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  name     String
+  price    Int    // rupiah, integer — hindari float untuk uang
+  category String @default("Umum")
+  icon     String @default("") // emoji per produk, fallback ikon kategori
+  stock    Int    @default(0)
   createdAt DateTime @default(now())
 
   items TransactionItem[]
   moves StockMove[]
 
+  @@index([warungId])
   @@map("products")
 }
 
-model Transaction {
-  id         String   @id @default(uuid())
-  subtotal   Int      @default(0)
-  discount   Int      @default(0)
-  tax        Int      @default(0)
-  total      Int
-  cash       Int
-  change     Int
-  payment    String   @default("CASH") // CASH | QRIS
-  createdAt  DateTime @default(now())
+model Meja {
+  id       String @id @default(uuid())
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
 
-  shiftId String?
-  shift   Shift?  @relation(fields: [shiftId], references: [id])
+  nomor String // "1".."20", unik per warung
+  // v1.2 koreksi #4: TIDAK ada kolom `status`. KOSONG/TERISI di-derive dari
+  // apakah ada Transaction {status: DRAFT, mejaId} yang terbuka. Menyimpan
+  // status = race check-then-act (dua klik "buka meja" → dua kebenaran).
+  // Derive untuk 20 meja murah: satu query grouped per render.
+
+  transactions Transaction[]
+
+  @@unique([warungId, nomor])
+  @@index([warungId])
+  @@map("mejas")
+}
+
+model Transaction {
+  id       String @id @default(uuid()) // UUID client-side saat offline → anti duplikat saat sync
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  shiftId   String?
+  shift     Shift?  @relation(fields: [shiftId], references: [id])
+  mejaId    String?
+  meja      Meja?   @relation(fields: [mejaId], references: [id])
+
+  // v1.2 koreksi #4: DRAFT = bill terbuka per meja (atau "bawa pulang" antrian);
+  // LUNAS = sudah dibayar. Rasio/laporan/hitung shift HANYA menghitung LUNAS.
+  status        String  @default("LUNAS") // DRAFT | LUNAS (const union)
+  subtotal      Int     @default(0)
+  discount      Int     @default(0)
+  tax           Int     @default(0)
+  total         Int     @default(0) // DRAFT baru dibuka masih 0; dihitung saat bayar
+  cash          Int     @default(0) // diisi saat bayar; DRAFT masih 0
+  change        Int     @default(0) // diisi saat bayar
+  payment       String  @default("CASH") // CASH | QRIS — diisi saat bayar
+  cashierId     String  // User.id kasir yang melayani (audit: siapa)
+  cashier       User    @relation("TransaksiOleh", fields: [cashierId], references: [id])
+  dibuatOffline Boolean @default(false) // true bila dibuat saat offline (transparansi konflik)
+  createdAt     DateTime @default(now())
 
   items TransactionItem[]
 
+  @@index([warungId, createdAt])
+  @@index([warungId, status]) // derive daftar meja + filter laporan LUNAS
   @@map("transactions")
 }
 
 model TransactionItem {
-  id            String      @id @default(uuid())
+  id       String @id @default(uuid())
+  // v1.2 koreksi #2: warungId DENORMALISASI — diisi saat checkout dalam tx
+  // yang sama. Tanpa ini, aturan #1 hanya bisa lewat join (lupa join = bocor).
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  productId     String
-  product       Product     @relation(fields: [productId], references: [id])
-  qty           Int
-  price         Int // snapshot harga saat jual
 
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name      String // snapshot nama saat transaksi (histori tidak bboleh berubah)
+  price     Int    // snapshot harga saat transaksi
+  qty       Int
+
+  @@index([warungId])
   @@map("transaction_items")
 }
 
 // Shift kasir: modal awal vs kas akhir (rekonsiliasi)
 model Shift {
   id        String    @id @default(uuid())
-  openedAt  DateTime  @default(now())
-  closedAt  DateTime?
-  modalAwal Int       @default(0)
-  kasFisik  Int?
-  status    String    @default("BUKA") // BUKA | TUTUP
+  warungId  String
+  warung    Warung    @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  cashierId  String
+  cashier    User     @relation("ShiftOleh", fields: [cashierId], references: [id])
+  modalAwal  Int
+  kasFisik   Int?     // diisi saat tutup
+  status     String   @default("BUKA") // BUKA | TUTUP (const union)
+  openedAt   DateTime @default(now())
+  closedAt   DateTime?
 
   transactions Transaction[]
 
+  // v1.2: keunikan shift BUKA tidak bisa pakai @@unique biasa (status bukan
+  // bagian key & SQLite tanpa partial unique index di Prisma) → keunangan
+  // dijaga transaksi aplikasi: BUKA-shift = $transaction { cek → create }
+  // + test race (lihat §2 aturan #8). Lihat juga desain.md §5.
+  @@index([warungId])
   @@map("shifts")
-}
-
-// Pengaturan global (key-value): pajak otomatis, dll.
-model Setting {
-  key   String @id
-  value String
-
-  @@map("settings")
 }
 
 // Kartu stok: semua perubahan stok tercatat
 model StockMove {
   id        String   @id @default(uuid())
+  warungId  String
+  warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  qty       Int // + masuk, - keluar
-  reason    String // PENJUALAN | KULAKAN | KOREKSI | STOK_AWAL
-  refId     String?
+  type      String // PENJUALAN | KULAKAN | KOREKSI | STOK_AWAL (const union)
+  qty       Int    // negatif = keluar
+  refId     String? // id transaksi sumber (kartu stok)
+  note      String?
+  createdBy String? // User.id pelaku (audit: siapa, kapan via createdAt)
   createdAt DateTime @default(now())
 
+  @@index([warungId, productId, createdAt])
   @@map("stock_moves")
+}
+
+// Pengaturan per warung (ganti key-value global).
+model Setting {
+  warungId  String @id
+  warung    Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  taxEnabled  Boolean  @default(true)
+  taxPct      Int      @default(10) // persen
+  receiptName String?  // header struk cetak (v1.2: ganti hardcoded "Warung Berkah Jaya")
+  jamBuka     String?  // "07:00" — dipakai rules anomali TRANSAKSI_LUAR_JAM (lampiran AI §4)
+  jamTutup    String?  // "21:00"
+
+  @@map("settings")
+}
+
+// v1.2 koreksi #6 — memenuhi PRD §11 "semua aksi tercatat"
+model AuditLog {
+  id        String   @id @default(uuid())
+  warungId  String
+  warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  userId    String?  // null = sistem (cron, sync)
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // LOGIN_OK | LOGIN_FAIL | PRICE_CHANGE | STOCK_KOREKSI |
+                     // SHIFT_OPEN | SHIFT_CLOSE | SETTING_CHANGE | DELETE_PRODUCT | ...
+  meta      String?  // JSON ringkas: {before, after} angka/id saja — bukan data mentah
+  createdAt DateTime @default(now())
+
+  @@index([warungId, createdAt])
+  @@map("audit_logs")
+}
+
+// dari lampiran AI (PRD-lampiran-ai.md §5) — model kosong sampai AI aktif
+model Insight {
+  id        String   @id @default(uuid())
+  warungId  String
+  warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  type      String   // NARRATIVE | ANOMALY | CHAT_SUMMARY  (String + const union —
+                     // jangan enum: dev masih SQLite, Prisma SQLite tidak support enum)
+  title     String
+  body      String   // narasi hasil AI (atau template fallback)
+  findings  String?  // JSON ringan: temuan rule §4 (bukti angka, untuk verifikasi)
+  source    String?  // tautan sumber: "/laporan?dari=..&samp=.." atau "/struk/<id>"
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([warungId, createdAt])
+  @@map("insights")
 }

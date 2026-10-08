@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Sidebar */}
           <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col bg-stone-950 text-white md:flex print:hidden">
             <div className="flex items-center gap-2 px-5 pb-4 pt-6">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500 text-xl">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-xl">
                 🧾
               </span>
               <div>

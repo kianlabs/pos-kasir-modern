@@ -2,11 +2,14 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { rupiah } from "@/lib/rupiah";
 import { PAYMENT_LABEL, shortId } from "@/lib/meta";
+import { currentWarungId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 export default async function TransaksiPage() {
+  const warungId = await currentWarungId();
   const trx = await prisma.transaction.findMany({
+    where: { warungId },
     orderBy: { createdAt: "desc" },
     take: 50,
     include: { items: { include: { product: true } } },
@@ -45,14 +48,14 @@ export default async function TransaksiPage() {
                   </td>
                   <td className="p-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                      t.payment === "QRIS" ? "bg-violet-100 text-violet-700" : "bg-orange-100 text-orange-700"
+                      t.payment === "QRIS" ? "bg-violet-100 text-violet-700" : "bg-accent-bg text-primary"
                     }`}>
                       {PAYMENT_LABEL[t.payment] ?? t.payment}
                     </span>
                   </td>
                   <td className="p-3 text-right font-bold">{rupiah(t.total)}</td>
                   <td className="p-3 text-right">
-                    <Link href={`/struk/${t.id}`} className="font-semibold text-orange-700 hover:underline">
+                    <Link href={`/struk/${t.id}`} className="font-semibold text-primary hover:underline">
                       Lihat →
                     </Link>
                   </td>

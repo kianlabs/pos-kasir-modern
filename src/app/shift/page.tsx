@@ -75,7 +75,7 @@ export default function ShiftPage() {
       <h1 className="mb-4 text-xl font-bold">Shift Kasir</h1>
 
       {active ? (
-        <div className="mb-5 rounded-xl border border-orange-200 bg-white p-4 shadow-sm">
+        <div className="mb-5 rounded-xl border border-warning-bg bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
               ● SHIFT BUKA
@@ -85,7 +85,7 @@ export default function ShiftPage() {
             </span>
             <span className="ml-auto text-sm">
               Modal <b>{rupiah(active.modalAwal)}</b> • Tunai masuk <b>{rupiah(active.tunai)}</b> •{" "}
-              Seharusnya <b className="text-orange-700">{rupiah(active.expected)}</b>
+              Seharusnya <b className="text-primary">{rupiah(active.expected)}</b>
             </span>
           </div>
           {closingId === active.id ? (
@@ -95,10 +95,10 @@ export default function ShiftPage() {
                 onChange={(e) => setKasFisik(e.target.value.replace(/\D/g, ""))}
                 inputMode="numeric"
                 placeholder="Hitung kas fisik di laci…"
-                className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500"
+                className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
               />
               <button onClick={() => tutup(active.id)}
-                className="rounded-lg bg-zinc-900 px-5 py-2 text-sm font-bold text-white hover:bg-zinc-700">
+                className="rounded-lg bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-hover">
                 Tutup shift
               </button>
               <button onClick={() => setClosingId(null)}
@@ -108,7 +108,7 @@ export default function ShiftPage() {
             </div>
           ) : (
             <button onClick={() => setClosingId(active.id)}
-              className="mt-3 rounded-lg bg-zinc-900 px-5 py-2 text-sm font-bold text-white hover:bg-zinc-700">
+              className="mt-3 rounded-lg bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-hover">
               Tutup shift…
             </button>
           )}
@@ -123,9 +123,9 @@ export default function ShiftPage() {
             onChange={(e) => setModal(e.target.value.replace(/\D/g, ""))}
             inputMode="numeric"
             placeholder="Modal awal laci (Rp)…"
-            className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500"
+            className="flex-1 rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
           />
-          <button className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white hover:bg-orange-700">
+          <button className="rounded-lg bg-primary px-5 py-2 text-sm font-bold text-white hover:bg-primary-hover">
             Buka shift
           </button>
         </form>
@@ -165,7 +165,7 @@ export default function ShiftPage() {
                   <td className="p-3 text-right font-bold">{rupiah(s.expected)}</td>
                   <td className="p-3 text-right">{s.kasFisik != null ? rupiah(s.kasFisik) : "—"}</td>
                   <td className={`p-3 text-right font-bold ${
-                    s.selisih == null ? "" : s.selisih === 0 ? "text-green-700" : "text-red-600"
+                    s.selisih == null ? "" : s.selisih === 0 ? "text-green-700" : "text-danger"
                   }`}>
                     {s.selisih == null ? "—" : `${s.selisih > 0 ? "+" : ""}${rupiah(s.selisih)}`}
                   </td>

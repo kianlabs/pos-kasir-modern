@@ -2,12 +2,19 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { rupiah } from "@/lib/rupiah";
 import { PAYMENT_LABEL, shortId } from "@/lib/meta";
+import { currentWarungId } from "@/lib/warung";
 import PrintButton from "./PrintButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function StrukPage({ params }: { params: { id: string } }) {
-  const trx = await prisma.transaction.findUnique({
-    where: { id: params.id },
-    include: { items: { include: { product: true } } },
+  const warungId = await currentWarungId();
+  const trx = await prisma.transaction.findFirst({
+    where: { id: params.id, warungId },
+    include: {
+      items: { include: { product: true } },
+      warung: { include: { settings: true } },
+    },
   });
 
   if (!trx)
@@ -15,25 +22,29 @@ export default async function StrukPage({ params }: { params: { id: string } }) 
       <div className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center shadow-sm">
         Transaksi tidak ditemukan.
         <br />
-        <Link href="/" className="font-bold text-orange-700 hover:underline">
+        <Link href="/" className="font-bold text-primary hover:underline">
           Kembali ke kasir
         </Link>
       </div>
     );
 
+  const receiptName =
+    trx.warung.settings[0]?.receiptName || trx.warung.nama || "Warung Berkah Jaya";
+  const alamat = trx.warung.alamat || "Jl. Merdeka No. 45, Kartasura";
+
   return (
     <div>
       <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-sm">
-        <h1 className="text-center text-lg font-bold">🧾 Warung Berkah Jaya</h1>
+        <h1 className="text-center text-lg font-bold">🧾 {receiptName}</h1>
         <p className="text-center text-xs text-zinc-500">
-          Jl. Merdeka No. 45, Kartasura
+          {alamat}
           <br />
           {trx.createdAt.toLocaleString("id-ID")} • #{shortId(trx.id)}
         </p>
         <div className="my-3 border-t-2 border-dashed" />
         {trx.items.map((i) => (
           <div key={i.id} className="mb-1.5">
-            <div className="font-bold">{i.product.name}</div>
+            <div className="font-bold">{i.name || i.product.name}</div>
             <div className="flex justify-between text-zinc-700">
               <span>
                 {i.qty} × {rupiah(i.price)}
@@ -84,7 +95,7 @@ export default async function StrukPage({ params }: { params: { id: string } }) 
       <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
         <Link
           href="/"
-          className="flex-1 rounded-lg bg-zinc-900 py-2.5 text-center text-sm font-bold text-white hover:bg-zinc-700"
+          className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
         >
           Transaksi baru
         </Link>

@@ -1,15 +1,25 @@
 import { prisma } from "@/lib/prisma";
+import { currentWarungId } from "@/lib/warung";
 
-type SettingDb = { setting: Pick<typeof prisma.setting, "findMany"> };
+type SettingDb = {
+  setting: {
+    findUnique: typeof prisma.setting.findUnique;
+  };
+};
 
-// Pajak otomatis dari pengaturan global.
+// Pajak otomatis dari pengaturan per-warung.
 // Kembalikan { enabled, pct } — checkout menghitung tax bila enabled.
-export async function getTaxSetting(tx: SettingDb = prisma) {
-  const rows = await tx.setting.findMany({
-    where: { key: { in: ["taxEnabled", "taxPct"] } },
+export async function getTaxSetting(tx: SettingDb = prisma, warungId?: string) {
+  const wId = warungId ?? (await currentWarungId());
+  const row = await tx.setting.findUnique({
+    where: { warungId: wId },
   });
-  const map = new Map(rows.map((r) => [r.key, r.value]));
-  const enabled = map.get("taxEnabled") !== "0";
-  const pct = Math.min(100, Math.max(0, Number(map.get("taxPct") ?? 10) || 0));
+
+  if (!row) {
+    return { enabled: true, pct: 10 };
+  }
+
+  const enabled = !!row.taxEnabled;
+  const pct = Math.min(100, Math.max(0, Number(row.taxPct) || 0));
   return { enabled, pct };
 }

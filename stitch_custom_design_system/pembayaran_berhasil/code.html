@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KRING! - Pembayaran Berhasil</title>
+<!-- Google Fonts: Geist -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "danger": "#C52A2A",
+            "surface-container-lowest": "#ffffff",
+            "ink-700": "#404040",
+            "surface-bright": "#f9f9f9",
+            "outline": "#747878",
+            "inverse-surface": "#2f3131",
+            "on-primary-container": "#858383",
+            "secondary": "#5e5e5e",
+            "on-secondary-container": "#646464",
+            "surface-container-low": "#f3f3f3",
+            "primary-container": "#1c1b1b",
+            "on-surface": "#1a1c1c",
+            "on-tertiary-fixed-variant": "#484645",
+            "surface-container": "#eeeeee",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#1c1b1a",
+            "inverse-primary": "#c8c6c5",
+            "surface-container-high": "#e8e8e8",
+            "primary-fixed": "#e5e2e1",
+            "surface-container-highest": "#e2e2e2",
+            "error-container": "#ffdad6",
+            "on-background": "#1a1c1c",
+            "surface-variant": "#e2e2e2",
+            "ink-950": "#171717",
+            "surface-dim": "#dadada",
+            "tertiary": "#000000",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed": "#1c1b1a",
+            "background": "#f9f9f9",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#c4c7c7",
+            "on-error-container": "#93000a",
+            "ink-100": "#F5F5F5",
+            "on-surface-variant": "#444748",
+            "ink-200": "#E5E5E5",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#e6e2df",
+            "ink-500": "#737373",
+            "canvas": "#FAFAFA",
+            "on-secondary-fixed-variant": "#464747",
+            "secondary-container": "#e3e2e2",
+            "secondary-fixed": "#e3e2e2",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-primary-fixed-variant": "#474746",
+            "primary-fixed-dim": "#c8c6c5",
+            "on-primary-fixed": "#1c1b1b",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#cac6c4",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface": "#FFFFFF",
+            "ink-300": "#D4D4D4",
+            "primary": "#000000",
+            "on-tertiary-container": "#868382",
+            "inverse-on-surface": "#f0f1f1",
+            "surface-tint": "#5f5e5e",
+            "success": "#16803A"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "gutter-mobile": "0.75rem",
+            "space-xl": "2rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin": "1.5rem",
+            "gutter": "1rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Geist", "sans-serif"],
+            "numeral-hero-mobile": ["Geist", "sans-serif"],
+            "display-hero": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist", "sans-serif"],
+            "numeral-md": ["Geist", "sans-serif"],
+            "body-lg": ["Geist", "sans-serif"],
+            "headline-sm": ["Geist", "sans-serif"],
+            "numeral-hero": ["Geist", "sans-serif"],
+            "display-hero-mobile": ["Geist", "sans-serif"],
+            "headline-md": ["Geist", "sans-serif"],
+            "label-lg": ["Geist", "sans-serif"],
+            "numeral-lg": ["Geist", "sans-serif"],
+            "caption": ["Geist", "sans-serif"],
+            "label-md": ["Geist", "sans-serif"]
+          },
+          "fontSize": {
+            "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "numeral-hero-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "numeral-md": ["15px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "numeral-hero": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "numeral-lg": ["20px", { "lineHeight": "26px", "fontWeight": "700" }],
+            "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-canvas text-ink-950 font-body-md text-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-ink-200">
+<!-- Header Ringkas Tablet -->
+<header class="w-full bg-surface border-b border-ink-200 px-space-xl py-space-sm h-16 flex items-center justify-between z-10 shrink-0">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-ink-950 tracking-tight">KRING!</span>
+<span class="text-ink-300">|</span>
+<span class="font-label-lg text-label-lg text-ink-950">Warung Bu Kris</span>
+<span class="text-ink-500 font-body-md text-body-md">• Tebet</span>
+</div>
+<div class="h-4 w-px bg-ink-200 hidden sm:block"></div>
+<div class="hidden sm:flex items-center gap-space-xs text-ink-700">
+<span class="material-symbols-outlined text-ink-500" style="font-size: 18px;">badge</span>
+<span class="font-body-md text-body-md">Kasir Budi Santoso</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs bg-ink-100 px-space-sm py-1 rounded-lg border border-ink-200">
+<span class="material-symbols-outlined text-ink-700" style="font-size: 16px;">schedule</span>
+<span class="font-label-md text-label-md text-ink-700">Shift Pagi #02</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-lg bg-surface border border-ink-200">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span class="font-label-md text-label-md text-ink-700">Online • Tersinkron</span>
+</div>
+</div>
+</header>
+<!-- Kontainer Terpusat Elegan Momen Pembayaran Berhasil -->
+<main class="flex-1 flex items-center justify-center p-space-md my-auto">
+<div class="w-full max-w-[640px] bg-surface border border-ink-200 rounded-[24px] p-space-xl shadow-[0_8px_24px_rgba(0,0,0,0.04)] flex flex-col">
+<!-- Lonceng & Indikator Sukses Tertahan -->
+<div class="flex flex-col items-center text-center">
+<div class="w-16 h-16 rounded-full bg-ink-100 border border-ink-200 flex items-center justify-center mb-space-md relative">
+<span class="material-symbols-outlined text-ink-950" style="font-size: 32px; font-variation-settings: 'FILL' 1;">notifications_active</span>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-success text-surface flex items-center justify-center border-2 border-surface shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-ink-950 tracking-tight mb-space-xs">KRING! Pembayaran Berhasil</h1>
+<p class="font-body-md text-body-md text-ink-500 max-w-md">Transaksi #KR-202410-0084 telah dicatat dan struk siap dicetak.</p>
+</div>
+<!-- Box Kembalian Dominan (Elemen Finansial Terbesar) -->
+<div class="mt-space-lg mb-space-lg bg-canvas border border-ink-200 rounded-[16px] p-space-lg text-center">
+<span class="font-label-md text-label-md tracking-wider text-ink-500 block uppercase mb-1">KEMBALIAN TUNAI</span>
+<div class="font-display-hero text-display-hero text-ink-950 tabular-nums leading-none py-1">
+          Rp21.465
+        </div>
+</div>
+<!-- Ringkasan Struk Kompak -->
+<div class="bg-surface rounded-xl border border-ink-200 divide-y divide-ink-200 mb-space-xl">
+<div class="flex justify-between items-center px-space-md py-3">
+<span class="font-body-md text-body-md text-ink-500">Meja</span>
+<span class="font-label-lg text-label-lg text-ink-950 font-semibold">Meja 04 <span class="font-normal text-ink-500 text-caption font-caption">(Makan di Tempat)</span></span>
+</div>
+<div class="flex justify-between items-center px-space-md py-3">
+<span class="font-body-md text-body-md text-ink-500">Waktu</span>
+<span class="font-label-lg text-label-lg text-ink-950 tabular-nums">12:48 WIB</span>
+</div>
+<div class="flex justify-between items-center px-space-md py-3">
+<span class="font-body-md text-body-md text-ink-500">Total Belanja</span>
+<span class="font-label-lg text-label-lg text-ink-950 font-semibold tabular-nums">Rp128.535</span>
+</div>
+<div class="flex justify-between items-center px-space-md py-3">
+<span class="font-body-md text-body-md text-ink-500">Diterima (Tunai)</span>
+<span class="font-label-lg text-label-lg text-ink-950 tabular-nums">Rp150.000</span>
+</div>
+<div class="flex justify-between items-center px-space-md py-3 bg-ink-100/50">
+<span class="font-body-md text-body-md text-ink-700 font-medium">Metode Pembayaran</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-ink-700" style="font-size: 18px;">payments</span>
+<span class="font-label-lg text-label-lg text-ink-950 font-semibold">Tunai</span>
+</div>
+</div>
+</div>
+<!-- Baris Aksi Utama Tablet Touch-First Ergonomics -->
+<div class="flex flex-col gap-space-sm">
+<!-- Tombol Primer Dominan -->
+<button class="w-full h-14 min-h-[56px] bg-ink-950 hover:bg-ink-950/90 active:scale-[0.98] transition-all text-surface font-headline-sm text-headline-sm tracking-wide rounded-xl flex items-center justify-center gap-space-sm shadow-sm" onclick="this.classList.add('opacity-90')">
+<span>TRANSAKSI BARU</span>
+<span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+</button>
+<!-- Tombol Sekunder Berdampingan -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="h-12 min-h-[48px] bg-surface hover:bg-ink-100 active:scale-[0.98] transition-all border border-ink-200 text-ink-950 font-label-lg text-label-lg rounded-xl flex items-center justify-center gap-space-sm">
+<span class="material-symbols-outlined text-ink-700" style="font-size: 20px;">print</span>
+<span>Cetak Struk</span>
+</button>
+<button class="h-12 min-h-[48px] bg-surface hover:bg-ink-100 active:scale-[0.98] transition-all border border-ink-200 text-ink-950 font-label-lg text-label-lg rounded-xl flex items-center justify-center gap-space-sm">
+<span class="material-symbols-outlined text-ink-700" style="font-size: 20px;">send</span>
+<span>Kirim Struk WhatsApp</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Info Kasir Terminal -->
+<footer class="w-full text-center py-space-sm text-ink-500 font-caption text-caption border-t border-ink-200/60 bg-surface/50">
+    KRING! Kasir Pintar UMKM • Sistem Operasional Terpadu Warung &amp; Kedai Mandiri
+  </footer>
+</body></html>

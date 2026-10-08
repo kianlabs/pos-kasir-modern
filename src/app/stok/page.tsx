@@ -6,7 +6,8 @@ import { productIcon } from "@/lib/meta";
 type Move = {
   id: string;
   qty: number;
-  reason: string;
+  type?: string;
+  reason?: string;
   refId: string | null;
   createdAt: string;
   product: { name: string; category: string; icon: string };
@@ -27,11 +28,14 @@ export default function StokPage() {
     fetch("/api/stock-moves").then((r) => r.json()).then(setMoves).catch(() => {});
   }, []);
 
-  const filtered = moves.filter(
-    (m) =>
+  const filtered = moves.filter((m) => {
+    const rawReason = m.type || m.reason || "";
+    const label = REASON_LABEL[rawReason] ?? rawReason;
+    return (
       m.product.name.toLowerCase().includes(filter.toLowerCase()) ||
-      (REASON_LABEL[m.reason] ?? m.reason).toLowerCase().includes(filter.toLowerCase())
-  );
+      label.toLowerCase().includes(filter.toLowerCase())
+    );
+  });
 
   return (
     <div>
@@ -41,7 +45,7 @@ export default function StokPage() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="🔍 Cari produk / alasan…"
-          className="ml-auto w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 sm:max-w-xs"
+          className="ml-auto w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary sm:max-w-xs"
         />
       </div>
       <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -56,27 +60,30 @@ export default function StokPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((m) => (
-                <tr key={m.id} className="border-b last:border-0 hover:bg-zinc-50">
-                  <td className="p-3 text-zinc-600">
-                    {new Date(m.createdAt).toLocaleString("id-ID", {
-                      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-                    })}
-                  </td>
-                  <td className="p-3 font-medium">
-                    <span className="mr-2">{productIcon(m.product)}</span>
-                    {m.product.name}
-                  </td>
-                  <td className="p-3">
-                    <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold">
-                      {REASON_LABEL[m.reason] ?? m.reason}
-                    </span>
-                  </td>
-                  <td className={`p-3 text-right font-bold ${m.qty < 0 ? "text-red-600" : "text-green-700"}`}>
-                    {m.qty > 0 ? `+${m.qty}` : m.qty}
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((m) => {
+                const rawReason = m.type || m.reason || "";
+                return (
+                  <tr key={m.id} className="border-b last:border-0 hover:bg-zinc-50">
+                    <td className="p-3 text-zinc-600">
+                      {new Date(m.createdAt).toLocaleString("id-ID", {
+                        day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="p-3 font-medium">
+                      <span className="mr-2">{productIcon(m.product)}</span>
+                      {m.product.name}
+                    </td>
+                    <td className="p-3">
+                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold">
+                        {REASON_LABEL[rawReason] ?? rawReason}
+                      </span>
+                    </td>
+                    <td className={`p-3 text-right font-bold ${m.qty < 0 ? "text-danger" : "text-green-700"}`}>
+                      {m.qty > 0 ? `+${m.qty}` : m.qty}
+                    </td>
+                  </tr>
+                );
+              })}
               {filtered.length === 0 && (
                 <tr><td colSpan={4} className="p-8 text-center text-zinc-500">Belum ada pergerakan stok.</td></tr>
               )}

@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
+import { currentWarungId, currentKasirId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const warungId = await currentWarungId();
   const products = await prisma.product.findMany({
+    where: { warungId },
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
   return NextResponse.json(products);
 }
 
 export async function POST(req: Request) {
+  const warungId = await currentWarungId();
+  const kasirId = await currentKasirId(warungId);
+
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const name = String(body.name ?? "").trim();
@@ -31,11 +37,17 @@ export async function POST(req: Request) {
   }
 
   const product = await prisma.product.create({
-    data: { name, price, stock, category, icon },
+    data: { warungId, name, price, stock, category, icon },
   });
   if (stock > 0) {
     await prisma.stockMove.create({
-      data: { productId: product.id, qty: stock, reason: "STOK_AWAL" },
+      data: {
+        warungId,
+        productId: product.id,
+        qty: stock,
+        type: "STOK_AWAL",
+        createdBy: kasirId,
+      },
     });
   }
   return NextResponse.json(product, { status: 201 });

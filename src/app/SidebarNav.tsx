@@ -26,7 +26,7 @@ export default function SidebarNav() {
             href={n.href}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
               active
-                ? "bg-orange-500 text-white shadow"
+                ? "bg-primary text-white shadow"
                 : "text-zinc-400 hover:bg-stone-800 hover:text-white"
             }`}
           >

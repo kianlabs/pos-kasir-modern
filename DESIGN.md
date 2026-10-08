@@ -1,300 +1,471 @@
----
-version: alpha
-name: KRING!
-description: "Hangat, playful, dan cepat dibaca — nuansa warung makan (krem gading, oranye bakar) dengan chrome gelap untuk sidebar kasir."
-colors:
-  primary: "#C2410C"
-  primary-hover: "#9A3412"
-  primary-bright: "#EA580C"
-  secondary: "#18181B"
-  tertiary: "#15803D"
-  neutral: "#FAF6F0"
-  surface: "#FFFFFF"
-  text-muted: "#71717A"
-  success-bg: "#DCFCE7"
-  warning: "#92400E"
-  warning-bg: "#FEF3C7"
-  danger: "#B91C1C"
-  danger-bg: "#FEF2F2"
-  accent-bg: "#FFF7ED"
-typography:
-  h1:
-    fontFamily: Inter
-    fontSize: 1.5rem
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: "-0.01em"
-  h2:
-    fontFamily: Inter
-    fontSize: 1.125rem
-    fontWeight: 700
-    lineHeight: 1.3
-  body-md:
-    fontFamily: Inter
-    fontSize: 1rem
-    fontWeight: 400
-    lineHeight: 1.5
-  body-sm:
-    fontFamily: Inter
-    fontSize: 0.875rem
-    fontWeight: 400
-    lineHeight: 1.5
-  label-sm:
-    fontFamily: Inter
-    fontSize: 0.75rem
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: "0.01em"
-  receipt:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
-    fontSize: 0.75rem
-    fontWeight: 400
-    lineHeight: 1.45
-rounded:
-  md: 6px
-  lg: 8px
-  xl: 12px
-  full: 9999px
-spacing:
-  sm: 8px
-  md: 16px
-  lg: 24px
-components:
-  page:
-    backgroundColor: "{colors.neutral}"
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "#FFFFFF"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  button-primary-hover:
-    backgroundColor: "{colors.primary-hover}"
-    textColor: "#FFFFFF"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.primary}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  button-secondary-hover:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.primary}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  button-danger:
-    backgroundColor: "{colors.danger}"
-    textColor: "#FFFFFF"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  button-disabled:
-    backgroundColor: "#FFEDD5"
-    textColor: "#9A3412"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "10px 16px"
-  input:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.secondary}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.lg}"
-    padding: "8px 12px"
-  card:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.md}"
-  table-cell-meta:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text-muted}"
-    typography: "{typography.body-sm}"
-  sidebar:
-    backgroundColor: "{colors.secondary}"
-    textColor: "#D4D4D8"
-    typography: "{typography.body-sm}"
-  sidebar-item-active:
-    backgroundColor: "{colors.primary}"
-    textColor: "#FFFFFF"
-    typography: "{typography.body-sm}"
-    rounded: "{rounded.lg}"
-    padding: "10px 12px"
-  badge-success:
-    backgroundColor: "{colors.success-bg}"
-    textColor: "{colors.tertiary}"
-    typography: "{typography.label-sm}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
-  badge-warning:
-    backgroundColor: "{colors.warning-bg}"
-    textColor: "{colors.warning}"
-    typography: "{typography.label-sm}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
-  badge-danger:
-    backgroundColor: "{colors.danger-bg}"
-    textColor: "{colors.danger}"
-    typography: "{typography.label-sm}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
-  badge-accent:
-    backgroundColor: "{colors.accent-bg}"
-    textColor: "{colors.primary}"
-    typography: "{typography.label-sm}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
-  empty-state:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text-muted}"
-    typography: "{typography.body-sm}"
-  receipt:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.secondary}"
-    typography: "{typography.receipt}"
+# KRING! — Design specification
+
+## Dokumen acuan
+
+Dokumen ini menjadi sumber acuan visual dan UX untuk membuat rancangan KRING! di Google Stitch. KRING! adalah aplikasi point of sale berbasis web untuk warung makan dan UMKM kuliner Indonesia. Pengguna utamanya adalah kasir yang bekerja cepat melalui tablet serta owner yang memantau usaha melalui ponsel.
+
+**Tagline:** Kring! Kasir bunyi, cuan masuk.
+
+**Arah visual:** monochrome, hangat, bersih, premium, tetapi tetap terasa ramah dan membumi. Hindari tampilan enterprise yang padat, kaku, atau terlalu teknis.
+
 ---
 
-## Overview
+## Tujuan pengalaman
 
-KRING! 🔔 — *"Kasir bunyi, cuan masuk."* Identitas visualnya hangat seperti warung
-makan itself: krem gading sebagai kanvas, oranye bakar sebagai warna aksi dan
-karakter, ditopang chrome gelap untuk sidebar kasir. Playful lewat emoji per
-produk dan radius yang ramah — bukan lewat dekorasi yang memperlambat kasir.
-Emoji adalah **identitas produk/kategori** (pilihan pelanggan saat input menu);
-ikon chrome UI (nav, judul section, placeholder pencarian) memakai satu set ikon
-SVG — lihat Don'ts.
+1. Kasir dapat menyelesaikan transaksi umum dalam maksimal dua langkah utama setelah produk dipilih.
+2. Total belanja, nominal pembayaran, dan kembalian selalu menjadi informasi paling menonjol.
+3. Semua kontrol utama nyaman disentuh di tablet tanpa bergantung pada hover.
+4. Owner dapat memahami kondisi usaha dalam beberapa detik dari layar ponsel.
+5. Status online, offline, sinkronisasi, shift, meja, dan stok tidak boleh ambigu.
+6. Antarmuka tetap terasa konsisten pada tablet, desktop, dan ponsel.
 
-Prinsipnya satu: **kontras & kecepatan baca di atas keindahan.** Kasir membaca
-layar dalam 1 detik sambil melayani antrean; pemilik membaca angka di HP-nya di
-rumah. Warna status selalu berpasangan dengan teks — jangan pernah menyampaikan
-"lunas"/"menipis" lewat warna saja.
+## Karakter produk
 
-## Colors
+- **Cepat:** aksi utama terlihat tanpa perlu mencari.
+- **Tenang:** sedikit warna, hierarki kuat, dan ruang kosong cukup.
+- **Ramah:** bahasa Indonesia sehari-hari, bukan istilah teknis.
+- **Terpercaya:** status transaksi dan data ditampilkan secara eksplisit.
+- **Touch-first:** target sentuh minimum 48 x 48 px.
 
-- **Primary (#C2410C) — "Oranye Bakar":** driver interaksi tunggal: tombol
-  utama, link, fokus, aksen badge, latar item sidebar aktif (putih di atasnya
-  5.2:1 — lolos WCAG AA). Itulah kenapa base-nya orange-700, bukan orange-600.
-- **Primary Hover (#9A3412):** versi lebih gelap untuk hover/pressed — kontras
-  7.3:1, memberi rasa "ditekan" tanpa animasi.
-- **Primary Bright (#EA580C) — orange-600:** aksen dekoratif & sorotan di atas
-  gelap (5.0:1 di atas secondary). **Bukan** latar teks putih kecil — putih
-  di atasnya hanya 3.0:1 (gagal AA; tercatat di UI sekarang: nav aktif memakai
-  orange-500 → 2.8:1).
-- **Secondary (#18181B) — zinc-900:** sidebar, chrome gelap, dan teks kuat di
-  kartu. Teks putih di atasnya 17.9:1.
-- **Tertiary (#15803D) — hijau daun:** teks status sukses ("LUNAS", stok aman)
-  di atas surface 5.0:1 — pasangan dengan `success-bg`.
-- **Neutral (#FAF6F0) — krem gading:** latar halaman. Satu-satunya warna "hangat"
-  besar; jangan ditimpa abu-abu murni yang membuat app terasa dingin.
-- **Surface (#FFFFFF):** kartu, input, tabel — kontras dengan neutral supaya
-  konten "terangkat" tanpa perlu bayangan tebal.
-- **Text Muted (#71717A) — zinc-500:** teks sekunder (tanggal, sub-teks) —
-  4.8:1 di putih. **Bukan zinc-400** (2.8:1, gagal — tercatat di audit).
-- **Status trio:** `success-bg`/`tertiary`, `warning-bg`/`warning`,
-  `danger-bg`/`danger` — semua lolos AA sebagai badge. Untuk tombol destruktif
-  pakai `danger` (#B91C1C) dengan teks putih.
-- **Accent BG (#FFF7ED):** oranye sangat muda untuk sorotan baris/hover ringan
-  di tabel tanpa mengubah hierarki.
+## Bahasa antarmuka
 
-## Typography
+Gunakan Bahasa Indonesia di seluruh tampilan.
 
-Inter untuk seluruh UI (**catatan implementasi:** `globals.css` sudah merujuk
-Inter tetapi belum dimuat — muat via `next/font` sekali di `layout.tsx`, atau
-jatuhkan sengaja ke system-ui dan hapus rujukan matinya; jangan biarkan
-tergantung seperti sekarang).
+- Gunakan **Bayar**, bukan *Checkout*.
+- Gunakan **Kembalian**, bukan *Change*.
+- Gunakan **Buka Shift** dan **Tutup Shift**, bukan *Start/End Session*.
+- Gunakan **Bawa Pulang**, bukan *Takeaway*.
+- Gunakan **Tersimpan di perangkat**, bukan pesan teknis tentang cache.
+- Pesan error harus menjelaskan masalah dan tindakan berikutnya.
 
-- Hierarki berat: **700** untuk judul (h1 24px, h2 18px), **600** untuk label
-  kecil/heading tabel, **400** untuk isi. Tidak ada font-weight aneh.
-- `label-sm` (12px/600) = kapital opsional untuk header tabel & badge; jangan
-  turun di bawah 12px untuk teks berisi (audit menemukan label 10px — hindari).
-- `receipt` memakai monospace stack system (tanpa webfont tambahan) — kolom
-  struk 80mm wajib monospace supaya rata.
+---
 
-## Layout & Spacing
+## Sistem visual
 
-- Skala spacing: `sm` 8 / `md` 16 / `lg` 24. Pola lapangan: `gap-3`–`gap-4`
-  antar kartu, `p-3`–`p-4` dalam kartu, `p-6`–`p-8` margin halaman.
-- Grid kasir: katalog (2–4 kolom responsif) + panel keranjang 360px sticky di
-  `xl`; di bawah `xl` keranjang turun ke bawah (target perbaikan: sticky lebih
-  awal atau tombol bayar mengambang — lihat audit UX).
-- Tabel selalu dibungkus `overflow-x-auto` + `min-w-*` — HP kasir jangan
-  pernah menyebabkan zoom-out.
-- Sidebar gelap tetap (desktop) + topbar scroll horizontal (mobile) — item
-  aktif memakai `sidebar-item-active`.
-- Kontrol yang disentuh jari (tombol aksi, stepper ±, chip uang cepat) punya
-  area sentuh **≥44×44px** — padding bukan ukuran teks yang menentukan.
+### Palet warna
 
-## Elevation & Depth
+KRING! menggunakan grayscale sebagai identitas utama. Warna semantik hanya muncul saat benar-benar diperlukan.
 
-Ringan dan datar: **`shadow-sm`** untuk kartu/tabel (17 pemakaian — default),
-**`shadow-md`** hanya untuk modal & dropdown. Tidak ada shadow tebal/neon.
-Kartu dibedakan dari latar lewat `surface` vs `neutral`, bukan bayangan.
-Scrollbar ramping 6px (`.nice-scroll`) — milik KRING!, pertahankan.
+| Token | Nilai | Penggunaan |
+|---|---|---|
+| Ink 950 | `#171717` | Teks utama, tombol primer |
+| Ink 700 | `#404040` | Teks sekunder kuat |
+| Ink 500 | `#737373` | Teks pendukung |
+| Ink 300 | `#D4D4D4` | Border kuat, disabled |
+| Ink 200 | `#E5E5E5` | Border standar |
+| Ink 100 | `#F5F5F5` | Selected surface ringan |
+| Canvas | `#FAFAFA` | Latar aplikasi |
+| Surface | `#FFFFFF` | Kartu, modal, panel |
+| Success | `#16803A` | Pembayaran sukses saja |
+| Danger | `#C52A2A` | Gagal, batal, void |
 
-## Shapes
+**Aturan warna:**
 
-Diukur dari UI berjalan (bukan tebakan) — nilai = nilai default Tailwind,
-sehingga merge token tidak mengubah render:
+- Tombol primer menggunakan `#171717` dengan teks putih.
+- Jangan memakai oranye, biru korporat, pastel, atau gradient dekoratif.
+- Status offline menggunakan grayscale dengan ikon dan label eksplisit; jangan mengandalkan warna saja.
+- Success dan danger hanya dipakai untuk umpan balik penting, bukan dekorasi.
+- Setiap teks harus memiliki kontras yang jelas terhadap latarnya.
 
-- `rounded-md` (6px) = kontrol kecil (stepper stok) — pemakaian jarang.
-- `rounded-lg` (8px) = **default interaktif & kartu**: tombol CTA, input,
-  kartu, item sidebar aktif (41+ pemakaian).
-- `rounded-xl` (12px) = panel besar (keranjang pesanan, kartu KPI).
-- `rounded-full` = badge status, chip kategori, chip uang cepat.
-- Struk cetak: tanpa radius (dibersihkan di print CSS).
+### Tipografi
 
-## Components
+Gunakan sans-serif modern yang bersih dan mudah dibaca, misalnya Inter atau Geist. Jangan memakai lebih dari satu keluarga font.
 
-- **`button-primary`** satu-satunya aksi high-emphasis per layar (mis. "Bayar").
-  Pasangan hover-nya wajib `button-primary-hover`. Jangan ada dua tombol
-  primary di satu viewport.
-- **`button-secondary`** untuk aksi sekunder (Batal, Kembali); **`button-danger`**
-  hanya untuk aksi merusak & selalu di belakang aksi aman, dengan konfirmasi
-  modal (bukan `confirm()` native — lihat Do's).
-- **`button-disabled`** untuk CTA yang belum bisa dijalankan (mis. "Bayar Rp0"):
-  oranye sangat muda + teks oranye gelap — terbaca "mati tapi jelas"; jangan
-  putih-di-atas-oranye-pucat yang hilang di mata.
-- **`input`** = field standar; fokus memakai ring `primary` (2px, offset 2px).
-- **`card`** = wadah konten utama; jangan bersarang lebih dari 2 tingkat.
-- **`sidebar` / `sidebar-item-active`** = navigasi; item aktif memakai bg
-  `primary` + teks putih (5.2:1). UI sekarang memakai orange-500/putih (2.8:1,
-  gagal AA) — koreksi masuk Fase 0.
-- **Badge** (`success`/`warning`/`danger`/`accent`) selalu berisi teks —
-  warna hanya memperkuat.
-- **`empty-state`** untuk setiap area data kosong (chart, tabel, list, KPI):
-  satu baris teks muted "Belum ada …". Chart kosong = sembunyikan sumbu atau
-  tampilkan pesan — jangan kanvas bertulang kosong (bug tercatat: sumbu tanpa
-  bar).
-- **`receipt`** khusus pratinjau & area cetak struk 80mm.
+- **Display:** 32–40 px, bobot 700; angka kembalian dan total besar.
+- **Heading 1:** 28–32 px, bobot 700.
+- **Heading 2:** 20–24 px, bobot 650–700.
+- **Body:** 15–16 px, bobot 400–500.
+- **Label:** 13–14 px, bobot 600.
+- **Caption:** 12–13 px, bobot 500.
+- Gunakan angka tabular untuk harga, total, omzet, dan laporan.
+- Format mata uang: `Rp25.000`, tanpa angka desimal.
 
-## Do's and Don'ts
+### Bentuk dan kedalaman
 
-**Do**
-- DO gunakan `rupiah()`/format Rupiah terpusat untuk semua angka — konsistensi `Rp12.000`.
-- DO teks sekunder minimal `text-muted` (#71717A) — sudah lolos AA.
-- DO status = warna + label teks (dan ikon), selalu bertiga.
-- DO sediakan `focus-visible` ring (2px `primary`) di setiap kontrol interaktif.
-- DO muat Inter via `next/font` sekali, atau hapus rujukan font-nya.
-- DO jaga satu `button-primary` per layar; sisanya secondary/danger.
-- DO beri `empty-state` di setiap area data kosong (chart, tabel, list, KPI).
-- DO tampilkan nilai kosong/nol dengan teks `text-muted` (`—`, `Rp0`) — bukan
-  warna aksi (dash "Kembalian —" jangan oranye).
-- DO jaga target sentuh ≥44px untuk kontrol kasir — stepper ±, chip uang cepat,
-  dan segmen Tunai/QRIS di UI sekarang 28–38px, tambah padding.
+- Radius kartu: 16 px.
+- Radius tombol dan input: 12 px.
+- Radius modal besar: 24 px.
+- Border standar: 1 px solid `#E5E5E5`.
+- Shadow ringan: `0 8px 24px rgba(0,0,0,0.06)`.
+- Hindari glassmorphism, blur berlebihan, neon, dan shadow gelap.
+- Ikon menggunakan gaya outline sederhana dengan ketebalan konsisten.
 
-**Don't**
-- DON'T pakai `text-zinc-400`/`#A1A1AA` untuk teks kecil (2.8:1 — gagal WCAG, tercatat di audit).
-- DON'T pakai `primary-bright` (#EA580C) sebagai latar teks putih kecil — hanya untuk aksen di atas gelap atau elemen tanpa teks.
-- DON'T beri latar oranye terang (orange-500/600) pada teks putih di bawah 18px (2.8–3.0:1, gagal AA) — latar tombol/chip/nav aktif pakai `primary` (#C2410C).
-- DON'T pakai hitam solid sebagai latar tombol aksi (tercatat: `Terapkan`) —
-  aksi selalu `button-primary`/`button-secondary`; hitam hanya chrome sidebar
-  (`secondary`).
-- DON'T pakai emoji sebagai ikon chrome UI (nav, judul section, placeholder
-  pencarian) — emoji khusus identitas produk/kategori; chrome pakai satu set
-  ikon SVG.
-- DON'T sampaikan makna status lewat warna saja (buta warna).
-- DON'T pakai `alert()`/`confirm()` native — pakai modal komponen KRING!.
-- DON'T menambah webfont kedua (biaya loading di HP Android kentang).
-- DON'T memakai bayangan tebal, gradient mencolok, atau oranye terang sebagai latar area baca besar.
+---
+
+## Struktur navigasi
+
+### Kasir
+
+Navigasi kasir harus sangat terbatas agar fokus tetap pada transaksi.
+
+- Kasir
+- Meja
+- Transaksi
+- Shift
+
+### Owner
+
+Owner menggunakan sidebar pada desktop dan bottom navigation pada ponsel.
+
+- Ringkasan
+- Kasir
+- Produk
+- Transaksi
+- Stok
+- Meja
+- Laporan
+- Pengaturan
+
+Header menampilkan nama outlet, status koneksi, status sinkronisasi, shift aktif, dan profil pengguna. Jangan memenuhi header dengan tombol sekunder.
+
+---
+
+## Spesifikasi layar
+
+### 1. Login dan pilih peran
+
+**Tujuan:** pengguna masuk dengan cepat sesuai perannya.
+
+- Logo KRING! dan tagline tampil sederhana di bagian atas.
+- Pilihan peran berupa dua kartu besar: **Owner** dan **Kasir**.
+- Alur kasir: pilih nama kasir, lalu masukkan PIN melalui numpad besar.
+- Alur owner: email/nomor ponsel dan kata sandi.
+- Pesan kesalahan muncul di dekat input, bukan hanya melalui toast.
+- Pada tablet, form berada di kartu terpusat dengan lebar maksimum sekitar 480 px.
+
+### 2. Kasir utama
+
+**Prioritas tertinggi.** Rancang untuk tablet landscape 1024–1440 px.
+
+Gunakan struktur tiga area:
+
+1. **Kategori:** rail atau bar chip yang mudah disentuh; kategori aktif berwarna hitam dengan teks putih.
+2. **Katalog produk:** grid kartu 3–5 kolom tergantung lebar layar.
+3. **Keranjang:** panel sticky di kanan, lebar sekitar 340–400 px.
+
+Isi layar:
+
+- Header ringkas: outlet, kasir, shift, koneksi, dan sinkronisasi.
+- Pencarian produk selalu terlihat.
+- Pilihan **Makan di Tempat** atau **Bawa Pulang** berada dekat bagian atas.
+- Jika makan di tempat, tampilkan pemilih meja.
+- Kartu produk berisi foto opsional, nama, harga, dan status stok.
+- Tanpa foto, gunakan bidang grayscale dengan inisial atau ikon makanan.
+- Produk habis tetap terlihat tetapi tidak dapat ditekan, dengan label **Habis**.
+- Menekan produk langsung menambahkannya ke keranjang.
+- Keranjang menampilkan kuantitas, catatan, harga, diskon, pajak, subtotal, dan total.
+- Tombol **BAYAR** hitam, selebar panel, tinggi minimum 64 px, selalu terlihat.
+- Total adalah angka terbesar di panel keranjang.
+- Empty state: **Belum ada pesanan. Pilih menu untuk mulai.**
+
+### 3. Pembayaran
+
+Gunakan modal atau sheet berukuran besar, tanpa memindahkan konteks transaksi.
+
+- Tab metode: **Tunai** dan **QRIS**.
+- Tab aktif hitam; tab lain putih dengan border.
+- Tunai menampilkan total, nominal diterima, kembalian otomatis, dan numpad besar.
+- Sediakan nominal cepat sesuai total: uang pas dan pembulatan umum.
+- Tombol **Proses Pembayaran** hanya aktif jika input valid.
+- QRIS menampilkan QR statis, total, serta tombol konfirmasi pembayaran.
+- Selalu sediakan tombol kembali yang tidak menghapus keranjang.
+
+### 4. Pembayaran berhasil
+
+Ini adalah momen brand utama, tetapi tetap minimal.
+
+- Ikon lonceng dengan animasi singkat dan teks **KRING! Pembayaran berhasil**.
+- Kembalian menjadi elemen terbesar pada pembayaran tunai.
+- Ringkasan kecil: nomor transaksi, metode, dan total.
+- Aksi: **Transaksi Baru** sebagai primer; **Cetak Struk** dan **Kirim Struk via WhatsApp** sebagai sekunder.
+- Success green hanya muncul pada ikon atau label sukses.
+- Jangan memakai confetti berlebihan atau animasi yang memperlambat kasir.
+
+### 5. Produk
+
+- Toolbar berisi pencarian, filter kategori, status stok, dan **Tambah Produk**.
+- Desktop menggunakan tabel yang lapang atau grid kartu; tablet memakai kartu.
+- Informasi utama: produk, kategori, harga, stok, dan status.
+- Aksi edit berada dalam menu tiga titik agar tampilan tidak ramai.
+- Form produk menggunakan satu kolom pada ponsel dan dua kolom pada desktop.
+- Penghapusan memerlukan konfirmasi yang menyebut nama produk.
+
+### 6. Transaksi
+
+- Filter tanggal, kasir, metode pembayaran, serta status sinkronisasi.
+- Setiap baris menampilkan nomor, waktu, kasir, total, metode, dan status.
+- Detail transaksi dibuka sebagai drawer di desktop dan halaman penuh di ponsel.
+- Aksi detail: cetak ulang, kirim struk, atau void sesuai izin pengguna.
+- Void menggunakan danger hanya pada dialog konfirmasi dan hasil akhirnya.
+
+### 7. Shift
+
+- Status **Shift Buka** atau **Shift Tutup** terlihat jelas di bagian atas.
+- Buka shift meminta modal awal melalui numpad.
+- Tutup shift menampilkan penjualan tunai, non-tunai, kas seharusnya, kas fisik, dan selisih.
+- Selisih tidak boleh tersembunyi; tampilkan label teks selain indikator warna.
+- Aksi tutup shift memerlukan konfirmasi final.
+
+### 8. Stok
+
+- Ringkasan atas: stok menipis, habis, dan pergerakan hari ini.
+- Daftar pergerakan mencakup penjualan, restock, dan koreksi.
+- Setiap perubahan memperlihatkan waktu, produk, jumlah, alasan, dan pengguna.
+- Koreksi stok memakai stepper besar serta kolom alasan wajib.
+- Gunakan label **Stok menipis** atau **Habis**; jangan mengandalkan warna.
+
+### 9. Meja
+
+- Grid meja menjadi tampilan utama.
+- Meja kosong: kartu putih dengan border.
+- Meja terisi: kartu hitam dengan teks putih.
+- Tiap kartu menampilkan nomor meja, status, durasi, dan total sementara.
+- Menekan meja terisi membuka detail bill dan aksi tambah pesanan.
+- Menekan meja kosong memulai pesanan baru.
+- Sediakan filter semua, kosong, dan terisi.
+
+### 10. Laporan owner
+
+Rancang mobile-first untuk dibaca cepat melalui ponsel.
+
+- Filter periode tetap mudah dijangkau.
+- Kartu utama: omzet, transaksi, rata-rata transaksi, dan laba jika datanya tersedia.
+- Grafik tujuh hari menggunakan grayscale dengan satu garis hitam tegas.
+- Daftar menu terlaris menampilkan peringkat, jumlah terjual, dan omzet.
+- Tampilkan stok menipis dan ringkasan metode pembayaran.
+- Gunakan insight deskriptif singkat; hindari dashboard penuh grafik kecil.
+- Tombol export diletakkan sebagai aksi sekunder.
+
+### 11. Pengaturan
+
+Kelompokkan pengaturan berdasarkan topik:
+
+- Profil outlet
+- Pajak dan layanan
+- Metode pembayaran
+- Printer struk
+- Pengguna dan peran
+- Sinkronisasi dan perangkat
+
+Gunakan switch hanya untuk pengaturan biner. Perubahan berisiko harus memiliki penjelasan dan konfirmasi.
+
+---
+
+## Komponen inti
+
+### Tombol
+
+- **Primer:** hitam, teks putih; satu aksi primer per area.
+- **Sekunder:** putih, teks hitam, border abu.
+- **Tersier:** teks atau ikon tanpa container dominan.
+- **Danger:** merah hanya untuk aksi destruktif yang sudah dikonfirmasi.
+- Tinggi minimum 48 px; tombol pembayaran minimum 64 px.
+- Label menggunakan kata kerja yang jelas: **Simpan Produk**, bukan **Simpan** bila konteks berpotensi ambigu.
+
+### Input
+
+- Tinggi minimum 48 px dengan label selalu terlihat.
+- Teks petunjuk di dalam field tidak menggantikan label.
+- Error diletakkan di bawah field dan menjelaskan cara memperbaiki.
+- Input uang menggunakan angka tabular dan format rupiah.
+- Numpad memiliki jarak cukup dan tombol hapus yang jelas.
+
+### Kartu produk
+
+- Seluruh kartu dapat ditekan.
+- Nama maksimal dua baris.
+- Harga selalu terlihat.
+- Status stok berada di bagian bawah atau sudut kanan atas.
+- Feedback pressed harus terasa melalui perubahan surface atau scale yang sangat halus.
+
+### Dialog, drawer, dan toast
+
+- Modal untuk keputusan singkat dan fokus.
+- Drawer untuk melihat detail tanpa kehilangan daftar.
+- Halaman penuh untuk proses kompleks pada ponsel.
+- Toast hanya untuk konfirmasi ringan; error penting tidak boleh hanya berupa toast.
+
+---
+
+## Status sistem
+
+### Offline dan sinkronisasi
+
+KRING! dirancang agar transaksi tetap dapat berlangsung saat koneksi terputus.
+
+- Tampilkan pill status **Online**, **Offline**, atau **Menyinkronkan** di header.
+- Saat offline, tampilkan banner tipis: **Tidak ada koneksi. Transaksi disimpan di perangkat dan akan disinkronkan otomatis.**
+- Setiap transaksi yang belum tersinkron memiliki ikon dan label **Belum tersinkron**.
+- Setelah koneksi kembali, tampilkan progres singkat dan hasil sinkronisasi.
+- Konflik atau kegagalan sinkronisasi harus memiliki aksi **Coba lagi** dan akses ke detail.
+
+### Loading
+
+- Gunakan skeleton untuk daftar dan kartu.
+- Jangan menutupi seluruh layar saat hanya satu panel yang dimuat.
+- Pada pembayaran, tombol menampilkan progres dan mencegah tap ganda.
+
+### Empty state
+
+Empty state harus menjelaskan kondisi dan menawarkan satu aksi yang relevan. Gunakan ilustrasi outline monochrome sederhana bila perlu, tanpa dekorasi berlebihan.
+
+---
+
+## Responsivitas
+
+### Tablet landscape: prioritas kasir
+
+- Tiga area tetap terlihat.
+- Keranjang sticky di kanan.
+- Kategori dapat menjadi rail atau bar horizontal.
+- Produk tetap memiliki target sentuh minimum 48 px.
+
+### Desktop
+
+- Sidebar owner dapat diperluas.
+- Konten memakai maksimum lebar agar baris tidak terlalu panjang.
+- Tabel diperbolehkan, tetapi tinggi baris minimum 52 px.
+
+### Ponsel
+
+- Bottom navigation untuk lima tujuan utama owner.
+- Panel kasir berubah menjadi katalog dan keranjang dalam dua layar atau bottom sheet.
+- Tombol aksi utama sticky di bawah dengan memperhatikan safe area.
+- Hindari tabel horizontal; ubah data menjadi kartu atau list.
+
+---
+
+## Aksesibilitas dan usability
+
+- Target sentuh minimum 48 x 48 px dengan jarak antarkontrol yang cukup.
+- Fokus keyboard harus terlihat jelas.
+- Semua ikon penting memiliki label atau tooltip.
+- Informasi status tidak boleh dibedakan hanya melalui warna.
+- Teks utama minimum 15 px pada layar operasional kasir.
+- Hindari teks abu-abu muda untuk informasi penting.
+- Dialog destruktif menyebut objek dan dampaknya dengan jelas.
+- Pastikan alur transaksi dapat diselesaikan dengan sentuhan, keyboard, atau barcode scanner.
+
+## Detail interaksi
+
+- Menambahkan produk memberi feedback instan pada kartu dan keranjang.
+- Perubahan jumlah tidak membuka dialog baru.
+- Menahan aksi atau menampilkan loading tidak boleh membuat kasir ragu apakah tap diterima.
+- Suara lonceng pembayaran bersifat opsional dan dapat dimatikan di pengaturan.
+- Animasi menggunakan durasi sekitar 150–250 ms; animasi sukses maksimal sekitar 600 ms.
+- Jangan menggunakan carousel, parallax, atau transisi dekoratif pada alur kasir.
+
+---
+
+## Larangan desain
+
+- Tidak memakai oranye, gradient, glassmorphism, neon, atau warna pastel.
+- Tidak membuat dashboard enterprise dengan terlalu banyak grafik dan angka kecil.
+- Tidak memakai sidebar besar pada layar kasir.
+- Tidak menyembunyikan aksi primer dalam menu tiga titik.
+- Tidak membuat kontrol yang hanya muncul saat hover.
+- Tidak memakai teks putih pada abu terang.
+- Tidak memakai ilustrasi besar yang mengurangi ruang kerja.
+- Tidak mengandalkan ikon tanpa label untuk aksi pembayaran, shift, atau void.
+- Tidak menampilkan data contoh seolah-olah data usaha nyata pada produk final.
+
+---
+
+## Brief untuk Google Stitch
+
+Buat seluruh layar sebagai satu sistem desain yang konsisten. Mulai dari layar **Kasir utama**, **Pembayaran**, **Pembayaran berhasil**, dan **Laporan owner** karena keempat layar ini menentukan pola utama produk. Setelah arah visual stabil, lanjutkan ke layar lainnya.
+
+### Prompt utama
+
+```text
+Design a cohesive responsive web application called “KRING!”, a point-of-sale system for Indonesian food stalls and culinary micro-businesses. Use Bahasa Indonesia for every label and message. The cashier primarily works quickly on a landscape tablet, while the owner monitors the business on a phone.
+
+Visual direction: premium warm monochrome minimalism. Use #FAFAFA for the app canvas, #FFFFFF for surfaces, #171717 for primary text and primary actions, #737373 for muted text, and #E5E5E5 for borders. Do not use orange, blue, pastel colors, gradients, glassmorphism, or decorative color. Success green and danger red may appear only for critical success, failure, void, or destructive feedback. Use generous whitespace, subtle borders, restrained shadows, 12–16 px component radii, and a modern sans-serif typeface such as Inter or Geist. Use large tabular numerals for prices, totals, revenue, cash received, and change.
+
+The interface must be touch-first with minimum 48 px targets, no hover-dependent controls, and a clear single primary action per area. Use familiar Indonesian terms such as “Bayar”, “Kembalian”, “Buka Shift”, “Tutup Shift”, “Bawa Pulang”, and “Makan di Tempat”. Status must never depend on color alone.
+
+Create these connected screens:
+1. Login and role selection for Owner or Kasir, with cashier name selection and large PIN numpad.
+2. Main cashier screen for landscape tablet with category controls, searchable product grid, and a sticky cart panel. Include dine-in/takeaway selection, table selection, quantity controls, discount, tax, large total, and a dominant black “BAYAR” button.
+3. Large payment modal with Tunai and QRIS tabs. Tunai uses a large numpad, quick amount buttons, cash received, and automatically calculated change.
+4. Payment success screen with a restrained bell animation, “KRING! Pembayaran berhasil”, large change amount, and actions for Transaksi Baru, Cetak Struk, and Kirim Struk via WhatsApp.
+5. Product management, transaction history, shift management, stock movement, table management, owner reports, and settings.
+6. Offline and synchronization states that clearly state transactions are stored on the device and will sync automatically.
+
+For the main cashier screen, prioritize speed and hierarchy over decoration. For owner reports, use a mobile-first layout with revenue, transaction count, average transaction, a simple grayscale seven-day chart, best-selling products, payment-method summary, and low-stock alerts. Keep all screens visually consistent and production-ready.
+```
+
+### Prompt iterasi layar kasir
+
+```text
+Refine the KRING! main cashier screen for a 1280 x 800 landscape tablet. Keep the monochrome design system unchanged. Use a compact top header, horizontal category chips, a spacious searchable product grid, and a 380 px sticky cart on the right. Make product cards and quantity controls comfortable for touch. Keep the order total visually dominant and the black BAYAR button fixed at the bottom of the cart. Show realistic interface states for an active shift, online sync status, dine-in at Meja 04, several cart items, and one sold-out product. Do not add new colors or decorative dashboard widgets.
+```
+
+### Prompt iterasi laporan owner
+
+```text
+Refine the KRING! owner report screen for a modern phone viewport. Keep the monochrome design system unchanged. Make today's revenue the first and strongest metric, followed by transaction count and average transaction. Add a simple grayscale seven-day sales chart, best-selling products, payment-method summary, and low-stock alerts. Use a sticky date filter and a restrained export action. Avoid tiny charts, dense tables, gradients, and decorative colors. The screen must be understandable within a few seconds.
+```
+
+### Prompt iterasi keadaan offline
+
+```text
+Create the offline and synchronization states for KRING! without changing the monochrome design system. Show a clear header status pill, a thin persistent banner explaining that transactions are stored on the device, labels for unsynced transactions, a synchronization progress state, a successful sync confirmation, and a recoverable sync failure with a Coba lagi action. Do not rely on color alone and do not block cashier transactions while offline.
+```
+
+---
+
+## Checklist evaluasi hasil Stitch
+
+### Konsistensi visual
+
+- [ ] Semua layar menggunakan palet monochrome yang sama.
+- [ ] Tidak ada oranye, biru korporat, pastel, atau gradient.
+- [ ] Border, radius, shadow, ikon, dan tipografi konsisten.
+- [ ] Angka finansial menggunakan hierarki dan format yang seragam.
+
+### Alur kasir
+
+- [ ] Produk dapat dipilih tanpa membuka modal tambahan.
+- [ ] Keranjang dan total selalu terlihat pada tablet landscape.
+- [ ] Tombol **BAYAR** menjadi aksi paling dominan.
+- [ ] Metode tunai menampilkan numpad, uang diterima, dan kembalian.
+- [ ] Keadaan berhasil, gagal, dan tap ganda ditangani dengan jelas.
+
+### Touch dan responsivitas
+
+- [ ] Target sentuh utama minimum 48 x 48 px.
+- [ ] Tidak ada aksi yang hanya tersedia melalui hover.
+- [ ] Tampilan kasir bekerja pada tablet landscape.
+- [ ] Laporan owner mudah dipindai pada ponsel.
+- [ ] Tabel berubah menjadi list atau kartu pada layar sempit.
+
+### Status operasional
+
+- [ ] Shift aktif atau tutup terlihat jelas.
+- [ ] Online, offline, menyinkronkan, dan gagal sinkron tidak ambigu.
+- [ ] Produk habis dan stok menipis memiliki label teks.
+- [ ] Meja kosong dan terisi dapat dibedakan tanpa warna.
+- [ ] Pesan error memberi tindakan berikutnya.
+
+### Bahasa
+
+- [ ] Semua teks menggunakan Bahasa Indonesia.
+- [ ] Label memakai istilah yang familiar bagi kasir warung.
+- [ ] Tombol menggunakan kata kerja yang spesifik.
+- [ ] Tidak ada jargon sistem yang terlihat oleh pengguna.
+
+---
+
+## Urutan produksi desain
+
+1. Tetapkan design tokens dan komponen dasar.
+2. Buat layar kasir utama pada tablet landscape.
+3. Buat pembayaran dan pembayaran berhasil.
+4. Validasi alur transaksi tunai dari awal sampai transaksi baru.
+5. Buat laporan owner pada ponsel.
+6. Turunkan pola yang sama ke produk, transaksi, shift, stok, meja, dan pengaturan.
+7. Tambahkan keadaan kosong, loading, offline, gagal, dan sinkronisasi.
+8. Uji ulang ukuran sentuh, kontras, hierarki angka, dan konsistensi bahasa.
+
+Dokumen ini menjadi acuan saat memilih atau mengiterasi hasil Google Stitch. Jika sebuah hasil terlihat menarik tetapi melanggar kecepatan transaksi, keterbacaan, atau status operasional, prioritaskan usability dan aturan dalam dokumen ini.

@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
+import { currentWarungId, currentKasirId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
 export async function PATCH(req: Request, { params }: Params) {
+  const warungId = await currentWarungId();
+  const kasirId = await currentKasirId(warungId);
+
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const data: { name?: string; price?: number; stock?: number; category?: string; icon?: string } = {};
@@ -35,16 +39,24 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   try {
-    const before = await prisma.product.findUnique({ where: { id: params.id } });
+    const before = await prisma.product.findFirst({
+      where: { id: params.id, warungId },
+    });
     if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
-    const product = await prisma.product.update({ where: { id: params.id }, data });
+
+    const product = await prisma.product.update({
+      where: { id: params.id },
+      data,
+    });
     // Catat selisih stok sebagai KOREKSI (kulakan manual lewat +/- juga masuk sini)
     if (data.stock !== undefined && data.stock !== before.stock) {
       await prisma.stockMove.create({
         data: {
+          warungId,
           productId: product.id,
           qty: data.stock - before.stock,
-          reason: data.stock > before.stock ? "KULAKAN" : "KOREKSI",
+          type: data.stock > before.stock ? "KULAKAN" : "KOREKSI",
+          createdBy: kasirId,
         },
       });
     }
@@ -55,8 +67,10 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
+  const warungId = await currentWarungId();
+
   const used = await prisma.transactionItem.count({
-    where: { productId: params.id },
+    where: { productId: params.id, warungId },
   });
   if (used > 0) {
     return NextResponse.json(
@@ -65,6 +79,11 @@ export async function DELETE(_req: Request, { params }: Params) {
     );
   }
   try {
+    const before = await prisma.product.findFirst({
+      where: { id: params.id, warungId },
+    });
+    if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+
     await prisma.product.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });
   } catch {

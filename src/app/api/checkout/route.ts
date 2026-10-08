@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
 import { readJson } from "@/lib/request";
+import { currentWarungId, currentKasirId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,11 @@ type CartItem = { productId: string; qty: number };
 
 // POST /api/checkout { items, cash, payment, discount }
 // payment: CASH | QRIS. total = subtotal - discount + pajak otomatis.
-// Pajak diambil dari pengaturan global (bukan input kasir).
+// Pajak diambil dari pengaturan warung (bukan input kasir).
 export async function POST(req: Request) {
+  const warungId = await currentWarungId();
+  const cashierId = await currentKasirId(warungId);
+
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const rawItems = (body.items ?? []) as CartItem[];
@@ -39,7 +43,7 @@ export async function POST(req: Request) {
     const items = Array.from(merged.entries());
     const id = await prisma.$transaction(async (tx) => {
       const products = await tx.product.findMany({
-        where: { id: { in: items.map(([pid]) => pid) } },
+        where: { id: { in: items.map(([pid]) => pid) }, warungId },
       });
       const byId = new Map(products.map((p) => [p.id, p]));
 
@@ -52,7 +56,7 @@ export async function POST(req: Request) {
       }
 
       const disc = Math.min(discount, subtotal);
-      const taxCfg = await getTaxSetting(tx);
+      const taxCfg = await getTaxSetting(tx, warungId);
       const tax = taxCfg.enabled ? Math.round(((subtotal - disc) * taxCfg.pct) / 100) : 0;
       const total = subtotal - disc + tax;
 
@@ -60,12 +64,15 @@ export async function POST(req: Request) {
       if (paid < total) throw new Error(`Uang kurang ${total - paid}.`);
 
       const shift = await tx.shift.findFirst({
-        where: { status: "BUKA" },
+        where: { warungId, status: "BUKA" },
         orderBy: { openedAt: "desc" },
       });
 
       const created = await tx.transaction.create({
         data: {
+          warungId,
+          cashierId,
+          status: "LUNAS",
           subtotal,
           discount: disc,
           tax,
@@ -80,14 +87,28 @@ export async function POST(req: Request) {
       for (const [pid, qty] of items) {
         const p = byId.get(pid)!;
         await tx.transactionItem.create({
-          data: { transactionId: created.id, productId: p.id, qty, price: p.price },
+          data: {
+            warungId,
+            transactionId: created.id,
+            productId: p.id,
+            name: p.name,
+            qty,
+            price: p.price,
+          },
         });
         await tx.product.update({
           where: { id: p.id },
           data: { stock: { decrement: qty } },
         });
         await tx.stockMove.create({
-          data: { productId: p.id, qty: -qty, reason: "PENJUALAN", refId: created.id },
+          data: {
+            warungId,
+            productId: p.id,
+            qty: -qty,
+            type: "PENJUALAN",
+            refId: created.id,
+            createdBy: cashierId,
+          },
         });
       }
 

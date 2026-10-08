@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
+import { currentWarungId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/shifts/[id]/close { kasFisik } → tutup shift + hitung selisih
 export async function POST(req: Request, { params }: { params: { id: string } }) {
+  const warungId = await currentWarungId();
+
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   const kasFisik = Number(body.kasFisik);
@@ -13,9 +16,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!Number.isInteger(kasFisik) || kasFisik < 0) {
     return NextResponse.json({ error: "Kas fisik tidak valid." }, { status: 400 });
   }
-  const shift = await prisma.shift.findUnique({
-    where: { id: params.id },
-    include: { transactions: { select: { total: true, payment: true } } },
+  const shift = await prisma.shift.findFirst({
+    where: { id: params.id, warungId },
+    include: {
+      transactions: {
+        where: { status: "LUNAS" },
+        select: { total: true, payment: true },
+      },
+    },
   });
   if (!shift || shift.status !== "BUKA") {
     return NextResponse.json({ error: "Shift tidak ditemukan / sudah tutup." }, { status: 404 });

@@ -44,7 +44,7 @@ export default function PengaturanPage() {
             role="switch"
             aria-checked={enabled}
             onClick={() => setEnabled((v) => !v)}
-            className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-orange-600" : "bg-zinc-300"}`}
+            className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-primary" : "bg-zinc-300"}`}
           >
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
@@ -60,16 +60,16 @@ export default function PengaturanPage() {
             onChange={(e) => setPct(e.target.value.replace(/[^\d.]/g, "").slice(0, 5))}
             inputMode="decimal"
             disabled={!enabled}
-            className="w-24 rounded-lg border px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:opacity-40"
+            className="w-24 rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-40"
           />
           <span className="text-sm font-bold">%</span>
         </div>
         <p className="mt-2 text-xs text-zinc-500">
           Pajak dihitung otomatis dari (subtotal − diskon) dan tercatat per transaksi + struk.
         </p>
-        {error && <p className="mt-2 text-sm text-red-600">⚠️ {error}</p>}
+        {error && <p className="mt-2 text-sm text-danger">⚠️ {error}</p>}
         {saved && <p className="mt-2 text-sm text-green-700">{saved}</p>}
-        <button className="mt-3 w-full rounded-lg bg-orange-600 py-2 text-sm font-bold text-white hover:bg-orange-700">
+        <button className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-primary-hover">
           Simpan
         </button>
       </form>

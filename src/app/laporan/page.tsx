@@ -48,7 +48,7 @@ export default function LaporanPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (failed) return <p className="text-red-600">Gagal memuat laporan. Refresh halaman.</p>;
+  if (failed) return <p className="text-danger">Gagal memuat laporan. Refresh halaman.</p>;
 
   if (!stats) return <p className="text-zinc-500">Memuat laporan…</p>;
 
@@ -61,17 +61,17 @@ export default function LaporanPage() {
         <h1 className="text-xl font-bold">Laporan</h1>
         <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-orange-500" />
+            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-primary" />
           <span className="text-zinc-400">→</span>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-orange-500" />
+            className="rounded-lg border bg-white px-2.5 py-1.5 outline-none focus:border-primary" />
           <button onClick={() => from && to && loadStats(from, to)}
-            className="rounded-lg bg-zinc-900 px-3.5 py-1.5 font-bold text-white hover:bg-zinc-700">
+            className="rounded-lg bg-primary px-3.5 py-1.5 font-bold text-white hover:bg-primary-hover">
             Terapkan
           </button>
           {from && to && (
             <a href={`/api/export?from=${from}&to=${to}`}
-              className="rounded-lg bg-orange-600 px-3.5 py-1.5 font-bold text-white hover:bg-orange-700">
+              className="rounded-lg bg-primary px-3.5 py-1.5 font-bold text-white hover:bg-primary-hover">
               ⬇ CSV
             </a>
           )}
@@ -105,7 +105,7 @@ export default function LaporanPage() {
                 </span>
                 <div className="flex w-full flex-1 items-end">
                   <div
-                    className="w-full rounded-t-md bg-orange-500"
+                    className="w-full rounded-t-md bg-primary"
                     style={{ height: `${Math.max(4, (d.total / maxWeek) * 100)}%` }}
                     title={rupiah(d.total)}
                   />
@@ -130,7 +130,7 @@ export default function LaporanPage() {
                 </div>
                 <div className="mt-1 h-2 rounded-full bg-zinc-100">
                   <div
-                    className="h-2 rounded-full bg-amber-500"
+                    className="h-2 rounded-full bg-primary"
                     style={{ width: `${(t.qty / maxTop) * 100}%` }}
                   />
                 </div>
@@ -149,11 +149,11 @@ export default function LaporanPage() {
             stats.lowStock.map((p) => (
               <div key={p.id} className="flex justify-between border-b py-1.5 text-sm last:border-0">
                 <span className="font-medium">{p.name}</span>
-                <b className="text-red-600">sisa {p.stock}</b>
+                <b className="text-danger">sisa {p.stock}</b>
               </div>
             ))
           )}
-          <Link href="/produk" className="mt-2 inline-block text-sm font-semibold text-orange-700 hover:underline">
+          <Link href="/produk" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
             Kelola stok di Produk →
           </Link>
         </div>
@@ -172,7 +172,7 @@ export default function LaporanPage() {
               <b>{rupiah(t.total)}</b>
             </Link>
           ))}
-          <Link href="/transaksi" className="mt-2 inline-block text-sm font-semibold text-orange-700 hover:underline">
+          <Link href="/transaksi" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
             Semua transaksi →
           </Link>
         </div>

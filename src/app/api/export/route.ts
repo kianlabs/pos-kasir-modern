@@ -1,21 +1,27 @@
 import { prisma } from "@/lib/prisma";
 import { isDateStr } from "@/lib/request";
+import { currentWarungId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/export?from=ISO&to=ISO → CSV transaksi periode
 export async function GET(req: Request) {
+  const warungId = await currentWarungId();
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  const where =
+  const dateFilter =
     isDateStr(from) && isDateStr(to)
-      ? { createdAt: { gte: new Date(from + "T00:00:00"), lte: new Date(to + "T23:59:59") } }
+      ? { gte: new Date(from + "T00:00:00"), lte: new Date(to + "T23:59:59") }
       : undefined;
 
   const trx = await prisma.transaction.findMany({
-    where,
+    where: {
+      warungId,
+      status: "LUNAS",
+      ...(dateFilter ? { createdAt: dateFilter } : {}),
+    },
     orderBy: { createdAt: "asc" },
     include: { items: { include: { product: true } } },
   });

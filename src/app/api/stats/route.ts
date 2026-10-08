@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isDateStr } from "@/lib/request";
+import { currentWarungId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const warungId = await currentWarungId();
   const { searchParams } = new URL(req.url);
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
@@ -24,20 +26,21 @@ export async function GET(req: Request) {
     prisma.transaction.aggregate({
       _sum: { total: true },
       _count: true,
-      where: { createdAt: { gte: start } },
+      where: { warungId, status: "LUNAS", createdAt: { gte: start } },
     }),
-    prisma.product.count(),
+    prisma.product.count({ where: { warungId } }),
     prisma.product.findMany({
-      where: { stock: { lte: 5 } },
+      where: { warungId, stock: { lte: 5 } },
       orderBy: { stock: "asc" },
       take: 10,
     }),
     prisma.transaction.findMany({
-      where: { createdAt: { gte: weekAgo } },
+      where: { warungId, status: "LUNAS", createdAt: { gte: weekAgo } },
       select: { total: true, createdAt: true },
     }),
     prisma.transactionItem.groupBy({
       by: ["productId"],
+      where: { warungId, transaction: { status: "LUNAS" } },
       _sum: { qty: true },
       orderBy: { _sum: { qty: "desc" } },
       take: 5,
@@ -63,7 +66,7 @@ export async function GET(req: Request) {
   // Nama produk terlaris
   const topIds = topItems.map((t) => t.productId);
   const topProducts = await prisma.product.findMany({
-    where: { id: { in: topIds } },
+    where: { id: { in: topIds }, warungId },
     select: { id: true, name: true, price: true },
   });
   const topById = new Map(topProducts.map((p) => [p.id, p]));
@@ -74,6 +77,7 @@ export async function GET(req: Request) {
   }));
 
   const recent = await prisma.transaction.findMany({
+    where: { warungId, status: "LUNAS" },
     orderBy: { createdAt: "desc" },
     take: 10,
     include: { items: true },
@@ -88,7 +92,7 @@ export async function GET(req: Request) {
     const r = await prisma.transaction.aggregate({
       _sum: { total: true },
       _count: true,
-      where: { createdAt: range },
+      where: { warungId, status: "LUNAS", createdAt: range },
     });
     const rCount = r._count;
     const rOmzet = r._sum.total ?? 0;
