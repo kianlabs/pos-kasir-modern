@@ -45,3 +45,4 @@ prisma/*.db-*
 .ui-review/
 err.log
 prisma/*.db.bak-*
+prisma/*.db.before-*

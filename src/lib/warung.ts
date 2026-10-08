@@ -68,11 +68,6 @@ export const currentWarung = memoize(async () => {
   return warung;
 });
 
-// Cek role: return false bila bukan salah satu role yang diizinkan.
-export function hasRole(session: SessionPayload | null, ...roles: string[]): boolean {
-  return !!session && roles.includes(session.role);
-}
-
 // Gate role untuk route API: kembalikan respons siap-pakai bila tidak berhak,
 // atau null bila boleh lanjut. Dipakai sebelum menyentuh Prisma.
 export async function requireOwnerResponse(): Promise<ReturnType<typeof NextResponse.json> | null> {
