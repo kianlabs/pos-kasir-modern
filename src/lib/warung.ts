@@ -1,9 +1,11 @@
 import * as React from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { SESSION_COOKIE, verifySession, type SessionPayload } from "@/lib/session";
 
-// Bridge Tahap 1: cookie "kring_warung" + fallback warung pertama.
-// Tahap 2 mengganti dengan session login (aturan #8: warungId TIDAK PERNAH dari body/query/header).
+// Tenant SELALU dari session login (lampiran skema §2 aturan #8):
+// warungId tidak pernah diterima dari body/query/header.
+
 function memoize<Args extends unknown[], Return>(
   fn: (...args: Args) => Promise<Return>
 ): (...args: Args) => Promise<Return> {
@@ -13,68 +15,58 @@ function memoize<Args extends unknown[], Return>(
   return fn;
 }
 
-export const currentWarungId = memoize(async (): Promise<string> => {
-  let cookieWarungId: string | undefined;
+// Sesi mentah dari cookie. null = belum login / token tidak valid.
+export const getSession = memoize(async (): Promise<SessionPayload | null> => {
+  let token: string | undefined;
   try {
-    const cookieStore = cookies();
-    cookieWarungId = cookieStore.get("kring_warung")?.value;
+    token = cookies().get(SESSION_COOKIE)?.value;
   } catch {
-    // Di luar request context (e.g. build / script)
+    // Di luar request context (build / script)
+    return null;
   }
-
-  if (cookieWarungId) {
-    const exists = await prisma.warung.findUnique({
-      where: { id: cookieWarungId },
-      select: { id: true },
-    });
-    if (exists) return exists.id;
-  }
-
-  const fallback = await prisma.warung.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-
-  if (!fallback) {
-    throw new Error("Jalankan seed dulu: tidak ada warung di database.");
-  }
-
-  return fallback.id;
+  return verifySession(token);
 });
 
+// Dipakai di route API: bawa objek { status, message } agar bisa langsung
+// dijadikan respons 401 tanpa lempar exception.
+export async function requireSession(): Promise<
+  { ok: true; session: SessionPayload } | { ok: false; message: string }
+> {
+  const session = await getSession();
+  if (!session) return { ok: false, message: "Belum login." };
+  return { ok: true, session };
+}
+
+// warungId turunan session — satu-satunya pintu masuk tenant.
+export const currentWarungId = memoize(async (): Promise<string> => {
+  const session = await getSession();
+  if (!session) throw new Error("Tidak ada session. Login dulu.");
+  return session.wid;
+});
+
+// Kasir/user yang sedang login (untuk audit: siapa).
 export const currentKasirId = memoize(async (warungId?: string): Promise<string> => {
-  const wId = warungId ?? (await currentWarungId());
-  const kasir = await prisma.user.findFirst({
-    where: {
-      warungId: wId,
-      role: "KASIR",
-      aktif: true,
-    },
-    orderBy: { createdAt: "asc" },
+  const session = await getSession();
+  if (!session) throw new Error("Tidak ada session. Login dulu.");
+  const wId = warungId ?? session.wid;
+
+  // Validasi user masih ada, aktif, dan berada di warung yang sama.
+  const user = await prisma.user.findFirst({
+    where: { id: session.uid, warungId: wId, aktif: true },
     select: { id: true },
   });
-
-  if (!kasir) {
-    // Fallback jika tidak ada kasir: ambil user apa pun (owner)
-    const anyUser = await prisma.user.findFirst({
-      where: { warungId: wId, aktif: true },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-    if (anyUser) return anyUser.id;
-    throw new Error(`Tidak ada kasir aktif di warung ${wId}.`);
-  }
-
-  return kasir.id;
+  if (!user) throw new Error("User tidak aktif atau tidak ditemukan.");
+  return user.id;
 });
 
 export const currentWarung = memoize(async () => {
   const wId = await currentWarungId();
-  const warung = await prisma.warung.findUnique({
-    where: { id: wId },
-  });
-  if (!warung) {
-    throw new Error("Jalankan seed dulu: warung tidak ditemukan.");
-  }
+  const warung = await prisma.warung.findUnique({ where: { id: wId } });
+  if (!warung) throw new Error("Warung tidak ditemukan.");
   return warung;
 });
+
+// Cek role: return false bila bukan salah satu role yang diizinkan.
+export function hasRole(session: SessionPayload | null, ...roles: string[]): boolean {
+  return !!session && roles.includes(session.role);
+}
