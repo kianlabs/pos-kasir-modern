@@ -130,18 +130,11 @@ export default function BillPanel({
     }
   }
 
-  // Terapkan diskon tanpa mengubah item. Endpoint PATCH wajib berisi ≥1 item,
-  // jadi kirim pasangan delta yang saling meniadakan (net 0) pada item pertama
-  // → server tidak mengubah qty, hanya menyimpan diskon.
+  // Terapkan diskon tanpa mengubah item. Endpoint PATCH menerima `discount`
+  // tanpa `items` (items opsional) → cukup kirim diskon saja.
   async function terapkanDiskon() {
     if (!billId) return;
-    if (items.length === 0) return setError("Tambahkan item dulu sebelum memberi diskon.");
-    const pid = items[0].productId;
     const r = await mutate(`/api/bills/${billId}`, "PATCH", {
-      items: [
-        { productId: pid, qty: 1 },
-        { productId: pid, qty: -1 },
-      ],
       discount: Math.max(0, Math.floor(Number(discountInput) || 0)),
     });
     if (r.ok) router.refresh();
@@ -292,7 +285,7 @@ export default function BillPanel({
           />
           <button
             onClick={terapkanDiskon}
-            disabled={loading || items.length === 0}
+            disabled={loading}
             className="rounded-lg bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
           >
             Terapkan

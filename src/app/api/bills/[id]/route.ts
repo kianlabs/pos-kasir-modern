@@ -9,23 +9,26 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
-// PATCH /api/bills/[id] { items: [{ productId, qty }], discount? }
+// PATCH /api/bills/[id] { items?: [{ productId, qty }], discount? }
 //
 // Tambah/ubah item pada bill DRAFT. qty diperlakukan sebagai DELTA yang
 // digabung per productId (merge, sama seperti checkout menggabung item
 // duplikat): qty positif menambah, qty negatif mengurangi. Bila hasil qty
-// item ≤ 0 → item dihapus. Setelah semua item diproses, subtotal/discount/
-// tax/total dihitung ulang server-side (hitungUlangBill) — angka client tidak
-// dipercaya. DRAFT TIDAK menyentuh stok/StockMove (plan §7 keputusan 3).
+// item ≤ 0 → item dihapus. `items` OPSIONAL: bila hanya ingin mengubah
+// diskon, cukup kirim { discount }. Setelah semua item diproses, subtotal/
+// discount/tax/total dihitung ulang server-side (hitungUlangBill) DI DALAM
+// $transaction yang sama — angka client tidak dipercaya. DRAFT TIDAK
+// menyentuh stok/StockMove (plan §7 keputusan 3).
 export async function PATCH(req: Request, { params }: Params) {
   const warungId = await currentWarungId();
 
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
 
-  const rawItems = body.items ?? [];
-  if (!Array.isArray(rawItems) || rawItems.length === 0) {
-    return NextResponse.json({ error: "Tidak ada item." }, { status: 400 });
+  // items OPSIONAL (boleh hanya kirim discount). Bila ada, wajib array item valid.
+  const rawItems: unknown = body.items ?? [];
+  if (!Array.isArray(rawItems)) {
+    return NextResponse.json({ error: "Item tidak valid." }, { status: 400 });
   }
 
   // Gabung delta per productId (merge) — pola sama dengan checkout.
@@ -55,12 +58,17 @@ export async function PATCH(req: Request, { params }: Params) {
     discount = d;
   }
 
+  // Minimal satu aksi: tambah/ubah item ATAU set diskon.
+  if (merged.size === 0 && discount === undefined) {
+    return NextResponse.json({ error: "Tidak ada perubahan." }, { status: 400 });
+  }
+
   try {
     // Guard tenant + DRAFT (lempar BillError 404 bila bukan milik warung ini).
     await requireBillDraft(params.id, warungId);
 
     const items = Array.from(merged.entries());
-    const billId = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx) => {
       // Cek ulang DI DALAM tx (bill bisa berubah status setelah guard di atas).
       const bill = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },
@@ -115,27 +123,24 @@ export async function PATCH(req: Request, { params }: Params) {
         }
       }
 
-      return bill.id;
+      // Hitung ulang total dari item SETELAH semua mutasi item, DI DALAM tx
+      // yang sama agar atomik. PENTING: pakai `tx` — hitungUlangBill(`prisma`)
+      // di dalam $transaction membaca snapshot pra-mutasi (total stale).
+      const totals = await hitungUlangBill(bill.id, warungId, tx);
+      const fresh = await tx.transaction.update({
+        where: { id: bill.id },
+        data: {
+          subtotal: totals.subtotal,
+          discount: totals.discount,
+          tax: totals.tax,
+          total: totals.total,
+        },
+        include: { items: true },
+      });
+
+      return fresh;
     });
 
-    // Hitung ulang total dari item SETELAH tx commit (bukan di dalamnya).
-    // hitungUlangBill memakai root prisma: di dalam $transaction pada SQLite
-    // ia membaca snapshot pra-mutasi → total bisa stale. Di luar tx aman.
-    const totals = await hitungUlangBill(billId, warungId);
-    await prisma.transaction.update({
-      where: { id: billId },
-      data: {
-        subtotal: totals.subtotal,
-        discount: totals.discount,
-        tax: totals.tax,
-        total: totals.total,
-      },
-    });
-
-    const updated = await prisma.transaction.findFirst({
-      where: { id: params.id, warungId },
-      include: { items: true },
-    });
     return NextResponse.json(updated);
   } catch (e) {
     if (e instanceof BillError) {

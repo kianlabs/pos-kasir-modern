@@ -31,8 +31,14 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     let moved = 0;
+    let totals: { subtotal: number; discount: number; tax: number; total: number } = {
+      subtotal: 0,
+      discount: 0,
+      tax: 0,
+      total: 0,
+    };
 
-    // Validasi + pindah + hapus dalam satu $transaction (atomik).
+    // Validasi + pindah + hitung ulang + hapus dalam satu $transaction (atomik).
     // Cek dilakukan via `tx` (bukan helper global) agar tidak ada race
     // check-then-act — pola sama "satu shift BUKA per warung" (aturan #11).
     await prisma.$transaction(async (tx) => {
@@ -57,12 +63,13 @@ export async function POST(req: Request, { params }: Params) {
 
       // Hapus bill sumber (item sudah kosong → cascade tidak menyisakan apa pun).
       await tx.transaction.delete({ where: { id: source.id } });
-    });
 
-    // Hitung ulang total bill tujuan dari item hasil gabung (server-side,
-    // uang integer rupiah — aturan #3, #12).
-    const totals = await hitungUlangBill(params.id, warungId);
-    await prisma.transaction.update({ where: { id: params.id }, data: totals });
+      // Hitung ulang total bill tujuan dari item hasil gabung, DI DALAM tx
+      // yang sama (atomik). Wajib pakai `tx`: hitungUlangBill(`prisma`) di
+      // dalam $transaction membaca snapshot pra-mutasi (total stale).
+      totals = await hitungUlangBill(target.id, warungId, tx);
+      await tx.transaction.update({ where: { id: target.id }, data: totals });
+    });
 
     await catat({
       warungId,

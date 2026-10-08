@@ -48,6 +48,13 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     let newBillId = "";
+    let sourceTotals: { subtotal: number; discount: number; tax: number; total: number } = {
+      subtotal: 0,
+      discount: 0,
+      tax: 0,
+      total: 0,
+    };
+    let targetTotals = { ...sourceTotals };
 
     await prisma.$transaction(async (tx) => {
       // Bill sumber harus DRAFT & milik warung ini (aturan #1 & #8).
@@ -124,15 +131,15 @@ export async function POST(req: Request, { params }: Params) {
           });
         }
       }
-    });
 
-    // Hitung ulang KEDUA bill dari item (server-side).
-    const sourceTotals = await hitungUlangBill(params.id, warungId);
-    const targetTotals = await hitungUlangBill(newBillId, warungId);
-    await prisma.$transaction([
-      prisma.transaction.update({ where: { id: params.id }, data: sourceTotals }),
-      prisma.transaction.update({ where: { id: newBillId }, data: targetTotals }),
-    ]);
+      // Hitung ulang KEDUA bill dari item, DI DALAM tx yang sama (atomik).
+      // Wajib pakai `tx`: hitungUlangBill(`prisma`) di dalam $transaction
+      // membaca snapshot pra-mutasi (total stale).
+      sourceTotals = await hitungUlangBill(source.id, warungId, tx);
+      targetTotals = await hitungUlangBill(created.id, warungId, tx);
+      await tx.transaction.update({ where: { id: source.id }, data: sourceTotals });
+      await tx.transaction.update({ where: { id: created.id }, data: targetTotals });
+    });
 
     await catat({
       warungId,
