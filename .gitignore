@@ -40,3 +40,8 @@ next-env.d.ts
 .env*.local
 prisma/*.db
 prisma/*.db-*
+
+# session artifacts
+.ui-review/
+err.log
+prisma/*.db.bak-*
