@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import type { StatusMeja } from "@/types";
+
+// Client minimal yang dibutuhkan helper ini — bisa `prisma` maupun `tx` di
+// dalam $transaction. Tipe `Prisma.TransactionClient` kompatibel dengan
+// PrismaClient untuk operasi baca/tulis yang dipakai di sini.
+type Db = Prisma.TransactionClient;
 
 // Helper manajemen meja + bill DRAFT (Tahap 3).
 //
@@ -69,16 +75,23 @@ export async function requireBillDraft(id: string, warungId: string) {
 // Hitung ulang subtotal/discount/tax/total bill dari item-nya (server-side,
 // bukan percaya angka client). Uang integer rupiah (aturan #3):
 // discount = min(discount, subtotal), tax = round(...). Reuse di semua mutasi.
+//
+// PENTING (dibuktikan lewat probe): pada Prisma+SQLite, client ROOT `prisma`
+// TIDAK melihat tulisan yang belum di-commit dari dalam `$transaction` — ia
+// membaca snapshot pra-mutasi (qty via tx=3, via root=0). Karena itu panggil
+// helper ini DENGAN `tx` bila dipakai di dalam $transaction; dengan `prisma`
+// (default) hanya aman di luar transaksi.
 export async function hitungUlangBill(
   billId: string,
-  warungId: string
+  warungId: string,
+  db: Db = prisma
 ): Promise<{ subtotal: number; discount: number; tax: number; total: number }> {
   const [items, bill] = await Promise.all([
-    prisma.transactionItem.findMany({
+    db.transactionItem.findMany({
       where: { transactionId: billId, warungId },
       select: { price: true, qty: true },
     }),
-    prisma.transaction.findFirst({
+    db.transaction.findFirst({
       where: { id: billId, warungId },
       select: { discount: true },
     }),
@@ -87,7 +100,7 @@ export async function hitungUlangBill(
   const subtotal = items.reduce((n, i) => n + i.price * i.qty, 0);
   const discount = Math.min(bill?.discount ?? 0, subtotal);
 
-  const setting = await prisma.setting.findUnique({ where: { warungId } });
+  const setting = await db.setting.findUnique({ where: { warungId } });
   const taxEnabled = setting ? !!setting.taxEnabled : true;
   const taxPct = setting ? Math.min(100, Math.max(0, Number(setting.taxPct) || 0)) : 10;
   const tax = taxEnabled ? Math.round(((subtotal - discount) * taxPct) / 100) : 0;
