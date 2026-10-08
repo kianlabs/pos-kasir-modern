@@ -20,5 +20,10 @@ export default defineConfig({
     // Test menyentuh satu file SQLite bersama → jangan jalankan file test
     // secara paralel agar isolasi data antar-file dapat dijamin.
     fileParallelism: false,
+    // Default 5000ms tidak cukup: test isolasi tenant melakukan seed penuh
+    // (38 produk + 10 meja + user + setting) lalu cascade delete dalam satu
+    // `it()`. Operasi nyata ~700ms, tetapi bisa melewati 5s di runner lambat.
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
 });
