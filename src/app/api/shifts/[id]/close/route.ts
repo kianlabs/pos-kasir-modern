@@ -31,6 +31,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "Shift tidak ditemukan / sudah tutup." }, { status: 404 });
   }
 
+  // Guard (plan §7 keputusan 1): bill DRAFT TIDAK boleh menggantung lintas shift.
+  // Bila masih ada bill terbuka di warung → 409, arahkan selesaikan/batalkan dulu.
+  const openBills = await prisma.transaction.count({
+    where: { warungId, status: "DRAFT" },
+  });
+  if (openBills > 0) {
+    return NextResponse.json(
+      { error: `Masih ada ${openBills} bill terbuka. Selesaikan atau batalkan dulu.` },
+      { status: 409 }
+    );
+  }
+
   const tunai = shift.transactions
     .filter((t) => t.payment === "CASH")
     .reduce((n, t) => n + t.total, 0);
