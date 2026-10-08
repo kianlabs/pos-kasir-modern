@@ -17,4 +17,10 @@ export type AuditAction =
   | "SHIFT_CLOSE"
   | "SETTING_CHANGE"
   | "DELETE_PRODUCT"
-  | "SEED_WARUNG";
+  | "SEED_WARUNG"
+  // Manajemen meja / bill DRAFT (Tahap 3)
+  | "MEJA_BUKA"
+  | "MEJA_BAYAR"
+  | "MEJA_BATAL"
+  | "MEJA_GABUNG"
+  | "MEJA_PISAH";
