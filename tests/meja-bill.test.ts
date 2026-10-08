@@ -11,6 +11,13 @@ import { deriveStatusMeja, hitungUlangBill } from "@/lib/meja";
 //
 // Test menyentuh DB test terpisah (prisma/test.db) via tests/global-setup.ts +
 // tests/setup.ts — JANGAN pernah arahkan ke dev.db.
+//
+// Batasan (jujur): test ini menguji KONTRAK DOMAIN (query/invarian/hitung uang)
+// terhadap DB nyata, bukan memanggil route handler HTTP. Handler butuh konteks
+// request (cookies() + React.cache) yang belum ada harness-mock di repo ini.
+// Alur buka/bayar di sini meniru handler sedekat mungkin; regresi K1 & P1
+// (baris di bawah) terbukti gagal pada logika lama → perubahan perilaku
+// handler tetap tertangkap. Lihat plan §8.6 & catatan reviewer soal batasan ini.
 describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
   let warungA: { id: string; nama: string };
   let warungB: { id: string; nama: string };
@@ -28,6 +35,19 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
   async function getProdukA() {
     const p = await prisma.product.findUniqueOrThrow({ where: { id: produkA.id } });
     return p;
+  }
+
+  // Helper: hapus semua bill DRAFT warung A (batal) agar test berikutnya
+  // mulai dari peta meja bersih. Dipakai di awal test yang butuh meja KOSONG.
+  async function bersihkanDraftA() {
+    const drafts = await prisma.transaction.findMany({
+      where: { warungId: warungA.id, status: "DRAFT" },
+      select: { id: true },
+    });
+    const ids = drafts.map((d) => d.id);
+    if (ids.length === 0) return;
+    await prisma.transactionItem.deleteMany({ where: { transactionId: { in: ids } } });
+    await prisma.transaction.deleteMany({ where: { id: { in: ids } } });
   }
 
   // Membuat bill DRAFT persis seperti handler POST /api/meja/[id]/bill:
@@ -88,8 +108,9 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     });
   }
 
-  // Bayar bill (POST /api/bills/[id]/bayar): validasi stok → decrement →
-  // StockMove → status LUNAS, semua dalam satu transaksi.
+  // Bayar bill (POST /api/bills/[id]/bayar): validasi stok (qty TERAGREGASI
+  // per produk) → decrement → StockMove → status LUNAS, semua dalam satu
+  // transaksi. Subtotal dari SNAPSHOT item.price (bukan harga produk live).
   async function bayarBill(billId: string, warungId: string, cashierId: string, cash: number) {
     return prisma.$transaction(async (tx) => {
       const bill = await tx.transaction.findFirst({
@@ -99,16 +120,23 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
       if (!bill) throw new Error("Bill tidak ditemukan.");
       if (bill.items.length === 0) throw new Error("Bill masih kosong.");
 
+      // Agregasi qty per productId (fix K1: cegah stok minus saat >1 baris produk sama).
+      const qtyByProduct = new Map<string, number>();
+      for (const item of bill.items) {
+        qtyByProduct.set(item.productId, (qtyByProduct.get(item.productId) ?? 0) + item.qty);
+      }
+
       const products = await tx.product.findMany({
-        where: { id: { in: bill.items.map((i) => i.productId) }, warungId },
+        where: { id: { in: Array.from(qtyByProduct.keys()) }, warungId },
       });
       const byId = new Map(products.map((p) => [p.id, p]));
 
       let subtotal = 0;
-      for (const item of bill.items) {
-        const p = byId.get(item.productId)!;
-        if (p.stock < item.qty) throw new Error(`Stok ${p.name} kurang (sisa ${p.stock}).`);
-        subtotal += p.price * item.qty;
+      for (const item of bill.items) subtotal += item.price * item.qty;
+
+      for (const [productId, qty] of Array.from(qtyByProduct.entries())) {
+        const p = byId.get(productId)!;
+        if (p.stock < qty) throw new Error(`Stok ${p.name} kurang (sisa ${p.stock}).`);
       }
 
       const discount = Math.min(bill.discount, subtotal);
@@ -133,17 +161,16 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
         },
       });
 
-      for (const item of bill.items) {
-        const p = byId.get(item.productId)!;
+      for (const [productId, qty] of Array.from(qtyByProduct.entries())) {
         await tx.product.update({
-          where: { id: p.id },
-          data: { stock: { decrement: item.qty } },
+          where: { id: productId },
+          data: { stock: { decrement: qty } },
         });
         await tx.stockMove.create({
           data: {
             warungId,
-            productId: p.id,
-            qty: -item.qty,
+            productId,
+            qty: -qty,
             type: "PENJUALAN",
             refId: bill.id,
             createdBy: cashierId,
@@ -354,8 +381,95 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     expect(billSumber.total).toBe(hitungSumber.total);
   });
 
+  it("(e2/REGRESI K1) bayar setelah gabung TIDAK membuat stok minus", async () => {
+    // Skenario bug: bill A & B masing-masing punya produk SAMA; gabung
+    // memindah baris tanpa merge → bill tujuan punya 2 baris produk sama.
+    // Logika bayar lama memvalidasi per-baris terhadap stok ter-cache →
+    // dua baris lolos → decrement kumulatif → stok minus. Regresi ini harus
+    // GAGAL pada kode lama dan LULUS setelah agregasi qty per produk.
+    await bersihkanDraftA();
+    const p = await prisma.product.create({
+      data: { warungId: warungA.id, name: `ProdukK1-${Date.now()}`, price: 1000, stock: 2 },
+    });
+
+    const target = await bukaBill(mejaA1.id, warungA.id, kasirA.id);
+    const source = await bukaBill(mejaA2.id, warungA.id, kasirA.id);
+    await tambahItem(target.id, warungA.id, p.id, 1); // 1 × produk
+    await tambahItem(source.id, warungA.id, p.id, 2); // 2 × produk
+
+    // Gabung tanpa merge → 2 baris produk p di bill target.
+    await prisma.$transaction(async (tx) => {
+      await tx.transactionItem.updateMany({
+        where: { transactionId: source.id, warungId: warungA.id },
+        data: { transactionId: target.id },
+      });
+      await tx.transaction.delete({ where: { id: source.id } });
+    });
+    const baris = await prisma.transactionItem.count({
+      where: { transactionId: target.id, productId: p.id },
+    });
+    expect(baris).toBe(2);
+
+    // Bayar: qty teragregasi = 3 > stok 2 → HARUS ditolak (stok tetap 2).
+    await expect(bayarBill(target.id, warungA.id, kasirA.id, 100000)).rejects.toThrow(
+      /Stok .* kurang/
+    );
+    const setelahGagal = await prisma.product.findUniqueOrThrow({ where: { id: p.id } });
+    expect(setelahGagal.stock).toBe(2); // tidak berkurang, tidak minus
+
+    // Turunkan kebutuhan jadi tepat = stok (hapus baris qty 1, sisakan qty 2),
+    // lalu bayar sukses dengan stok tepat 0 (bukan minus).
+    await prisma.transactionItem.delete({
+      where: { id: (await prisma.transactionItem.findFirstOrThrow({
+        where: { transactionId: target.id, productId: p.id, qty: 1 },
+      })).id },
+    });
+    await bayarBill(target.id, warungA.id, kasirA.id, 100000);
+    const akhir = await prisma.product.findUniqueOrThrow({ where: { id: p.id } });
+    expect(akhir.stock).toBe(0);
+    expect(akhir.stock).toBeGreaterThanOrEqual(0);
+
+    // Produk uji tidak dihapus (masih dirujuk TransactionItem → FK Restrict);
+    // cukup bersihkan DRAFT. DB test dibuang tiap run (global-setup migrate).
+    await bersihkanDraftA();
+  });
+
+  it("(e3/REGRESI P1) bayar memakai snapshot harga item, bukan harga produk live", async () => {
+    // Bug lama: bayar memakai p.price (harga produk live) sementara PATCH/
+    // struk memakai snapshot. Ubah harga produk saat bill terbuka → tagihan
+    // tidak boleh ikut berubah.
+    await bersihkanDraftA();
+    const p = await prisma.product.create({
+      data: { warungId: warungA.id, name: `ProdukP1-${Date.now()}`, price: 5000, stock: 10 },
+    });
+    const bill = await bukaBill(mejaA1.id, warungA.id, kasirA.id);
+    await tambahItem(bill.id, warungA.id, p.id, 2); // subtotal snapshot = 10_000
+
+    // Harga produk naik SETELAH item masuk bill.
+    await prisma.product.update({ where: { id: p.id }, data: { price: 9000 } });
+
+    const hasil = await bayarBill(bill.id, warungA.id, kasirA.id, 1_000_000);
+    const lunas = await prisma.transaction.findUniqueOrThrow({ where: { id: hasil.id } });
+
+    // Subtotal = 2 × 5000 (snapshot), bukan 2 × 9000 (live).
+    expect(lunas.subtotal).toBe(10_000);
+    expect(lunas.total).toBe(10_000 + Math.round(10_000 * 0.1)); // + pajak 10%
+
+    // Stok turun 2 (dari 10 → 8).
+    const after = await prisma.product.findUniqueOrThrow({ where: { id: p.id } });
+    expect(after.stock).toBe(8);
+
+    // Produk uji tidak dihapus (dirujuk TransactionItem → FK Restrict).
+  });
+
   it("(f) DRAFT tidak bocor ke laporan: /transaksi & stats hanya LUNAS (aturan #12)", async () => {
-    // Saat ini ada DRAFT terbuka (sisa test sebelumnya) DENGAN item & total.
+    // Buat sendiri DRAFT dengan item & total > 0 agar pembuktian bermakna
+    // (tidak bergantung sisa test sebelumnya).
+    const p = await prisma.product.findFirstOrThrow({ where: { warungId: warungA.id } });
+    const draft = await bukaBill(mejaA1.id, warungA.id, kasirA.id);
+    await tambahItem(draft.id, warungA.id, p.id, 2);
+    await tambahItem(draft.id, warungA.id, p.id, 1); // qty 3 → total > 0
+
     const drafts = await prisma.transaction.findMany({
       where: { warungId: warungA.id, status: "DRAFT" },
       include: { items: true },

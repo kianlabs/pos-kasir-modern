@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
+import { BillError } from "@/lib/meja";
 
 export const dynamic = "force-dynamic";
 
@@ -23,20 +24,20 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
         where: { id: params.id, warungId },
         select: { id: true },
       });
-      if (!meja) throw new Error("Meja tidak ditemukan.");
+      if (!meja) throw new BillError("Meja tidak ditemukan.", 404);
 
       const existing = await tx.transaction.findFirst({
         where: { warungId, mejaId: meja.id, status: "DRAFT" },
         select: { id: true },
       });
-      if (existing) throw new Error("Meja sudah punya bill terbuka.");
+      if (existing) throw new BillError("Meja sudah punya bill terbuka.", 409);
 
       const shift = await tx.shift.findFirst({
         where: { warungId, status: "BUKA" },
         orderBy: { openedAt: "desc" },
         select: { id: true },
       });
-      if (!shift) throw new Error("Belum ada shift terbuka. Buka shift dulu.");
+      if (!shift) throw new BillError("Belum ada shift terbuka. Buka shift dulu.", 400);
 
       // DRAFT tidak menyentuh stok (plan §7 keputusan 3): total masih 0,
       // stok/StockMove baru disentuh saat transisi DRAFT → LUNAS (bayar).
@@ -62,8 +63,10 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
     return NextResponse.json({ id: bill.id, mejaId: bill.mejaId, status: bill.status }, { status: 201 });
   } catch (e) {
+    if (e instanceof BillError) {
+      return NextResponse.json({ error: e.message }, { status: e.status });
+    }
     const message = e instanceof Error ? e.message : "Gagal buka bill.";
-    const status = message === "Meja tidak ditemukan." ? 404 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

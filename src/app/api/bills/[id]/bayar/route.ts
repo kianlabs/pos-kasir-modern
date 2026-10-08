@@ -42,23 +42,39 @@ export async function POST(req: Request, { params }: Params) {
 
       // Validasi stok nyata terjadi di sini (bukan saat tambah item): dua bill
       // DRAFT boleh sama-sama memuat qty melebihi stok; yang bayar dulu menang.
+      //
+      // PENTING (fix K1): agregasi qty per productId DULU. Satu bill bisa punya
+      // >1 baris produk yang sama (mis. hasil gabung memindah baris tanpa merge).
+      // Bila validasi per-baris terhadap stok yang di-cache, dua baris bisa
+      // sama-sama lolos lalu decrement kumulatif → stok minus.
+      const qtyByProduct = new Map<string, { qty: number; name: string }>();
+      for (const item of bill.items) {
+        const cur = qtyByProduct.get(item.productId);
+        if (cur) cur.qty += item.qty;
+        else qtyByProduct.set(item.productId, { qty: item.qty, name: item.name });
+      }
+
       const products = await tx.product.findMany({
-        where: { id: { in: bill.items.map((i) => i.productId) }, warungId },
+        where: { id: { in: Array.from(qtyByProduct.keys()) }, warungId },
         select: { id: true, name: true, price: true, stock: true },
       });
       const byId = new Map(products.map((p) => [p.id, p]));
 
+      // Subtotal dari SNAPSHOT harga item (bukan harga produk live) agar tagihan
+      // konsisten dengan baris struk & nilai DRAFT yang dilihat kasir (fix P1).
       let subtotal = 0;
-      for (const item of bill.items) {
-        const p = byId.get(item.productId);
-        if (!p) throw new BillError(`Produk ${item.name} tidak ditemukan.`, 400);
-        if (p.stock < item.qty) {
+      for (const item of bill.items) subtotal += item.price * item.qty;
+
+      // Validasi stok terhadap qty TERAGREGASI per produk.
+      for (const [productId, agg] of Array.from(qtyByProduct.entries())) {
+        const p = byId.get(productId);
+        if (!p) throw new BillError(`Produk ${agg.name} tidak ditemukan.`, 400);
+        if (p.stock < agg.qty) {
           throw new BillError(`Stok ${p.name} kurang (sisa ${p.stock}).`, 400);
         }
-        subtotal += p.price * item.qty;
       }
 
-      // Hitung ulang dari harga produk saat bayar + diskon tersimpan.
+      // Hitung ulang diskon/pajak/total dari subtotal snapshot + diskon tersimpan.
       const discount = Math.min(bill.discount, subtotal);
       const taxCfg = await getTaxSetting(tx, warungId);
       const tax = taxCfg.enabled ? Math.round(((subtotal - discount) * taxCfg.pct) / 100) : 0;
@@ -82,18 +98,18 @@ export async function POST(req: Request, { params }: Params) {
         },
       });
 
-      // Decrement stok + StockMove per item — hanya di jalur bayar.
-      for (const item of bill.items) {
-        const p = byId.get(item.productId)!;
+      // Decrement stok + StockMove per PRODUK (qty teragregasi) — hanya di
+      // jalur bayar. Satu StockMove per produk, konsisten dengan kartu stok.
+      for (const [productId, agg] of Array.from(qtyByProduct.entries())) {
         await tx.product.update({
-          where: { id: p.id },
-          data: { stock: { decrement: item.qty } },
+          where: { id: productId },
+          data: { stock: { decrement: agg.qty } },
         });
         await tx.stockMove.create({
           data: {
             warungId,
-            productId: p.id,
-            qty: -item.qty,
+            productId,
+            qty: -agg.qty,
             type: "PENJUALAN",
             refId: bill.id,
             createdBy: kasirId,
