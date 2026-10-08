@@ -21,6 +21,9 @@ export async function POST(req: Request) {
   const cash = Number(body.cash);
   const payment = body.payment === "QRIS" ? "QRIS" : "CASH";
   const discount = Math.max(0, Math.floor(Number(body.discount) || 0));
+  // Meja OPSIONAL (jalur "bayar langsung di meja"). Ini bukan tenant key —
+  // warungId tetap dari session (aturan #8); mejaId tetap divalidasi milik warung.
+  const mejaId = typeof body.mejaId === "string" && body.mejaId ? body.mejaId : null;
 
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     return NextResponse.json({ error: "Keranjang kosong." }, { status: 400 });
@@ -68,10 +71,17 @@ export async function POST(req: Request) {
         orderBy: { openedAt: "desc" },
       });
 
+      // Validasi kepemilikan meja (aturan #1 & #8) bila kasir memilih meja.
+      if (mejaId) {
+        const meja = await tx.meja.findFirst({ where: { id: mejaId, warungId } });
+        if (!meja) throw new Error("Meja tidak ditemukan.");
+      }
+
       const created = await tx.transaction.create({
         data: {
           warungId,
           cashierId,
+          mejaId,
           status: "LUNAS",
           subtotal,
           discount: disc,

@@ -8,6 +8,7 @@ import type { Role } from "@/types";
 // owner dapat semua termasuk produk, laporan, pengaturan.
 const NAV: { href: string; label: string; icon: string; roles: Role[] }[] = [
   { href: "/", label: "Kasir", icon: "🛒", roles: ["OWNER", "KASIR"] },
+  { href: "/meja", label: "Meja", icon: "🍽️", roles: ["OWNER", "KASIR"] },
   { href: "/transaksi", label: "Transaksi", icon: "🧾", roles: ["OWNER", "KASIR"] },
   { href: "/shift", label: "Shift", icon: "⏰", roles: ["OWNER", "KASIR"] },
   { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },

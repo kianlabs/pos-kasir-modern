@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function TransaksiPage() {
   const warungId = await currentWarungId();
   const trx = await prisma.transaction.findMany({
-    where: { warungId },
+    // Aturan #12: hanya LUNAS yang tampil sebagai transaksi. Bill DRAFT
+    // (meja terbuka) tidak boleh bocor ke daftar ini.
+    where: { warungId, status: "LUNAS" },
     orderBy: { createdAt: "desc" },
     take: 50,
     include: { items: { include: { product: true } } },
