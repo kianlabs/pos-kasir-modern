@@ -10,7 +10,7 @@ import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
 // Middleware di sini adalah lapisan UX (redirect cepat) + guard kasar role;
 // guard yang mengikat tetap di handler.
 
-const OWNER_ONLY_API = ["/api/settings", "/api/export", "/api/auth/kasir"];
+const OWNER_ONLY_API = ["/api/settings", "/api/export"];
 const OWNER_ONLY_PAGES = ["/produk", "/laporan", "/pengaturan"];
 
 function decodeRoleUnsafe(token: string | undefined): SessionPayload["role"] | null {
@@ -34,6 +34,9 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/masuk") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/logout") ||
+    // Daftar kasir per warung untuk tablet login: publik menurut desain
+    // (lampiran skema §2 aturan #7). Handler hanya mengembalikan {id, name}.
+    pathname.startsWith("/api/auth/kasir") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico"
   ) {
