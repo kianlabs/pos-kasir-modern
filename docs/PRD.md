@@ -88,8 +88,10 @@ Fondasi yang sudah ada (dari KasirKu): kasir + keranjang + diskon/pajak, CRUD pr
 - [x] Checkout atomik (validasi stok + kurangi stok dalam 1 transaksi DB)
 
 ### 6.2. Baru di MVP
-- [ ] **Multi-tenant single-DB** — semua tabel bisnis punya `warungId`; semua query di-scope per warung (tenant di-resolve dari user login, lihat §10). *Selesai bila: test isolasi hijau — user warung A request data warung B → 403/kosong.*
-- [ ] **Login multi-role** (owner vs kasir) — kasir hanya bisa jualan, owner bisa ubah produk/harga/laporan. *Selesai bila: kasir buka /produk langsung ditolak 403; owner bisa semuanya. Login kasir = pilih nama dari daftar → ketik PIN → verifikasi hash server-side.*
+- [x] **Multi-tenant single-DB** — semua tabel bisnis punya `warungId`; semua query di-scope per warung (tenant di-resolve dari user login, lihat §10). *Selesai bila: test isolasi hijau — user warung A request data warung B → 403/kosong.*
+  > **Status implementasi (Tahap 2):** session HMAC cookie; `warungId` diambil dari session (bukan dari input/parameter user); semua query di-scope per `warungId` session.
+- [x] **Login multi-role** (owner vs kasir) — kasir hanya bisa jualan, owner bisa ubah produk/harga/laporan. *Selesai bila: kasir buka /produk langsung ditolak 403; owner bisa semuanya. Login kasir = pilih nama dari daftar → ketik PIN → verifikasi hash server-side.*
+  > **Status implementasi (Tahap 2):** gate 403 kasir di `/produk` (juga `/laporan`, `/pengaturan`); rate-limit PIN 5× gagal / 5 menit; AuditLog mencatat login (`LOGIN_OK`/`LOGIN_FAIL`).
 - [ ] **Manajemen meja** — 10–20 meja, status kosong/terisi, bill per meja, gabung/pisah bill. *Selesai bila: 2 meja aktif bersamaan tanpa bill tercampur; tutup meja mengosongkan status.*
 - [ ] **Mode offline-first** — transaksi tersimpan lokal (IndexedDB) saat offline, auto-sync saat online kembali (upsert by UUID client-side, idempotent); indikator status koneksi jelas di UI. *Selesai bila: matikan internet → 5 transaksi → nyalakan → kelimanya muncul di server tanpa duplikat.*
 - [ ] **PWA installable** — bisa di-install di tablet/HP kasir seperti aplikasi native, ikon KRING! di home screen. *Selesai bila: instal dari Chrome Android, buka fullscreen tanpa address bar.*

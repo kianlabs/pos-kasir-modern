@@ -12,19 +12,42 @@ Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwin
 - **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
 - **Laporan** (`/laporan`) — filter tanggal, export CSV, grafik 7 hari, produk terlaris, stok menipis
 - **Pengaturan** (`/pengaturan`) — pajak otomatis on/off + tarif
+- **Auth & RBAC** (`/masuk/[slug]`) — login multi-role: owner (email + password) & kasir (PIN); session HMAC cookie; kasir dibatasi (403 di `/produk`, `/laporan`, `/pengaturan`)
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
 
-## Cara jalan
+## Menjalankan
+
+Prasyarat: buat file `.env` dengan **`SESSION_SECRET`** (wajib, minimal 16 karakter) dan **`DATABASE_URL`**.
 
 ```bash
-cd pos-kasir-modern
-npm install              # otomatis menjalankan prisma generate via postinstall
-npx prisma migrate dev   # buat DB SQLite
-npx tsx prisma/seed.ts   # isi 38 menu warung (dilewati bila sudah ada transaksi)
-npm run dev              # buka http://localhost:3000
+# .env
+SESSION_SECRET=ganti-dengan-string-acak-min-16-karakter
+DATABASE_URL="file:./dev.db"
 ```
 
-> Catatan: `npm install` sudah otomatis men-generate Prisma Client (via script `postinstall: prisma generate`) — tidak perlu menjalankan `npx prisma generate` secara terpisah. Prisma dipakai versi 6 (stabil, perintah `migrate dev`).
+Lalu jalankan:
+
+```bash
+npm install                # otomatis menjalankan prisma generate via postinstall
+npx prisma migrate deploy  # terapkan migrasi ke DB
+npx tsx prisma/seed.ts     # isi data demo (idempoten — dilewati bila sudah ada)
+npm run dev                # buka http://localhost:3000
+```
+
+> Catatan: `npm install` sudah otomatis men-generate Prisma Client (via script `postinstall: prisma generate`) — tidak perlu menjalankan `npx prisma generate` secara terpisah. Prisma dipakai versi 6.
+
+## Akun demo
+
+Setelah `seed.ts`, gunakan akun berikut:
+
+- **Owner** — email `owner@warung-berkah-jaya.demo`, password `password123`
+- **Kasir** — PIN `123456`
+- **Akses halaman masuk:** `/masuk/warung-berkah-jaya` (per-warung) atau `/masuk/_` (fallback tanpa slug)
+
+## Keamanan
+
+- **`SESSION_SECRET` wajib diisi di produksi** (minimal 16 karakter) — tanpa ini sesi tidak aman.
+- **Rate-limit PIN masih in-memory** (5× gagal → blokir 5 menit). Pindahkan ke DB/Redis saat deploy multi-instance, karena state in-memory tidak terbagi antar proses.
 
 ## Struktur
 
@@ -56,7 +79,6 @@ prisma/
 
 ## Ide pengembangan lanjut
 
-- Login kasir/admin (NextAuth) + hak akses
 - Mode barcode scanner (input keyboard wedge)
 - Mode kios fullscreen
 - Deploy live (Vercel + Postgres)
