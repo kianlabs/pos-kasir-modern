@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { rupiah } from "@/lib/rupiah";
 import { PAYMENT_LABEL, shortId } from "@/lib/meta";
@@ -17,16 +18,8 @@ export default async function StrukPage({ params }: { params: { id: string } }) 
     },
   });
 
-  if (!trx)
-    return (
-      <div className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center shadow-sm">
-        Transaksi tidak ditemukan.
-        <br />
-        <Link href="/" className="font-bold text-primary hover:underline">
-          Kembali ke kasir
-        </Link>
-      </div>
-    );
+  // Struk = bukti bayar. Bill DRAFT belum boleh dicetak → tolak (plan §4.5.2).
+  if (!trx || trx.status !== "LUNAS") notFound();
 
   const receiptName =
     trx.warung.settings[0]?.receiptName || trx.warung.nama || "Warung Berkah Jaya";
