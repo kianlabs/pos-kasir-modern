@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
-import { currentWarungId } from "@/lib/warung";
+import { currentWarungId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,11 @@ export async function GET() {
 }
 
 // PATCH /api/settings { taxEnabled?, taxPct?, receiptName?, jamBuka?, jamTutup? }
+// Owner-only: kasir tidak boleh mengubah pajak / identitas struk.
 export async function PATCH(req: Request) {
+  const denied = await requireOwnerResponse();
+  if (denied) return denied;
+
   const warungId = await currentWarungId();
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });

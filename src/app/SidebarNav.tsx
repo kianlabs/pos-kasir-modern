@@ -2,23 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Role } from "@/types";
 
-const NAV = [
-  { href: "/", label: "Kasir", icon: "🛒" },
-  { href: "/produk", label: "Produk", icon: "📦" },
-  { href: "/transaksi", label: "Transaksi", icon: "🧾" },
-  { href: "/shift", label: "Shift", icon: "⏰" },
-  { href: "/stok", label: "Stok", icon: "📋" },
-  { href: "/laporan", label: "Laporan", icon: "📊" },
-  { href: "/pengaturan", label: "Pengaturan", icon: "⚙️" },
+// Menu per role (PRD §6.2): kasir hanya jualan + lihat shift/stok/transaksi;
+// owner dapat semua termasuk produk, laporan, pengaturan.
+const NAV: { href: string; label: string; icon: string; roles: Role[] }[] = [
+  { href: "/", label: "Kasir", icon: "🛒", roles: ["OWNER", "KASIR"] },
+  { href: "/transaksi", label: "Transaksi", icon: "🧾", roles: ["OWNER", "KASIR"] },
+  { href: "/shift", label: "Shift", icon: "⏰", roles: ["OWNER", "KASIR"] },
+  { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },
+  { href: "/produk", label: "Produk", icon: "📦", roles: ["OWNER"] },
+  { href: "/laporan", label: "Laporan", icon: "📊", roles: ["OWNER"] },
+  { href: "/pengaturan", label: "Pengaturan", icon: "⚙️", roles: ["OWNER"] },
 ];
 
-export default function SidebarNav() {
+export default function SidebarNav({ role }: { role: Role }) {
   const path = usePathname();
+  const items = NAV.filter((n) => n.roles.includes(role));
 
   return (
     <nav className="flex flex-col gap-1 p-3">
-      {NAV.map((n) => {
+      {items.map((n) => {
         const active = n.href === "/" ? path === "/" : path.startsWith(n.href);
         return (
           <Link

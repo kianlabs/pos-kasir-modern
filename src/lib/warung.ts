@@ -1,7 +1,9 @@
 import * as React from "react";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { SESSION_COOKIE, verifySession, type SessionPayload } from "@/lib/session";
+import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
+import { verifySession } from "@/lib/session";
 
 // Tenant SELALU dari session login (lampiran skema §2 aturan #8):
 // warungId tidak pernah diterima dari body/query/header.
@@ -69,4 +71,17 @@ export const currentWarung = memoize(async () => {
 // Cek role: return false bila bukan salah satu role yang diizinkan.
 export function hasRole(session: SessionPayload | null, ...roles: string[]): boolean {
   return !!session && roles.includes(session.role);
+}
+
+// Gate role untuk route API: kembalikan respons siap-pakai bila tidak berhak,
+// atau null bila boleh lanjut. Dipakai sebelum menyentuh Prisma.
+export async function requireOwnerResponse(): Promise<ReturnType<typeof NextResponse.json> | null> {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Belum login." }, { status: 401 });
+  }
+  if (session.role !== "OWNER") {
+    return NextResponse.json({ error: "Akses khusus owner." }, { status: 403 });
+  }
+  return null;
 }

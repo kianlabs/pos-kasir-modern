@@ -1,34 +1,22 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Role } from "@/types";
+import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
 
-// Session stateless: payload base64url + tanda tangan HMAC-SHA256.
-// Tanpa dependency baru, cukup untuk Next 14 App Router.
-// Rahasia diambil dari SESSION_SECRET; di dev ada fallback + peringatan.
+// Penandatanganan & verifikasi token session (Node runtime).
+// Tipe + nama cookie ada di lib/auth-session.ts agar middleware edge bisa
+// mengimpornya tanpa menyeret node:crypto.
 
-export const SESSION_COOKIE = "kring_session";
+export { SESSION_COOKIE };
+export type { SessionPayload };
+
 export const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 jam — satu shift kerja
-
-export type SessionPayload = {
-  uid: string; // User.id
-  wid: string; // Warung.id — SATU-SATUNYA sumber warungId (lampiran §2 #8)
-  role: Role;
-  name: string; // nama tampil (audit + header)
-  iat: number; // epoch detik
-  exp: number; // epoch detik
-};
 
 function secret(): string {
   const s = process.env.SESSION_SECRET;
   if (s && s.length >= 16) return s;
-  // Dev-only fallback agar `next dev` langsung jalan. Produksi WAJIB set env.
   if (process.env.NODE_ENV === "production") {
     throw new Error("SESSION_SECRET wajib diisi di produksi (min. 16 karakter).");
   }
   return "kring-dev-secret-change-me";
-}
-
-function b64url(input: Buffer | string): string {
-  return Buffer.from(input).toString("base64url");
 }
 
 function sign(payloadB64: string): string {
@@ -50,9 +38,8 @@ export function issueSession(user: {
     iat: now,
     exp: now + SESSION_TTL_SECONDS,
   };
-  const payloadB64 = b64url(JSON.stringify(payload));
-  const token = `${payloadB64}.${sign(payloadB64)}`;
-  return { token, maxAge: SESSION_TTL_SECONDS };
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return { token: `${payloadB64}.${sign(payloadB64)}`, maxAge: SESSION_TTL_SECONDS };
 }
 
 export function verifySession(token: string | undefined | null): SessionPayload | null {
@@ -84,6 +71,5 @@ export function verifySession(token: string | undefined | null): SessionPayload 
     return null;
   }
   if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
-
   return payload;
 }

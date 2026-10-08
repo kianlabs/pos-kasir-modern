@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { catat } from "@/lib/audit";
 import { getSession } from "@/lib/warung";
-import { SESSION_COOKIE } from "@/lib/session";
+import { SESSION_COOKIE } from "@/lib/auth-session";
 
 export const dynamic = "force-dynamic";
 

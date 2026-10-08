@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { isDateStr } from "@/lib/request";
-import { currentWarungId } from "@/lib/warung";
+import { currentWarungId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/export?from=ISO&to=ISO → CSV transaksi periode
+// GET /api/export?from=ISO&to=ISO → CSV transaksi periode (owner-only).
 export async function GET(req: Request) {
+  const denied = await requireOwnerResponse();
+  if (denied) return denied;
+
   const warungId = await currentWarungId();
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");

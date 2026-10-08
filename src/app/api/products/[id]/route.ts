@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
-import { currentWarungId, currentKasirId } from "@/lib/warung";
+import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: { id: string } };
 
+// PATCH /api/products/[id] → owner-only (ubah harga/Stok/katalog).
 export async function PATCH(req: Request, { params }: Params) {
+  const denied = await requireOwnerResponse();
+  if (denied) return denied;
+
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 
@@ -66,7 +70,11 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 }
 
+// DELETE /api/products/[id] → owner-only.
 export async function DELETE(_req: Request, { params }: Params) {
+  const denied = await requireOwnerResponse();
+  if (denied) return denied;
+
   const warungId = await currentWarungId();
 
   const used = await prisma.transactionItem.count({

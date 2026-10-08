@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
-import { issueSession, SESSION_COOKIE } from "@/lib/session";
+import { issueSession } from "@/lib/session";
+import { SESSION_COOKIE } from "@/lib/auth-session";
 import { checkLoginRate, recordLoginFailure, recordLoginSuccess } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";

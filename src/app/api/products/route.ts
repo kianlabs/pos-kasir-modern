@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
-import { currentWarungId, currentKasirId } from "@/lib/warung";
+import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,11 @@ export async function GET() {
   return NextResponse.json(products);
 }
 
+// POST /api/products → owner-only (kasir tidak boleh mengubah katalog/harga).
 export async function POST(req: Request) {
+  const denied = await requireOwnerResponse();
+  if (denied) return denied;
+
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 
