@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
+import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,23 @@ export async function PATCH(req: Request, { params }: Params) {
         },
       });
     }
+    // Audit mutasi penting (lampiran skema §2 aturan #10) — angka ringkas saja.
+    if (data.price !== undefined && data.price !== before.price) {
+      await catat({
+        warungId,
+        userId: kasirId,
+        action: "PRICE_CHANGE",
+        meta: { before: before.price, after: data.price },
+      });
+    }
+    if (data.stock !== undefined && data.stock !== before.stock) {
+      await catat({
+        warungId,
+        userId: kasirId,
+        action: "STOCK_KOREKSI",
+        meta: { before: before.stock, after: data.stock },
+      });
+    }
     return NextResponse.json(product);
   } catch {
     return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
@@ -76,6 +94,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (denied) return denied;
 
   const warungId = await currentWarungId();
+  const kasirId = await currentKasirId(warungId);
 
   const used = await prisma.transactionItem.count({
     where: { productId: params.id, warungId },
@@ -93,6 +112,12 @@ export async function DELETE(_req: Request, { params }: Params) {
     if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
 
     await prisma.product.delete({ where: { id: params.id } });
+    await catat({
+      warungId,
+      userId: kasirId,
+      action: "DELETE_PRODUCT",
+      meta: { name: before.name },
+    });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });

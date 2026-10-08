@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
-import { currentWarungId, requireOwnerResponse } from "@/lib/warung";
+import { catat } from "@/lib/audit";
+import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function PATCH(req: Request) {
   if (denied) return denied;
 
   const warungId = await currentWarungId();
+  const kasirId = await currentKasirId(warungId);
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
 
@@ -67,6 +69,16 @@ export async function PATCH(req: Request) {
       jamTutup: updateData.jamTutup ?? "21:00",
     },
   });
+
+  const fields = Object.keys(updateData);
+  if (fields.length > 0) {
+    await catat({
+      warungId,
+      userId: kasirId,
+      action: "SETTING_CHANGE",
+      meta: { fields },
+    });
+  }
 
   return NextResponse.json({
     taxEnabled: setting.taxEnabled,
