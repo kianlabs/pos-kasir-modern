@@ -1,9 +1,10 @@
 # PRD: KRING! — POS Kasir Modern untuk Warung Makan Indonesia
 
-**Versi:** 1.1 — 26 September 2026
+**Versi:** 1.2 — 8 Oktober 2026
 **Status:** Siap eksekusi — dikembangkan dari repo `pos-kasir-modern` (KasirKu)
 **Pemilik:** Kyan (KyanDev)
-**Changelog v1.1:** tambah keputusan multi-tenant (§3, §6.2, §10), section Pricing (§5b), metrik sync + willingness-to-pay (§5), klarifikasi QR statis (§8, §9), acceptance per item MVP (§6.2), kriteria keluar minggu 2 (§13). Detail skema: lihat lampiran `prd-pos-kring-lampiran-skema-db.md` v1.1.
+**Changelog v1.1:** tambah keputusan multi-tenant (§3, §6.2, §10), section Pricing (§5b), metrik sync + willingness-to-pay (§5), klarifikasi QR statis (§8, §9), acceptance per item MVP (§6.2), kriteria keluar minggu 2 (§13). Detail skema: lihat lampiran `PRD-lampiran-skema-db.md` (kini v1.2).
+**Changelog v1.2:** tambah keputusan AI-integrated — fitur "KRING! Insight" di §7b (laporan naratif tutup-shift, deteksi anomali "mata owner", tanya-laporan chat) + daftar tolak di §7b; gating fitur AI ke plan berbayar (§5b); sinkronisasi timeline (§13). Detail teknis: lampiran `PRD-lampiran-ai.md` v1.0.
 
 ---
 
@@ -70,6 +71,7 @@ Fondasi yang sudah ada (dari KasirKu): kasir + keranjang + diskon/pajak, CRUD pr
 
 - **Fase pilot (5 warung, 3 bulan): GRATIS** — imbalan: feedback tiap 2 minggu + izin pakai testimoni/logo untuk marketing.
 - **Setelah validasi: Rp99rb/warung/bln** — di bawah Moka/Majoo, di atas biaya server (±Rp30rb). Keputusan final setelah minggu 6 berdasarkan willingness-to-pay 5 warung pilot (target: ≥ 3 bersedia lanjut berbayar).
+- **Fitur AI ("KRING! Insight") = pembeda plan berbayar** — plan gratis/gratis-pilot tetap dapat ringkasan angka template (tanpa AI); naratif laporan, deteksi anomali, dan tanya-laporan khusus plan ACTIVE (lihat §7b). Biaya token AI ditanggung KRING! dan wajib < Rp5rb/warung/bln (lihat lampiran §8).
 
 ---
 
@@ -100,12 +102,30 @@ Kasir warung bisa dipakai **jualan seharian penuh tanpa internet**, owner terima
 
 ## 7. Fase 2 (setelah MVP stabil)
 
+### 7a. Fase 2 — inti
+
 - [ ] **Struk digital via WhatsApp** — kirim struk ke nomor pembeli, gantikan (opsional) struk kertas
-- [ ] **Laporan harian otomatis ke WA owner** — tiap tutup shift, ringkasan omzet + produk terlaris terkirim sendiri
+- [ ] **Laporan harian otomatis ke WA owner** — tiap tutup shift, ringkasan omzet + produk terlaris terkirim sendiri *(narasi AI menyusul di §7b — channel & trigger yang sama)*
 - [ ] **Dashboard realtime owner** — pantau penjualan live dari HP di rumah (polling → upgrade WebSocket)
 - [ ] **Mode barcode scanner** — untuk warung yang jual produk kemasan (input keyboard wedge)
 - [ ] **Promo engine** — beli 1 gratis 1, diskon jam sepi (happy hour), voucher
 - [ ] **Mode kios fullscreen** — untuk tablet kasir yang hanya menampilkan halaman kasir
+
+### 7b. Fase 2 — "KRING! Insight" (AI) — baru di v1.2
+
+**Prinsip non-negotiable (detail di lampiran `PRD-lampiran-ai.md`):**
+AI adalah **lapisan insight di atas data, bukan di jalur kritikal kasir**. Checkout, stok, dan sync offline tetap deterministik — tanpa AI, tanpa internet. AI hanya dipanggil saat owner meminta (biaya terkendali, kasir tidak pernah menunggu API). Keras: **owner-only**, tool di-allowlist (tidak ada SQL/text-to-SQL mentah), `warungId` disuntik dari session — **bukan dari prompt**, kirim ringkasan agregat — bukan buku besar mentah.
+
+Fitur, berurutan prioritas:
+
+- [ ] **1. Laporan naratif tutup-shift** — ringkasan ke WA/dashboard berupa bahasa manusia, bukan angka telanjang: *"Omzet Rp1,8jt (23 trx), naik 12% dari kemarin; Laris: Bakso Urat ×18; selisih kas +Rp2.000 (aman); Telur tinggal 4 — besok kulakan ya, Bu."* Template angka → 1 call AI. *Selesai bila: tiap tutup shift owner menerima ringkasan yang terbaca tanpa membuka dashboard, dan angkanya identik dengan /laporan.*
+- [ ] **2. Deteksi anomali "mata owner"** — aturan statistik deterministik (diskon tak wajar, selisih kas berulang per kasir, transaksi di luar jam shift, omzet anjlok vs 7 hari) → AI hanya merangkai temuan jadi narasi → alert ke owner. *Selesai bila: 3 skenario curang berikutnya terdeteksi & terkirim dalam 1 hari uji.*
+- [ ] **3. Tanya-laporan (chat owner)** — bahasa sehari-hari: *"stok apa yang menipis?"*, *"Dimas berapa omzet minggu ini?"* → AI jawab + chart dari data tenant-nya sendiri. *Selesai bila: 10 pertanyaan sampel terjawab benar; pertanyaan/permintaan lintas-warung selalu gagal atau diarahkan kembali ke data sendiri.*
+- [ ] **4. (Fase 3 evaluasi)** — OCR onboarding foto daftar harga → draft produk; prediksi stok & saran kulakan (statistik dulu, AI merangkai kalimat); bot WA AI dua arah (WA API resmi, jangan unofficial); input suara kasir.
+
+**Daftar tolak (diputuskan di v1.2, jangan diangkat lagi tanpa alasan baru):** AI di jalur checkout / latensi kasir; AI mengubah harga/produk otomatis tanpa konfirmasi manusia; text-to-SQL bebas; chatbot RAG umum tentang internet; model besar / fine-tune lokal.
+
+**Kriteria keluar KRING! Insight:** owner aktif memakai ≥ 1 fitur AI di minggu pertama pilot, tanpa keluhan kepercayaan pada angka, dan biaya token < Rp5.000/warung/bln (terukur di dashboard billing).
 
 ---
 
@@ -191,7 +211,7 @@ HP Owner
 | 1–2 | Login multi-role + skema multi-tenant + migrasi Postgres + deploy staging | Staging live, 1 warung fiktif bisa jualan penuh |
 | 3–4 | Manajemen meja + offline-first (IndexedDB + sync engine + indikator koneksi) + PWA | 5 transaksi offline tersync tanpa duplikat |
 | 5–6 | Uji lapangan di 1–2 warung sungguhan, perbaiki dari feedback | Keputusan pricing final (target 3/5 bersedia bayar) |
-| 7+ | Fase 2: struk WA → laporan WA otomatis → dashboard realtime | — |
+| 7+ | Fase 2: struk WA → laporan WA otomatis → dashboard realtime → **KRING! Insight (AI, §7b)** | — |
 
 ---
 
