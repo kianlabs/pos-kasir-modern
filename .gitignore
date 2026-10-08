@@ -46,3 +46,6 @@ prisma/*.db-*
 err.log
 prisma/*.db.bak-*
 prisma/*.db.before-*
+
+# herdr/agent run artifacts (bukan bagian proyek)
+.omo/
