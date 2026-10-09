@@ -38,7 +38,13 @@ export function middleware(req: NextRequest) {
     // (lampiran skema §2 aturan #7). Handler hanya mengembalikan {id, name}.
     pathname.startsWith("/api/auth/kasir") ||
     pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
+    // Aset PWA WAJIB publik tanpa sesi: browser/PWA installer mengambilnya
+    // sebelum login (manifest, service worker, ikon). Bila di-gate, install
+    // PWA gagal & /sw.js ter-redirect → offline mati (Tahap 4).
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js" ||
+    pathname === "/favicon.ico" ||
+    /^\/icon-\d+\.png$/.test(pathname)
   ) {
     return NextResponse.next();
   }
