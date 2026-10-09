@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { rupiah } from "@/lib/rupiah";
-import { productIcon } from "@/lib/meta";
+import { categoryIcon, productIcon } from "@/lib/meta";
 
 // Panel aksi bill DRAFT meja. Endpoint dibuat worker lain (kontrak plan §4.3):
 //  - Buka bill   POST   /api/meja/[mejaId]/bill
@@ -57,6 +57,8 @@ export default function BillPanel({
   // Tambah item
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState("1");
+  const [cari, setCari] = useState("");
+  const [kategori, setKategori] = useState<string>("");
 
   // Diskon
   const [discountInput, setDiscountInput] = useState(discount > 0 ? String(discount) : "");
@@ -78,6 +80,21 @@ export default function BillPanel({
   const categories = useMemo(
     () => Array.from(new Set(products.map((p) => p.category))),
     [products]
+  );
+
+  // Produk yang ditampilkan di grid cepat: filter kategori + pencarian nama.
+  const produkTampil = useMemo(() => {
+    const q = cari.trim().toLowerCase();
+    return products.filter(
+      (p) =>
+        (!kategori || p.category === kategori) &&
+        (!q || p.name.toLowerCase().includes(q))
+    );
+  }, [products, kategori, cari]);
+
+  const produkTerpilih = useMemo(
+    () => products.find((p) => p.id === productId) ?? null,
+    [products, productId]
   );
 
   const discNum = Math.min(Number(discountInput) || 0, subtotal);
@@ -254,44 +271,114 @@ export default function BillPanel({
       {/* Tambah item */}
       <section className="rounded-xl border bg-white p-4 shadow-sm">
         <h3 className="mb-2 font-bold">Tambah Item</h3>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <select
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+
+        {/* Pencarian + filter kategori — kasir jam sibuk tak perlu scroll dropdown panjang. */}
+        <input
+          value={cari}
+          onChange={(e) => setCari(e.target.value)}
+          placeholder="🔍 Cari menu…"
+          className="mb-2 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+        <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button
+            onClick={() => setKategori("")}
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+              kategori === "" ? "bg-primary text-white" : "bg-zinc-100 text-zinc-600"
+            }`}
           >
-            <option value="">— Pilih produk —</option>
-            {categories.map((c) => (
-              <optgroup key={c} label={c}>
-                {products
-                  .filter((p) => p.category === c)
-                  .map((p) => {
-                    const sisa = Math.max(0, sisaStok(p));
-                    return (
-                      <option key={p.id} value={p.id}>
-                        {productIcon(p)} {p.name} — {rupiah(p.price)} (sisa {sisa})
-                      </option>
-                    );
-                  })}
-              </optgroup>
-            ))}
-          </select>
-          <div className="flex items-center gap-2">
+            Semua
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setKategori(c)}
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                kategori === c ? "bg-primary text-white" : "bg-zinc-100 text-zinc-600"
+              }`}
+            >
+              {categoryIcon(c)} {c}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid tombol produk — satu ketuk pilih, langsung tambah oleh tombol besar. */}
+        <div className="max-h-64 overflow-y-auto rounded-lg border bg-zinc-50 p-2">
+          {produkTampil.length === 0 ? (
+            <p className="py-6 text-center text-sm text-zinc-400">Menu tidak ditemukan.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {produkTampil.map((p) => {
+                const sisa = Math.max(0, sisaStok(p));
+                const dipilih = productId === p.id;
+                const habis = sisa <= 0;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setProductId(p.id)}
+                    className={`flex flex-col rounded-lg border p-2.5 text-left text-xs transition ${
+                      dipilih
+                        ? "border-primary bg-accent-bg ring-1 ring-primary"
+                        : "border-zinc-200 bg-white hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-xl">{productIcon(p)}</span>
+                    <span className="mt-1 line-clamp-2 min-h-8 font-semibold leading-tight">
+                      {p.name}
+                    </span>
+                    <span className="mt-1 flex items-center justify-between">
+                      <span className="font-bold text-primary">{rupiah(p.price)}</span>
+                      <span className={habis ? "font-semibold text-amber-600" : "text-zinc-400"}>
+                        sisa {sisa}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Qty + tombol tambah — aktif hanya bila produk sudah dipilih. */}
+        <div className="mt-3 flex items-center gap-2">
+          <div className="min-w-0 flex-1 text-sm">
+            {produkTerpilih ? (
+              <span className="truncate font-semibold">
+                {productIcon(produkTerpilih)} {produkTerpilih.name}
+              </span>
+            ) : (
+              <span className="text-zinc-400">Pilih menu di atas</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setQty(String(Math.max(1, (Number(qty) || 1) - 1)))}
+              className="h-9 w-9 rounded-lg border bg-white text-lg font-bold text-zinc-600 hover:bg-zinc-50"
+              aria-label="Kurangi qty"
+            >
+              −
+            </button>
             <input
               value={qty}
               onChange={(e) => setQty(e.target.value.replace(/\D/g, ""))}
               inputMode="numeric"
-              className="w-20 rounded-lg border bg-white px-3 py-2 text-center text-sm font-bold outline-none focus:border-primary"
-              placeholder="Qty"
+              className="h-9 w-14 rounded-lg border bg-white text-center text-sm font-bold outline-none focus:border-primary"
+              placeholder="1"
             />
             <button
-              onClick={tambahItem}
-              disabled={loading}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-40"
+              onClick={() => setQty(String((Number(qty) || 0) + 1))}
+              className="h-9 w-9 rounded-lg border bg-white text-lg font-bold text-zinc-600 hover:bg-zinc-50"
+              aria-label="Tambah qty"
             >
-              Tambah
+              +
             </button>
           </div>
+          <button
+            onClick={tambahItem}
+            disabled={loading || !productId}
+            className="h-9 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-40"
+          >
+            Tambah
+          </button>
         </div>
         <p className="mt-2 text-xs text-zinc-500">
           Stok baru berkurang saat bill dibayar, bukan saat item ditambahkan.
@@ -510,14 +597,17 @@ export default function BillPanel({
         </section>
       )}
 
-      {/* Batal */}
-      <button
-        onClick={batal}
-        disabled={loading}
-        className="w-full rounded-lg border border-danger/40 bg-white py-2.5 text-sm font-bold text-danger hover:bg-red-50 disabled:opacity-40"
-      >
-        Batalkan Bill (kosongkan meja)
-      </button>
+      {/* Batal — aksi destruktif, sengaja dibuat kompak & terpisah agar tidak
+          sengaja tertekan saat scroll cepat. */}
+      <div className="flex justify-end border-t pt-3">
+        <button
+          onClick={batal}
+          disabled={loading}
+          className="rounded-lg border border-danger/40 bg-white px-4 py-2 text-sm font-bold text-danger hover:bg-red-50 disabled:opacity-40"
+        >
+          🗑️ Batalkan Bill
+        </button>
+      </div>
     </div>
   );
 }
