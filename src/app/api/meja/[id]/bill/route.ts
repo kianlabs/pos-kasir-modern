@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
 import { BillError } from "@/lib/meja";
@@ -23,7 +23,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const cashierId = await currentKasirId(warungId);
 
   try {
-    const bill = await prisma.$transaction(async (tx) => {
+    const bill = await transaksi(async (tx) => {
       const meja = await tx.meja.findFirst({
         where: { id: params.id, warungId },
         select: { id: true },

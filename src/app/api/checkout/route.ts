@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, transaksi } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
 import { readJson } from "@/lib/request";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await transaksi(async (tx) => {
       const taxCfg = await getTaxSetting(tx, warungId);
       return prosesCheckout(tx, {
         id,

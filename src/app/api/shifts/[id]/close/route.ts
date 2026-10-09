@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -21,7 +21,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   // Cek shift + guard DRAFT + update ditutup dalam SATU $transaction agar
   // tidak ada jendela TOCTOU (bill dibuka tepat setelah cek DRAFT lolos).
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await transaksi(async (tx) => {
       const shift = await tx.shift.findFirst({
         where: { id: params.id, warungId },
         include: {

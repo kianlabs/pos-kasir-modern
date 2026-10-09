@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { catat } from "@/lib/audit";
 import { readJson } from "@/lib/request";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -83,7 +83,7 @@ export async function PATCH(req: Request, { params }: Params) {
     await requireBillDraft(params.id, warungId);
 
     const items = Array.from(merged.entries());
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await transaksi(async (tx) => {
       // Cek ulang DI DALAM tx (bill bisa berubah status setelah guard di atas).
       const bill = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },
@@ -179,7 +179,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   try {
     const bill = await requireBillDraft(params.id, warungId);
 
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       const current = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },
         select: { id: true },

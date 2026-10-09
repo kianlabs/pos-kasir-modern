@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -63,7 +63,7 @@ export async function POST(req: Request, { params }: Params) {
     };
     let targetTotals = { ...sourceTotals };
 
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       // Bill sumber harus DRAFT & milik warung ini (aturan #1 & #8).
       const source = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },

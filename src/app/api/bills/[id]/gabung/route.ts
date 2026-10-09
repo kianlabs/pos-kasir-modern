@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -48,7 +48,7 @@ export async function POST(req: Request, { params }: Params) {
     // Validasi + pindah + hitung ulang + hapus dalam satu $transaction (atomik).
     // Cek dilakukan via `tx` (bukan helper global) agar tidak ada race
     // check-then-act — pola sama "satu shift BUKA per warung" (aturan #11).
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       const target = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },
         select: { id: true },

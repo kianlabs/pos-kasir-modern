@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, transaksi } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
@@ -131,7 +131,7 @@ async function prosesSatu(
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await transaksi(async (tx) => {
       return prosesCheckout(tx, {
         id,
         warungId,

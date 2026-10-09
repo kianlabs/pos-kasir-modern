@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { transaksi } from "@/lib/prisma";
 import { catat } from "@/lib/audit";
 import { readJson } from "@/lib/request";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: Params) {
     // Guard tenant + DRAFT (lempar BillError 404 bila bukan milik warung ini).
     await requireBillDraft(params.id, warungId);
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await transaksi(async (tx) => {
       const bill = await tx.transaction.findFirst({
         where: { id: params.id, warungId, status: "DRAFT" },
         include: { items: true },

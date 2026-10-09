@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, transaksi } from "@/lib/prisma";
 import { readJson } from "@/lib/request";
 import { catat } from "@/lib/audit";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
   const modalAwal = Math.max(0, Math.floor(Number(body.modalAwal) || 0));
 
   try {
-    const shift = await prisma.$transaction(async (tx) => {
+    const shift = await transaksi(async (tx) => {
       const active = await tx.shift.findFirst({
         where: { warungId, status: "BUKA" },
       });
