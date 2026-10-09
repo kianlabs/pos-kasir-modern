@@ -175,9 +175,13 @@ model Shift {
   transactions Transaction[]
 
   // v1.2: keunikan shift BUKA tidak bisa pakai @@unique biasa (status bukan
-  // bagian key & SQLite tanpa partial unique index di Prisma) → keunangan
-  // dijaga transaksi aplikasi: BUKA-shift = $transaction { cek → create }
-  // + test race (lihat §2 aturan #8). Lihat juga desain.md §5.
+  // bagian key). Di Postgres ditegakkan lewat partial unique index DB:
+  //   CREATE UNIQUE INDEX shifts_one_buka_per_warung ON shifts(warungId)
+  //   WHERE status = 'BUKA';
+  // (lihat prisma/migrations/20261009120000_shift_one_open). Aplikasi tetap
+  // cek-then-act di dalam $transaction untuk pesan 409 yang rapi; index DB
+  // adalah jaring pengaman anti-race (P2002 → 409 di src/app/api/shifts).
+  // Lihat juga desain.md §5.
   @@index([warungId])
   @@map("shifts")
 }
