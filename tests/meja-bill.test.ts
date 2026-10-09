@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { prisma } from "@/lib/prisma";
+import { prisma, transaksi } from "@/lib/prisma";
 import { seedWarung } from "../prisma/seed";
+import { bersihkanWarungUji } from "./helpers";
 import { deriveStatusMeja, hitungUlangBill } from "@/lib/meja";
 
 // Uji manajemen meja / bill DRAFT (plan Tahap 3 §5.7). Menguji kontrak domain
@@ -9,8 +10,8 @@ import { deriveStatusMeja, hitungUlangBill } from "@/lib/meja";
 // DRAFT tidak bocor ke laporan (aturan #12), isolasi tenant, dan hitung ulang
 // uang integer server-side.
 //
-// Test menyentuh DB test terpisah (prisma/test.db) via tests/global-setup.ts +
-// tests/setup.ts — JANGAN pernah arahkan ke dev.db.
+// Test menyentuh DB test terpisah (Postgres, TEST_DATABASE_URL) via
+// tests/global-setup.ts + tests/setup.ts — JANGAN pernah arahkan ke DB dev/produksi.
 //
 // Batasan (jujur): test ini menguji KONTRAK DOMAIN (query/invarian/hitung uang)
 // terhadap DB nyata, bukan memanggil route handler HTTP. Handler butuh konteks
@@ -53,7 +54,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
   // Membuat bill DRAFT persis seperti handler POST /api/meja/[id]/bill:
   // cek-dalam-transaksi → satu DRAFT per meja, shift WAJIB BUKA.
   async function bukaBill(mejaId: string, warungId: string, cashierId: string) {
-    return prisma.$transaction(async (tx) => {
+    return transaksi(async (tx) => {
       const existing = await tx.transaction.findFirst({
         where: { warungId, mejaId, status: "DRAFT" },
       });
@@ -78,7 +79,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     qty: number,
     discount?: number
   ) {
-    return prisma.$transaction(async (tx) => {
+    return transaksi(async (tx) => {
       if (discount !== undefined) {
         await tx.transaction.update({ where: { id: billId }, data: { discount } });
       }
@@ -121,7 +122,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
   // per produk) → decrement → StockMove → status LUNAS, semua dalam satu
   // transaksi. Subtotal dari SNAPSHOT item.price (bukan harga produk live).
   async function bayarBill(billId: string, warungId: string, cashierId: string, cash: number) {
-    return prisma.$transaction(async (tx) => {
+    return transaksi(async (tx) => {
       const bill = await tx.transaction.findFirst({
         where: { id: billId, warungId, status: "DRAFT" },
         include: { items: true },
@@ -223,6 +224,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
   });
 
   afterAll(async () => {
+    await bersihkanWarungUji(["Warung Meja Alpha", "Warung Meja Beta"]);
     await prisma.$disconnect();
   });
 
@@ -340,7 +342,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
       (await prisma.transactionItem.count({ where: { transactionId: source.id } }));
 
     // Gabung: pindahkan semua item sumber → target, hapus bill sumber.
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       await tx.transactionItem.updateMany({
         where: { transactionId: source.id, warungId: warungA.id },
         data: { transactionId: target.id },
@@ -384,7 +386,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     const target = await bukaBill(mejaA2.id, warungA.id, kasirA.id);
 
     const moveQty = 1;
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       await tx.transactionItem.update({
         where: { id: item.id },
         data: { qty: qtyAsal - moveQty },
@@ -454,7 +456,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     await tambahItem(source.id, warungA.id, p.id, 2); // 2 × produk
 
     // Gabung tanpa merge → 2 baris produk p di bill target.
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       await tx.transactionItem.updateMany({
         where: { transactionId: source.id, warungId: warungA.id },
         data: { transactionId: target.id },
@@ -533,7 +535,7 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
 
     // Meniru PATCH /api/bills/[id] { discount } pada bill KOSONG: set diskon,
     // lalu hitung ulang DI DALAM tx dan simpan (persis alur route).
-    await prisma.$transaction(async (tx) => {
+    await transaksi(async (tx) => {
       await tx.transaction.update({ where: { id: bill.id }, data: { discount: 5000 } });
       const totals = await hitungUlangBill(bill.id, warungA.id, tx);
       await tx.transaction.update({

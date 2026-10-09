@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, transaksi } from "@/lib/prisma";
 import { getTaxSetting } from "@/lib/settings";
 import { seedWarung } from "../prisma/seed";
+import { bersihkanWarungUji } from "./helpers";
 import { prosesCheckout } from "@/lib/offline/sync";
 
 // Uji sync engine + endpoint idempotent (plan Tahap 4 §5 W1).
@@ -18,8 +19,8 @@ import { prosesCheckout } from "@/lib/offline/sync";
 // React.cache yang belum ada harness-mock). Query/validasi di sini identik
 // dengan yang dijalankan handler di dalam `$transaction`.
 //
-// DB test terpisah (prisma/test.db) via tests/global-setup.ts + tests/setup.ts —
-// JANGAN pernah arahkan ke dev.db.
+// DB test terpisah (Postgres, TEST_DATABASE_URL) via tests/global-setup.ts +
+// tests/setup.ts — JANGAN pernah arahkan ke DB dev/produksi.
 describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
   let warungA: { id: string; nama: string };
   let warungB: { id: string; nama: string };
@@ -41,7 +42,7 @@ describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
     allowStokMinus?: boolean;
     totalDariClient?: number | null;
   }) {
-    return prisma.$transaction(async (tx) => {
+    return transaksi(async (tx) => {
       const taxCfg = await getTaxSetting(tx, args.warungId);
       return prosesCheckout(tx, {
         id: args.id ?? null,
@@ -85,6 +86,7 @@ describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
   });
 
   afterAll(async () => {
+    await bersihkanWarungUji(["Warung Sync Alpha", "Warung Sync Beta"]);
     await prisma.$disconnect();
   });
 

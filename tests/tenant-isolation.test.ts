@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { seedWarung } from "../prisma/seed";
+import { bersihkanWarungUji } from "./helpers";
 
 // Lampiran PRD skema DB §2 aturan #2: user warung A request data warung B
 // harus 403/kosong. Ini gerbang CI — bukan test manual.
@@ -8,7 +9,7 @@ import { seedWarung } from "../prisma/seed";
 // Strategi: seed dua warung lewat helper yang sama dengan produksi
 // (seedWarung), tambah 1 transaksi untuk warung B, lalu buktikan setiap query
 // yang WAJIB di-scope warungId (§2 aturan #1) tidak pernah menyentuh tenant
-// lain. DB test terpisah (`prisma/test.db`) di-migrate di tests/global-setup.ts.
+// lain. DB test terpisah (Postgres, TEST_DATABASE_URL) di-migrate di tests/global-setup.ts.
 describe("isolasi tenant (§2 aturan #2)", () => {
   let warungA: { id: string; nama: string };
   let warungB: { id: string; nama: string };
@@ -40,6 +41,11 @@ describe("isolasi tenant (§2 aturan #2)", () => {
   });
 
   afterAll(async () => {
+    await bersihkanWarungUji([
+      "Warung Alpha Test",
+      "Warung Beta Test",
+      "Warung Sementara Test",
+    ]);
     await prisma.$disconnect();
   });
 
