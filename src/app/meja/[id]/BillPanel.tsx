@@ -98,6 +98,11 @@ export default function BillPanel({
   );
 
   const discNum = Math.min(Number(discountInput) || 0, subtotal);
+  // Diskon tersimpan bisa sengaja MELEBIHI subtotal (DRAFT menyimpan nilai
+  // "niat" mentah; tax/total memakai versi ter-clamp). Tampilkan diskon yang
+  // benar-benar mengurangi, plus catatan bila ada kelebihan yang tak terpakai.
+  const discEffective = Math.min(discount, subtotal);
+  const discLebih = discount > subtotal;
   const cashNum = Number(cash) || 0;
   const kembalian = cashNum - total;
   const canPay = items.length > 0 && !loading && (payment === "QRIS" || cashNum >= total);
@@ -157,9 +162,10 @@ export default function BillPanel({
     if (!p) return setError("Pilih produk dulu.");
     const q = Number(qty);
     if (!Number.isInteger(q) || q <= 0) return setError("Qty harus bilangan > 0.");
+    // Hanya kirim `items` — JANGAN ikutkan `discount` di sini, agar diskon
+    // yang sudah diterapkan tidak ikut tertimpa nilai kotak input (fix A1).
     const r = await mutate(`/api/bills/${billId}`, "PATCH", {
       items: [{ productId: p.id, qty: q }],
-      discount: discNum,
     });
     if (r.ok) {
       setProductId("");
@@ -188,7 +194,13 @@ export default function BillPanel({
       payment,
     });
     if (r.ok && r.data.id) {
+      setCash(""); // hindari nominal tunai basi saat bill berikutnya
       router.push(`/struk/${r.data.id}`);
+    } else if (r.ok) {
+      // Bayar sukses di server tapi id struk tak terkirim → jangan diam.
+      setCash("");
+      setError("Pembayaran berhasil tapi struk gagal dibuka.");
+      router.refresh();
     }
   }
 
@@ -212,11 +224,20 @@ export default function BillPanel({
   async function pisah() {
     if (!billId) return;
     if (!pisahTarget) return setError("Pilih meja tujuan dulu.");
-    const picked = items
-      .filter((it) => pisahPick[it.id]?.on)
-      .map((it) => ({ transactionItemId: it.id, qty: Number(pisahPick[it.id]?.qty) || 0 }))
-      .filter((p) => p.qty > 0);
-    if (picked.length === 0) return setError("Pilih minimal satu item untuk dipisah.");
+    const dipilih = items.filter((it) => pisahPick[it.id]?.on);
+    if (dipilih.length === 0) return setError("Pilih minimal satu item untuk dipisah.");
+    // Baris tercentang WAJIB punya qty valid; input kosong TIDAK boleh diam-diam
+    // dianggap qty penuh (fix N3). Nomor kosong = 0 → tolak dengan pesan jelas.
+    for (const it of dipilih) {
+      const n = Number(pisahPick[it.id]?.qty);
+      if (!Number.isInteger(n) || n <= 0) {
+        return setError(`Qty ${it.name} harus diisi dan > 0.`);
+      }
+    }
+    const picked = dipilih.map((it) => ({
+      transactionItemId: it.id,
+      qty: Number(pisahPick[it.id]?.qty),
+    }));
     for (const p of picked) {
       const src = items.find((it) => it.id === p.transactionItemId);
       if (src && p.qty > src.qty) return setError(`Qty ${src.name} melebihi jumlah di bill.`);
@@ -248,6 +269,7 @@ export default function BillPanel({
       <div className="mt-4 space-y-3">
         {err}
         <button
+          type="button"
           onClick={bukaBill}
           disabled={!hasShift || loading}
           className="w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
@@ -281,6 +303,7 @@ export default function BillPanel({
         />
         <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
+            type="button"
             onClick={() => setKategori("")}
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
               kategori === "" ? "bg-primary text-white" : "bg-zinc-100 text-zinc-600"
@@ -290,6 +313,7 @@ export default function BillPanel({
           </button>
           {categories.map((c) => (
             <button
+              type="button"
               key={c}
               onClick={() => setKategori(c)}
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -311,8 +335,12 @@ export default function BillPanel({
                 const sisa = Math.max(0, sisaStok(p));
                 const dipilih = productId === p.id;
                 const habis = sisa <= 0;
+                // qty yang SUDAH ada di bill ini (delta): beri badge agar kasir
+                // tahu penambahan akan menggabung (+N), bukan baris baru (fix A11).
+                const qtyAda = qtyDiBill.get(p.id) ?? 0;
                 return (
                   <button
+                    type="button"
                     key={p.id}
                     onClick={() => setProductId(p.id)}
                     className={`flex flex-col rounded-lg border p-2.5 text-left text-xs transition ${
@@ -321,7 +349,14 @@ export default function BillPanel({
                         : "border-zinc-200 bg-white hover:border-primary/40"
                     }`}
                   >
-                    <span className="text-xl">{productIcon(p)}</span>
+                    <span className="relative text-xl">
+                      {productIcon(p)}
+                      {qtyAda > 0 && (
+                        <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 text-[10px] font-bold leading-4 text-white">
+                          ×{qtyAda}
+                        </span>
+                      )}
+                    </span>
                     <span className="mt-1 line-clamp-2 min-h-8 font-semibold leading-tight">
                       {p.name}
                     </span>
@@ -351,6 +386,7 @@ export default function BillPanel({
           </div>
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() => setQty(String(Math.max(1, (Number(qty) || 1) - 1)))}
               className="h-9 w-9 rounded-lg border bg-white text-lg font-bold text-zinc-600 hover:bg-zinc-50"
               aria-label="Kurangi qty"
@@ -365,6 +401,7 @@ export default function BillPanel({
               placeholder="1"
             />
             <button
+              type="button"
               onClick={() => setQty(String((Number(qty) || 0) + 1))}
               className="h-9 w-9 rounded-lg border bg-white text-lg font-bold text-zinc-600 hover:bg-zinc-50"
               aria-label="Tambah qty"
@@ -373,11 +410,12 @@ export default function BillPanel({
             </button>
           </div>
           <button
+            type="button"
             onClick={tambahItem}
             disabled={loading || !productId}
             className="h-9 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-40"
           >
-            Tambah
+            Tambah {Number(qty) || 1}
           </button>
         </div>
         <p className="mt-2 text-xs text-zinc-500">
@@ -397,6 +435,7 @@ export default function BillPanel({
             className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
           />
           <button
+            type="button"
             onClick={terapkanDiskon}
             disabled={loading}
             className="rounded-lg border border-primary/30 bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
@@ -405,7 +444,10 @@ export default function BillPanel({
           </button>
         </div>
         {discNum > 0 && (
-          <p className="mt-1.5 text-xs text-zinc-500">Diskon aktif: {rupiah(discNum)}</p>
+          <p className="mt-1.5 text-xs text-zinc-500">
+            Diskon aktif: {rupiah(discEffective)}
+            {discLebih && <> (diniatkan {rupiah(discount)})</>}
+          </p>
         )}
       </section>
 
@@ -416,11 +458,16 @@ export default function BillPanel({
           <span>Subtotal</span>
           <span>{rupiah(subtotal)}</span>
         </div>
-        {discount > 0 && (
+        {discEffective > 0 && (
           <div className="flex justify-between text-sm text-zinc-600">
             <span>Diskon</span>
-            <span>−{rupiah(discount)}</span>
+            <span>−{rupiah(discEffective)}</span>
           </div>
+        )}
+        {discLebih && (
+          <p className="mt-1 text-xs text-amber-700">
+            Diskon melebihi subtotal — sisa {rupiah(discount - subtotal)} tidak terpakai.
+          </p>
         )}
         {tax > 0 && (
           <div className="flex justify-between text-sm text-zinc-600">
@@ -435,6 +482,7 @@ export default function BillPanel({
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-bold">
           <button
+            type="button"
             onClick={() => setPayment("CASH")}
             className={`rounded-lg border py-2 ${
               payment === "CASH" ? "border-primary bg-primary text-white" : "bg-white"
@@ -443,6 +491,7 @@ export default function BillPanel({
             💵 Tunai
           </button>
           <button
+            type="button"
             onClick={() => setPayment("QRIS")}
             className={`rounded-lg border py-2 ${
               payment === "QRIS" ? "border-primary bg-primary text-white" : "bg-white"
@@ -456,6 +505,7 @@ export default function BillPanel({
           <>
             <div className="mt-3 grid grid-cols-4 gap-1.5">
               <button
+                type="button"
                 onClick={() => setCash(String(total))}
                 className="rounded-md bg-accent-bg py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
               >
@@ -463,6 +513,7 @@ export default function BillPanel({
               </button>
               {QUICK_CASH.map((v) => (
                 <button
+                  type="button"
                   key={v}
                   onClick={() => setCash(String(v))}
                   className="rounded-md bg-zinc-100 py-1.5 text-xs font-bold hover:bg-zinc-200"
@@ -471,13 +522,19 @@ export default function BillPanel({
                 </button>
               ))}
             </div>
+            {/* Nilai mentah (digit) agar caret tidak melompat saat edit
+                di tengah angka; format rupiah hanya di keterangan. */}
             <input
-              value={cash ? Number(cash).toLocaleString("id-ID") : ""}
+              value={cash}
               onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
               inputMode="numeric"
               placeholder="Nominal diterima…"
+              aria-label="Nominal tunai diterima"
               className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-right text-lg font-bold outline-none focus:border-primary"
             />
+            {cashNum > 0 && (
+              <p className="mt-1 text-right text-xs text-zinc-400">{rupiah(cashNum)}</p>
+            )}
             <div className="mt-1.5 flex justify-between text-sm font-semibold">
               <span className="text-zinc-500">Kembalian</span>
               <span className={kembalian < 0 ? "text-danger" : "text-secondary"}>
@@ -488,6 +545,7 @@ export default function BillPanel({
         )}
 
         <button
+          type="button"
           onClick={bayar}
           disabled={!canPay}
           className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
@@ -526,6 +584,7 @@ export default function BillPanel({
                 ))}
               </select>
               <button
+                type="button"
                 onClick={gabung}
                 disabled={loading || !gabungSource}
                 className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
@@ -570,6 +629,7 @@ export default function BillPanel({
                         <span className="truncate">{it.name}</span>
                       </label>
                       <input
+                        aria-label={`Qty ${it.name}`}
                         value={pick?.qty ?? String(it.qty)}
                         onChange={(e) =>
                           setPisahPick((s) => ({
@@ -586,6 +646,7 @@ export default function BillPanel({
                 })}
               </div>
               <button
+                type="button"
                 onClick={pisah}
                 disabled={loading || !pisahTarget}
                 className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
@@ -601,6 +662,7 @@ export default function BillPanel({
           sengaja tertekan saat scroll cepat. */}
       <div className="flex justify-end border-t pt-3">
         <button
+          type="button"
           onClick={batal}
           disabled={loading}
           className="rounded-lg border border-danger/40 bg-white px-4 py-2 text-sm font-bold text-danger hover:bg-red-50 disabled:opacity-40"
