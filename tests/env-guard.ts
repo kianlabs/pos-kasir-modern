@@ -68,6 +68,18 @@ export function resolveTestDatabaseUrl(): string {
     ["DATABASE_URL", process.env.DATABASE_URL],
   ];
 
+  // Escape hatch darurat: sadar menerima risiko test menghapus data di host
+  // yang sama dengan dev/produksi. Hanya untuk staging tanpa data pelanggan.
+  // JANGAN dipakai di produksi.
+  if (process.env.ALLOW_TEST_ON_SHARED_DB === "1") {
+    console.warn(
+      "[env-guard] PERINGATAN: ALLOW_TEST_ON_SHARED_DB=1 — guard host dilewati. " +
+        "Test boleh menghapus data di DB yang sama dengan dev/produksi. " +
+        "Jangan dipakai di produksi.",
+    );
+    return testUrl;
+  }
+
   for (const [name, raw] of others) {
     const other = raw?.trim();
     if (!other) continue;
