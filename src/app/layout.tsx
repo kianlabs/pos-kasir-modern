@@ -5,7 +5,7 @@ import LogoutButton from "./LogoutButton";
 import ServiceWorkerRegister from "./ServiceWorkerRegister";
 import OfflineShell from "./OfflineShell";
 import "./globals.css";
-import { currentWarung, getSession } from "@/lib/warung";
+import { currentWarung, getSession } from "@/server/tenant";
 
 export const metadata: Metadata = {
   title: "KRING! — Kasir Warung",

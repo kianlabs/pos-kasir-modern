@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/warung";
+import { prisma } from "@/server/db";
+import { getSession } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
 

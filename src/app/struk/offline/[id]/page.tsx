@@ -7,10 +7,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { rupiah } from "@/lib/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/lib/meta";
-import { getCache, getOutbox } from "@/lib/offline/db";
-import type { OutboxEntry } from "@/lib/offline/types";
+import { rupiah } from "@/shared/rupiah";
+import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { getCache, getOutbox } from "@/client/offline-db";
+import type { OutboxEntry } from "@/client/offline-types";
 
 type CachedProduct = { id: string; name: string; price: number };
 type CachedSettings = { enabled: boolean; pct: number };

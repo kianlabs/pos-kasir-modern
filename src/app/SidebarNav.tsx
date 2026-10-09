@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/types";
-import { isNavActive, navForRole } from "@/lib/nav";
+import { isNavActive, navForRole } from "@/shared/nav";
 
 // Sidebar desktop (md+). Definisi menu ada di lib/nav.ts (satu sumber
 // kebenaran, dipakai juga oleh bottom-nav mobile).

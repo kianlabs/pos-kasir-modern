@@ -4,25 +4,25 @@
 //    bersama oleh POST /api/checkout dan POST /api/sync. Menerima `tx` (Prisma
 //    TransactionClient) supaya tetap atomik dalam satu `$transaction`.
 //    PENTING: file ini juga diimpor bundle CLIENT (page.tsx) → hanya boleh
-//    `import type` dari Prisma, TIDAK boleh meng-import `@/lib/prisma`,
-//    `@/lib/settings`, atau `@/lib/audit` (semuanya menyeret Prisma runtime).
+//    `import type` dari Prisma, TIDAK boleh meng-import `@/server/db`,
+//    `@/server/settings`, atau `@/server/audit` (semuanya menyeret Prisma runtime).
 //    Query setting/pajak & audit dilakukan oleh route (server) yang memanggil.
 //
 // 2) CLIENT — `syncOutbox()` / `enqueueCheckout()`: menggerakkan antrean
-//    IndexedDB (reuse `@/lib/offline/db`) ↔ endpoint /api/sync.
+//    IndexedDB (reuse `@/client/offline-db`) ↔ endpoint /api/sync.
 //
 // Idempotency (PRD §10, lampiran §2 aturan #5): id = UUID client-side. Bila
 // transaksi dengan id itu SUDAH ada untuk warung ini → kembalikan yang ada,
 // JANGAN decrement stok lagi. Ini yang mencegah uang/transaksi dobel saat retry.
 
 import type { Prisma } from "@prisma/client";
-import { deleteOutbox, listOutbox, putOutbox } from "@/lib/offline/db";
+import { deleteOutbox, listOutbox, putOutbox } from "@/client/offline-db";
 import type {
   OutboxEntry,
   OutboxPayload,
   SyncBatchResponse,
   SyncItemResult,
-} from "@/lib/offline/types";
+} from "@/client/offline-types";
 
 // ════════════════════════════════════════════════════════════════════
 // BAGIAN SERVER — inti checkout idempotent

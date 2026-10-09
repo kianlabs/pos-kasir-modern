@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import bcrypt from "bcryptjs";
 
 // Perbaikan sekali-jalan untuk baris user lama pra-refactor multi-tenant.

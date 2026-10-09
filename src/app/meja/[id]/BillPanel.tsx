@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { rupiah } from "@/lib/rupiah";
-import { categoryIcon, productIcon } from "@/lib/meta";
+import { rupiah } from "@/shared/rupiah";
+import { categoryIcon, productIcon } from "@/shared/category-icon";
 
 // Panel aksi bill DRAFT meja. Endpoint dibuat worker lain (kontrak plan §4.3):
 //  - Buka bill   POST   /api/meja/[mejaId]/bill

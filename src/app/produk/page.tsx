@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { rupiah } from "@/lib/rupiah";
-import { productIcon, ICON_CHOICES } from "@/lib/meta";
+import { rupiah } from "@/shared/rupiah";
+import { productIcon, ICON_CHOICES } from "@/shared/category-icon";
 
 type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import { seedWarung } from "../prisma/seed";
 import { bersihkanWarungUji } from "./helpers";
 

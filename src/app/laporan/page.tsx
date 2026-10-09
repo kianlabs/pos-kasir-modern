@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { rupiah } from "@/lib/rupiah";
+import { rupiah } from "@/shared/rupiah";
 
 type Stats = {
   omzetHariIni: number;

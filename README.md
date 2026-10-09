@@ -117,7 +117,10 @@ src/app/
     stock-moves/      → GET kartu stok
     settings/         → GET + PATCH pajak
     export/           → GET CSV transaksi
-src/lib/              → prisma client + format rupiah + ikon kategori + pajak
+src/server/           → server-only: prisma (db.ts), session, tenant, audit, settings, rate-limit, meja, http
+src/client/           → client-only: offline-db, offline-sync, offline-types (IndexedDB)
+src/shared/           → aman dua sisi: session-types, rupiah, nav, category-icon
+src/types/            → tipe global (Role, dll)
 prisma/
   schema.prisma       → Warung, User, Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting, Meja, AuditLog, Insight (PostgreSQL)
   migrations/         → migrasi Postgres (init_postgres + partial unique index DRAFT-per-meja)

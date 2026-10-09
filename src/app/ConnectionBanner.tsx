@@ -10,8 +10,8 @@
 // pertama identik (null). IndexedDB hanya disentuh di dalam useEffect.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { countOutbox } from "@/lib/offline/db";
-import { syncOutbox } from "@/lib/offline/sync";
+import { countOutbox } from "@/client/offline-db";
+import { syncOutbox } from "@/client/offline-sync";
 
 /**
  * Nama event window yang dipancarkan setiap kali antrean outbox berubah

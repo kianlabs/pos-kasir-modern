@@ -1,9 +1,9 @@
 import * as React from "react";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
-import { verifySession } from "@/lib/session";
+import { prisma } from "@/server/db";
+import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
+import { verifySession } from "@/server/session";
 
 // Tenant SELALU dari session login (lampiran skema §2 aturan #8):
 // warungId tidak pernah diterima dari body/query/header.

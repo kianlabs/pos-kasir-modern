@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { rupiah } from "@/lib/rupiah";
-import { shortId } from "@/lib/meta";
+import { rupiah } from "@/shared/rupiah";
+import { shortId } from "@/shared/category-icon";
 
 type Shift = {
   id: string;

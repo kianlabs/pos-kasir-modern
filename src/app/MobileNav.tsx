@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/types";
-import { bottomOverflow, bottomPrimary, isNavActive } from "@/lib/nav";
+import { bottomOverflow, bottomPrimary, isNavActive } from "@/shared/nav";
 
 // Bottom navigation mobile (< md). Menu utama selalu tampil di bawah
 // (jangkauan jempol); menu lain (owner-only) masuk sheet "Lainnya".

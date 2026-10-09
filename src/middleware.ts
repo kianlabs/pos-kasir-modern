@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
+import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 
 // Gate sesi/role di edge (lampiran skema §2 aturan #1, #8).
 //

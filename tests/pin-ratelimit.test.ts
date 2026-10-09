@@ -5,7 +5,7 @@ import {
   checkLoginRate,
   recordLoginFailure,
   recordLoginSuccess,
-} from "@/lib/rate-limit";
+} from "@/server/rate-limit";
 
 // Lampiran PRD skema DB §2 aturan #9: 5 kegagalan berturut per User → tolak
 // 5 menit (blok sementara). Daftar nama boleh publik; PIN harus terasa seperti

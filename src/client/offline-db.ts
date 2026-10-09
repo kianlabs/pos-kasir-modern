@@ -8,7 +8,7 @@
 // tidak ada — semua fungsi mengembalikan error/promise yang jelas bila dipanggil
 // di non-browser, TIDAK melempar saat import (aman untuk SSR).
 
-import type { OutboxEntry } from "@/lib/offline/types";
+import type { OutboxEntry } from "@/client/offline-types";
 
 const DB_NAME = "kring-offline";
 const DB_VERSION = 1;

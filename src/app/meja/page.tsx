@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { deriveStatusMeja } from "@/lib/meja";
-import { rupiah } from "@/lib/rupiah";
-import { currentWarungId } from "@/lib/warung";
+import { deriveStatusMeja } from "@/server/meja";
+import { rupiah } from "@/shared/rupiah";
+import { currentWarungId } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
 

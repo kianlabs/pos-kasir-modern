@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/server/db";
 import type { AuditAction } from "@/types";
 
 // catat() dipakai untuk semua aksi mutasi penting (lampiran skema §2 aturan #10).

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { rupiah } from "@/lib/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/lib/meta";
-import { currentWarungId } from "@/lib/warung";
+import { prisma } from "@/server/db";
+import { rupiah } from "@/shared/rupiah";
+import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { currentWarungId } from "@/server/tenant";
 import PrintButton from "./PrintButton";
 
 export const dynamic = "force-dynamic";

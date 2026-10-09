@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { SESSION_COOKIE, type SessionPayload } from "@/lib/auth-session";
+import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 
 // Penandatanganan & verifikasi token session (Node runtime).
 // Tipe + nama cookie ada di lib/auth-session.ts agar middleware edge bisa

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { readJson } from "@/lib/request";
-import { catat } from "@/lib/audit";
-import { issueSession } from "@/lib/session";
-import { SESSION_COOKIE } from "@/lib/auth-session";
-import { checkLoginRate, recordLoginFailure, recordLoginSuccess } from "@/lib/rate-limit";
+import { prisma } from "@/server/db";
+import { readJson } from "@/server/http";
+import { catat } from "@/server/audit";
+import { issueSession } from "@/server/session";
+import { SESSION_COOKIE } from "@/shared/session-types";
+import { checkLoginRate, recordLoginFailure, recordLoginSuccess } from "@/server/rate-limit";
 
 export const dynamic = "force-dynamic";
 

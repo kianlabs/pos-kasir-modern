@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { rupiah } from "@/lib/rupiah";
-import { productIcon } from "@/lib/meta";
-import { getCache, putCache } from "@/lib/offline/db";
-import { enqueueCheckout } from "@/lib/offline/sync";
-import type { OutboxPayload } from "@/lib/offline/types";
+import { rupiah } from "@/shared/rupiah";
+import { productIcon } from "@/shared/category-icon";
+import { getCache, putCache } from "@/client/offline-db";
+import { enqueueCheckout } from "@/client/offline-sync";
+import type { OutboxPayload } from "@/client/offline-types";
 import { OUTBOX_CHANGED_EVENT } from "./ConnectionBanner";
 
 type TaxInfo = { enabled: boolean; pct: number };

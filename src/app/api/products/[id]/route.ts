@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { readJson } from "@/lib/request";
-import { catat } from "@/lib/audit";
-import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/lib/warung";
+import { prisma } from "@/server/db";
+import { readJson } from "@/server/http";
+import { catat } from "@/server/audit";
+import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
 

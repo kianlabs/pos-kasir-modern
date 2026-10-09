@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { prisma, transaksi } from "@/lib/prisma";
+import { prisma, transaksi } from "@/server/db";
 import { seedWarung } from "../prisma/seed";
 import { bersihkanWarungUji } from "./helpers";
-import { deriveStatusMeja, hitungUlangBill } from "@/lib/meja";
+import { deriveStatusMeja, hitungUlangBill } from "@/server/meja";
 
 // Uji manajemen meja / bill DRAFT (plan Tahap 3 §5.7). Menguji kontrak domain
 // yang dipakai endpoint: invarian satu DRAFT per meja, derive KOSONG/TERISI,

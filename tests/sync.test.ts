@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { prisma, transaksi } from "@/lib/prisma";
-import { getTaxSetting } from "@/lib/settings";
+import { prisma, transaksi } from "@/server/db";
+import { getTaxSetting } from "@/server/settings";
 import { seedWarung } from "../prisma/seed";
 import { bersihkanWarungUji } from "./helpers";
-import { prosesCheckout } from "@/lib/offline/sync";
+import { prosesCheckout } from "@/client/offline-sync";
 
 // Uji sync engine + endpoint idempotent (plan Tahap 4 §5 W1).
 //

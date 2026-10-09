@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { deriveStatusMeja } from "@/lib/meja";
-import { rupiah } from "@/lib/rupiah";
-import { currentWarungId } from "@/lib/warung";
+import { prisma } from "@/server/db";
+import { deriveStatusMeja } from "@/server/meja";
+import { rupiah } from "@/shared/rupiah";
+import { currentWarungId } from "@/server/tenant";
 import BillPanel from "./BillPanel";
 
 export const dynamic = "force-dynamic";

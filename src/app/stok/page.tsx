@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { productIcon } from "@/lib/meta";
+import { productIcon } from "@/shared/category-icon";
 
 type Move = {
   id: string;

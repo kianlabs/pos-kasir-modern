@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { currentWarungId } from "@/lib/warung";
+import { prisma } from "@/server/db";
+import { currentWarungId } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
 
