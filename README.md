@@ -1,6 +1,6 @@
 # 🧾 KasirKu — POS Kasir Modern
 
-Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwind + Prisma + SQLite**.
+Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwind + Prisma + PostgreSQL (Supabase)**.
 
 ## Fitur
 
@@ -30,28 +30,41 @@ dibayar (`DRAFT → LUNAS`), bukan saat bill dibuka atau item ditambahkan.** Kar
 
 ## Menjalankan
 
-Prasyarat: buat file `.env` dengan **`SESSION_SECRET`** (wajib, minimal 16 karakter) dan **`DATABASE_URL`**.
+Prasyarat: buat file `.env` dengan **`DATABASE_URL`**, **`DIRECT_URL`** (Postgres/Supabase), dan **`SESSION_SECRET`**.
 
 ```bash
 # .env
+# Pooled (pgbouncer, port 6543) untuk runtime/serverless:
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/DB?pgbouncer=true&connection_limit=1"
+# Direct (port 5432) untuk migrasi:
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/DB"
 SESSION_SECRET=ganti-dengan-string-acak-min-16-karakter
-DATABASE_URL="file:./dev.db"
 ```
 
 Lalu jalankan:
 
 ```bash
 npm install                # otomatis menjalankan prisma generate via postinstall
-npx prisma migrate deploy  # terapkan migrasi ke DB
-npx tsx prisma/seed.ts     # isi data demo (idempoten — dilewati bila sudah ada)
+npm run db:deploy          # terapkan migrasi ke DB (prisma migrate deploy)
+npm run db:seed            # isi data demo (idempoten — dilewati bila sudah ada)
 npm run dev                # buka http://localhost:3000
 ```
 
-> Catatan: `npm install` sudah otomatis men-generate Prisma Client (via script `postinstall: prisma generate`) — tidak perlu menjalankan `npx prisma generate` secara terpisah. Prisma dipakai versi 6.
+> Catatan: `npm install` sudah otomatis men-generate Prisma Client (via script `postinstall: prisma generate`) — tidak perlu menjalankan `npx prisma generate` secara terpisah. Prisma dipakai versi 6. Provider DB = **PostgreSQL**.
+
+### Menjalankan test
+
+Test membutuhkan koneksi Postgres. Set `TEST_DATABASE_URL` (disarankan, DB terpisah agar tidak menyentuh data dev/produksi) atau biarkan jatuh ke `DATABASE_URL`:
+
+```bash
+TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_TEST" npm test
+```
+
+`tests/global-setup.ts` menjalankan `prisma migrate deploy` ke URL test sebelum suite berjalan.
 
 ## Akun demo
 
-Setelah `seed.ts`, gunakan akun berikut:
+Setelah `db:seed`, gunakan akun berikut:
 
 - **Owner** — email `owner@warung-berkah-jaya.demo`, password `password123`
 - **Kasir** — PIN `123456`
@@ -61,6 +74,19 @@ Setelah `seed.ts`, gunakan akun berikut:
 
 - **`SESSION_SECRET` wajib diisi di produksi** (minimal 16 karakter) — tanpa ini sesi tidak aman.
 - **Rate-limit PIN masih in-memory** (5× gagal → blokir 5 menit). Pindahkan ke DB/Redis saat deploy multi-instance, karena state in-memory tidak terbagi antar proses.
+
+## Deploy (Vercel + Supabase)
+
+1. **Supabase** → buat project → ambil dua connection string: pooled (6543) dan direct (5432).
+2. **Vercel** → import repo → set env:
+   - `DATABASE_URL` = pooled URL (`?pgbouncer=true&connection_limit=1`)
+   - `DIRECT_URL` = direct URL
+   - `SESSION_SECRET` = string acak ≥16 karakter
+3. **Migrasi** dijalankan ke DB: `npx prisma migrate deploy` (memakai `DIRECT_URL`).
+4. **Seed warung fiktif:** `npm run db:seed` (idempoten).
+5. Verifikasi: URL staging live, login owner + kasir, jualan penuh (checkout → struk → laporan), PWA installable (HTTPS), isolasi tenant benar.
+
+> **Invarian Postgres:** partial unique index `tx_one_draft_per_meja` (di migrasi `init_postgres`) menegakkan **satu bill DRAFT per meja** di level DB. Di SQLite invarian ini hanya dijaga aplikasi; di Postgres kini dijamin database.
 
 ## Struktur
 
@@ -93,8 +119,10 @@ src/app/
     export/           → GET CSV transaksi
 src/lib/              → prisma client + format rupiah + ikon kategori + pajak
 prisma/
-  schema.prisma       → Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting
-  seed.ts             → 38 menu warung + pajak default 10%
+  schema.prisma       → Warung, User, Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting, Meja, AuditLog, Insight (PostgreSQL)
+  migrations/         → migrasi Postgres (init_postgres + partial unique index DRAFT-per-meja)
+  migrations-sqlite-archive/ → riwayat migrasi SQLite (arsip, sebelum pindah Postgres)
+  seed.ts             → 38 menu warung + pajak default 10% (parameter --warungs=N)
 ```
 
 ## Ide pengembangan lanjut

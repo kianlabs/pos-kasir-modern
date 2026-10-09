@@ -98,6 +98,7 @@ Fondasi yang sudah ada (dari KasirKu): kasir + keranjang + diskon/pajak, CRUD pr
 - [x] **PWA installable** — bisa di-install di tablet/HP kasir seperti aplikasi native, ikon KRING! di home screen. *Selesai bila: instal dari Chrome Android, buka fullscreen tanpa address bar.*
   > **Status implementasi (Tahap 4):** `manifest.webmanifest` (standalone, ikon 192/512) + service worker manual (`public/sw.js`: app-shell cache-first, HTML network-first, GET produk/settings stale-while-revalidate). Aset PWA publik (di allow-list middleware). Terverifikasi: `Page.getAppManifest errors: []`, SW `activated`.
 - [ ] **Deploy production** — migrasi SQLite → PostgreSQL (termasuk skema multi-tenant sejak awal, lihat lampiran), deploy (Vercel + Postgres managed). *Selesai bila: URL staging live, 1 warung fiktif bisa jualan penuh.*
+  > **Status implementasi (Tahap 5, dalam proses):** provider Prisma → `postgresql` (Supabase); migrasi `init_postgres` + partial unique index `tx_one_draft_per_meja`; test runner parametrisasi `TEST_DATABASE_URL`. Sisa: isi kredensial → `migrate deploy` → deploy Vercel → verifikasi staging.
 
 ### 6.3. Kriteria "MVP selesai"
 Kasir warung bisa dipakai **jualan seharian penuh tanpa internet**, owner terima rekap di akhir shift, dan data tidak ada yang hilang.
@@ -170,7 +171,7 @@ Tablet/HP Kasir (PWA)
   ├── IndexedDB (antrean offline) + status koneksi
   └── API Routes (Next.js)
         ├── Prisma ORM
-        └── PostgreSQL (production) / SQLite (dev)
+        └── PostgreSQL (Supabase) — dev & production
 HP Owner
   ├── Dashboard realtime (polling → WebSocket)
   └── Notifikasi via WhatsApp API (Fase 2)
