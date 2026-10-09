@@ -6,6 +6,7 @@ import { currentWarungId, currentKasirId } from "@/server/tenant";
 import {
   prosesCheckout,
   isUniqueConstraintError,
+  BATAS_UANG,
   type CheckoutLine,
 } from "@/client/offline-sync";
 
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
   const rawItems = (body.items ?? []) as CheckoutLine[];
   const cash = Number(body.cash);
   const payment = body.payment === "QRIS" ? "QRIS" : "CASH";
-  const discount = Math.max(0, Math.floor(Number(body.discount) || 0));
+  const discount = Math.min(Math.max(0, Math.floor(Number(body.discount) || 0)), BATAS_UANG);
   // Meja OPSIONAL (jalur "bayar langsung di meja"). Ini bukan tenant key —
   // warungId tetap dari session (aturan #8); mejaId tetap divalidasi milik warung.
   const mejaId = typeof body.mejaId === "string" && body.mejaId ? body.mejaId : null;

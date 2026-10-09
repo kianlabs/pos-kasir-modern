@@ -8,6 +8,7 @@ import {
   prosesCheckout,
   isUniqueConstraintError,
   SYNC_BATCH_LIMIT,
+  BATAS_UANG,
   type CheckoutLine,
 } from "@/client/offline-sync";
 import type { SyncItemResult } from "@/client/offline-types";
@@ -104,10 +105,24 @@ async function prosesSatu(
 
   const cash = Number(item.cash);
   const payment = item.payment === "QRIS" ? "QRIS" : "CASH";
-  const discount = Math.max(0, Math.floor(Number(item.discount) || 0));
+  // Diskon: clamp eksplisit ke [0, BATAS_UANG] (bukan hanya >= 0) agar nilai
+  // absurd dari client tak menghasilkan diskon/total aneh atau overflow int32.
+  const discount = Math.min(Math.max(0, Math.floor(Number(item.discount) || 0)), BATAS_UANG);
   const mejaId = typeof item.mejaId === "string" && item.mejaId ? item.mejaId : null;
   // Total dihitung client saat offline (opsional) → otoritatif saat sync (PRD §12).
-  const totalDariClient = Number.isInteger(Number(item.total)) ? Number(item.total) : null;
+  // Validasi rentang: bila bukan integer atau di luar [0, BATAS_UANG], JANGAN
+  // diteruskan mentah — kembalikan error (data korup) agar server hitung sendiri
+  // lewat jalur normal, bukan menyimpan total di luar batas wajar.
+  const totalMentah = Number(item.total);
+  const totalDariClient =
+    item.total === undefined || item.total === null
+      ? null
+      : Number.isInteger(totalMentah) && totalMentah >= 0 && totalMentah <= BATAS_UANG
+        ? totalMentah
+        : null;
+  if (item.total !== undefined && item.total !== null && totalDariClient === null) {
+    return { id, status: "error", message: "Total transaksi di luar batas wajar." };
+  }
   const createdAt =
     typeof item.createdAt === "number" && Number.isFinite(item.createdAt)
       ? new Date(item.createdAt)
