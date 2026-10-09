@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { deriveStatusMeja } from "@/lib/meja";
+import { rupiah } from "@/lib/rupiah";
 import { currentWarungId } from "@/lib/warung";
 
 export const dynamic = "force-dynamic";
@@ -58,9 +59,16 @@ export default async function MejaPage() {
                   </span>
                 </div>
                 <div className="mt-3 text-lg font-bold">Meja {m.nomor}</div>
-                <div className="text-xs text-zinc-500">
-                  {isTerisi ? "Bill terbuka — ketuk untuk kelola" : "Kosong — ketuk untuk buka bill"}
-                </div>
+                {isTerisi ? (
+                  <div className="mt-0.5">
+                    <div className="text-sm font-bold text-primary">{rupiah(m.total)}</div>
+                    <div className="text-xs text-zinc-500">
+                      {m.itemCount} item • ketuk untuk kelola
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-zinc-500">Kosong — ketuk untuk buka bill</div>
+                )}
               </Link>
             );
           })}

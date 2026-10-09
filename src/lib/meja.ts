@@ -21,33 +21,66 @@ export type MejaDenganStatus = {
   nomor: string;
   status: StatusMeja;
   billId: string | null;
+  // Ringkasan bill terbuka (null bila KOSONG) — dipakai peta meja agar kasir
+  // melihat jumlah item & total tanpa perlu membuka tiap meja.
+  itemCount: number;
+  total: number;
 };
 
 // Peta seluruh meja warung + statusnya + id bill DRAFT terbuka (bila ada).
-// Satu query grouped per render — murah untuk 10–20 meja.
+// Satu query meja + satu query bill terbuka (dengan agregat item) per render.
 export async function deriveStatusMeja(warungId: string): Promise<MejaDenganStatus[]> {
   const [mejas, openBills] = await Promise.all([
     prisma.meja.findMany({
       where: { warungId },
-      orderBy: { nomor: "asc" },
+      // `nomor` disimpan sebagai String; orderBy asc SQLite mengurutkan
+      // leksikografis → "10" muncul sebelum "2" (1, 10, 2, 3, …). Urutkan
+      // numerik di sini agar peta meja tampil 1, 2, 3, … 10.
       select: { id: true, nomor: true },
     }),
     prisma.transaction.findMany({
       where: { warungId, status: "DRAFT", mejaId: { not: null } },
-      select: { id: true, mejaId: true },
+      select: {
+        id: true,
+        mejaId: true,
+        total: true,
+        items: { select: { qty: true } },
+      },
     }),
   ]);
 
-  const billByMeja = new Map<string, string>();
+  mejas.sort((a, b) => {
+    const na = Number(a.nomor);
+    const nb = Number(b.nomor);
+    // Nomor numerik diutamakan; nomor non-numerik (mis. "A1") jatuh ke
+    // perbandingan string agar tetap deterministik.
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+    return a.nomor.localeCompare(b.nomor, "id");
+  });
+
+  const billByMeja = new Map<string, { id: string; itemCount: number; total: number }>();
   for (const b of openBills) {
     // Bila karena suatu hal ada >1 DRAFT di meja yang sama, ambil yang pertama;
     // invarian "satu DRAFT per meja" dijaga di endpoint buka bill.
-    if (b.mejaId && !billByMeja.has(b.mejaId)) billByMeja.set(b.mejaId, b.id);
+    if (b.mejaId && !billByMeja.has(b.mejaId)) {
+      billByMeja.set(b.mejaId, {
+        id: b.id,
+        itemCount: b.items.reduce((n, i) => n + i.qty, 0),
+        total: b.total,
+      });
+    }
   }
 
   return mejas.map((m) => {
-    const billId = billByMeja.get(m.id) ?? null;
-    return { id: m.id, nomor: m.nomor, status: billId ? "TERISI" : "KOSONG", billId };
+    const bill = billByMeja.get(m.id) ?? null;
+    return {
+      id: m.id,
+      nomor: m.nomor,
+      status: bill ? "TERISI" : "KOSONG",
+      billId: bill?.id ?? null,
+      itemCount: bill?.itemCount ?? 0,
+      total: bill?.total ?? 0,
+    };
   });
 }
 
