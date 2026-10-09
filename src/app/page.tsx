@@ -130,7 +130,7 @@ export default function KasirPage() {
       payment,
       discount: discNum,
     };
-    await enqueueCheckout(id, payload);
+    await enqueueCheckout(payload, { id });
     window.dispatchEvent(new Event(OUTBOX_CHANGED_EVENT));
     setCart({});
     setCash("");

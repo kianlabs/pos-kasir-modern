@@ -342,15 +342,19 @@ async function terapkanHasil(
 /**
  * Masukkan satu checkout ke antrean offline. `id` = UUID client-side (calon
  * Transaction.id di server) → retry aman/idempotent.
+ *
+ * `opts.id` dapat diberikan pemanggil bila id perlu diketahui SEBELUM enqueue
+ * (mis. untuk mengarahkan langsung ke `/struk/offline/<id>`); bila tidak diisi,
+ * id dibuat di sini.
  */
 export async function enqueueCheckout(
   payload: OutboxPayload,
-  createdAt?: number
+  opts?: { id?: string; createdAt?: number }
 ): Promise<OutboxEntry> {
   const entry: OutboxEntry = {
-    id: crypto.randomUUID(),
+    id: opts?.id ?? crypto.randomUUID(),
     payload,
-    createdAt: createdAt ?? Date.now(),
+    createdAt: opts?.createdAt ?? Date.now(),
     status: "pending",
     attempts: 0,
   };
