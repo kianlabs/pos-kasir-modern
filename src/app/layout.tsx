@@ -1,13 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import SidebarNav from "./SidebarNav";
 import MobileNav from "./MobileNav";
 import LogoutButton from "./LogoutButton";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
+import OfflineShell from "./OfflineShell";
 import "./globals.css";
 import { currentWarung, getSession } from "@/lib/warung";
 
 export const metadata: Metadata = {
   title: "KRING! — Kasir Warung",
   description: "Aplikasi kasir modern: kasir, produk, transaksi, laporan.",
+  // PWA: Metadata API merender <link rel="manifest" href="/manifest.webmanifest">.
+  manifest: "/manifest.webmanifest",
+};
+
+// theme-color lewat Metadata API (Next 14 memindahkannya ke `viewport`).
+export const viewport: Viewport = {
+  themeColor: "#a0522d",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,6 +28,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <html lang="id">
         <body className="bg-neutral text-secondary antialiased">
           <div className="mx-auto max-w-7xl px-4 py-8">{children}</div>
+          {/* SW didaftarkan app-wide agar PWA tetap installable dari halaman login. */}
+          <ServiceWorkerRegister />
         </body>
       </html>
     );
@@ -80,11 +91,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <p className="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-400 print:hidden">
                 {today}
               </p>
-              {children}
+              {/* OfflineShell (worker-2) membungkus banner koneksi + status antrean. */}
+              <OfflineShell>{children}</OfflineShell>
             </div>
           </div>
         </div>
         <MobileNav role={session.role} />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
