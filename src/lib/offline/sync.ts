@@ -53,6 +53,13 @@ export type ProsesCheckoutInput = {
    *         konflik untuk review owner ("transparan > sempurna").
    */
   allowStokMinus: boolean;
+  /**
+   * Total yang DIHITUNG CLIENT saat offline (jalur sync). Bila integer >= 0,
+   * dipakai sebagai total OTORITATIF — uang sudah diterima kasir, jadi server
+   * tidak menolak karena selisih pembulatan/cache basi (PRD §12).
+   * Jalur online tidak mengisi ini → server tetap menghitung sendiri.
+   */
+  totalDariClient?: number | null;
 };
 
 export type KonflikStok = { productId: string; name: string; butuh: number; sisa: number };
@@ -140,13 +147,39 @@ export async function prosesCheckout(
     subtotal += p.price * qty;
   }
 
-  // (4) Uang integer rupiah. Diskon di-clamp ke subtotal; pajak dari setting.
-  const disc = Math.min(input.discount, subtotal);
-  const tax = input.taxCfg.enabled
-    ? Math.round(((subtotal - disc) * input.taxCfg.pct) / 100)
+  // (4) Uang integer rupiah.
+  //  - JALUR ONLINE: hitung total dari server; tolak bila uang kurang.
+  //  - JALUR SYNC OFFLINE (allowStokMinus + totalDariClient): uang SUDAH diterima
+  //    kasir saat offline → totalDariClient OTORITATIF, tidak pernah ditolak.
+  //    Diskon/pajak tersimpan disesuaikan agar invarian uang
+  //    `subtotal - discount + tax === total` PERSIS (integer rupiah), dengan
+  //    subtotal tetap dari snapshot harga server.
+  let disc: number;
+  let tax: number;
+  let total: number;
+  // Pajak acuan dari setting (dipakai untuk menyerap selisih pada jalur offline).
+  const tax0 = input.taxCfg.enabled
+    ? Math.round(((subtotal - Math.min(input.discount, subtotal)) * input.taxCfg.pct) / 100)
     : 0;
-  const total = subtotal - disc + tax;
+  if (
+    input.allowStokMinus &&
+    typeof input.totalDariClient === "number" &&
+    Number.isInteger(input.totalDariClient) &&
+    input.totalDariClient >= 0
+  ) {
+    total = input.totalDariClient;
+    // Diskon di-clamp [0, subtotal] menyerap selisih total-client vs subtotal-server,
+    // dengan acuan pajak setting, agar invarian tetap eksak.
+    disc = Math.min(Math.max(input.discount, subtotal + tax0 - total), subtotal);
+    // Pajak tersimpan = sisa penyeimbang → `subtotal - discount + tax === total` SELALU.
+    tax = total - (subtotal - disc);
+  } else {
+    disc = Math.min(input.discount, subtotal);
+    tax = tax0;
+    total = subtotal - disc + tax;
+  }
 
+  // paid: QRIS = total; CASH = nominal tunai. Jalur offline: cash apa adanya.
   const paid = input.payment === "CASH" ? input.cash : total;
   if (paid < total) throw new Error(`Uang kurang ${total - paid}.`);
 
@@ -244,6 +277,7 @@ function keWire(entry: OutboxEntry) {
     payment: entry.payload.payment,
     discount: entry.payload.discount,
     mejaId: entry.payload.mejaId ?? null,
+    total: entry.payload.total ?? undefined,
     createdAt: entry.createdAt,
   };
 }

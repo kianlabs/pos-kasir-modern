@@ -21,6 +21,7 @@ type TransaksiSync = {
   payment?: unknown;
   discount?: unknown;
   mejaId?: unknown;
+  total?: unknown;
   createdAt?: unknown;
 };
 
@@ -105,6 +106,8 @@ async function prosesSatu(
   const payment = item.payment === "QRIS" ? "QRIS" : "CASH";
   const discount = Math.max(0, Math.floor(Number(item.discount) || 0));
   const mejaId = typeof item.mejaId === "string" && item.mejaId ? item.mejaId : null;
+  // Total dihitung client saat offline (opsional) → otoritatif saat sync (PRD §12).
+  const totalDariClient = Number.isInteger(Number(item.total)) ? Number(item.total) : null;
   const createdAt =
     typeof item.createdAt === "number" && Number.isFinite(item.createdAt)
       ? new Date(item.createdAt)
@@ -142,6 +145,7 @@ async function prosesSatu(
         createdAt,
         taxCfg,
         allowStokMinus: true, // PRD §12: terima walau stok kurang
+        totalDariClient,
       });
     });
 

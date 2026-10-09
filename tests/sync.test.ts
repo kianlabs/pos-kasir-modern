@@ -39,6 +39,7 @@ describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
     cash?: number;
     payment?: "CASH" | "QRIS";
     allowStokMinus?: boolean;
+    totalDariClient?: number | null;
   }) {
     return prisma.$transaction(async (tx) => {
       const taxCfg = await getTaxSetting(tx, args.warungId);
@@ -55,6 +56,7 @@ describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
         createdAt: null,
         taxCfg,
         allowStokMinus: args.allowStokMinus ?? false,
+        totalDariClient: args.totalDariClient ?? null,
       });
     });
   }
@@ -248,5 +250,59 @@ describe("sync engine idempotent & isolasi tenant (Tahap 4)", () => {
     expect(trxB.warungId).toBe(warungB.id);
     const dariA = await prisma.transaction.findMany({ where: { warungId: warungA.id, id: idB } });
     expect(dariA).toHaveLength(0);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────
+  // REGRESI bug sync produksi: kasir jual OFFLINE dengan "Uang pas" — client
+  // set cash = total DIHITUNG CLIENT (harga/setting cache). Saat sync, server
+  // dulu menghitung ulang total dari harga LIVE + setting live, lalu MENOLAK
+  // "Uang kurang 200." → transaksi offline gagal sync SELAMANYA (status error).
+  // Perbaikan (PRD §12): pada jalur sync (allowStokMinus) total dari client
+  // OTORITATIF. Test ini GAGAL (ditolak "Uang kurang") bila logika itu dilepas.
+  it("(5) REGRESI: cash 'uang pas' dari total CLIENT (beda dari total server) TETAP sync, bukan 'Uang kurang'", async () => {
+    // Produk khusus dengan stok besar agar bukan kasus konflik stok.
+    const p = await prisma.product.create({
+      data: { warungId: warungA.id, name: `SyncUangPas-${Date.now()}`, price: 5000, stock: 100 },
+    });
+
+    const id = randomUUID();
+    const totalClient = 9800; // total cache client (mis. 2 × 4900 saat harga cache lama)
+
+    // Dulu: server hitung 2 × 5000 = 10000 > cash 9800 → throw "Uang kurang 200.".
+    const hasil = await checkout({
+      id,
+      warungId: warungA.id,
+      cashierId: kasirA.id,
+      productId: p.id,
+      qty: 2,
+      cash: totalClient, // "uang pas" menurut client
+      allowStokMinus: true,
+      totalDariClient: totalClient,
+    });
+
+    expect(hasil.sudahAda).toBe(false);
+
+    // Transaksi TERSIMPAN (bukan error) & uang pas per client.
+    const trx = await prisma.transaction.findUniqueOrThrow({ where: { id } });
+    expect(trx.status).toBe("LUNAS");
+    expect(trx.total).toBe(totalClient);
+    expect(trx.cash).toBe(totalClient);
+    expect(trx.change).toBe(0);
+
+    // Invarian uang: subtotal - discount + tax === total PERSIS (integer rupiah).
+    expect(trx.subtotal - trx.discount + trx.tax).toBe(trx.total);
+
+    // Kontrol: jalur ONLINE (allowStokMinus falsy) tetap MENOLAK uang kurang.
+    await expect(
+      checkout({
+        id: randomUUID(),
+        warungId: warungA.id,
+        cashierId: kasirA.id,
+        productId: p.id,
+        qty: 2,
+        cash: totalClient,
+        allowStokMinus: false,
+      })
+    ).rejects.toThrow(/Uang kurang/);
   });
 });

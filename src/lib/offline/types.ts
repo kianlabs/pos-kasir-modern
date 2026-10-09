@@ -22,6 +22,12 @@ export type OutboxPayload = {
   payment: "CASH" | "QRIS";
   discount: number;
   mejaId?: string | null;
+  /**
+   * Total yang DIHITUNG CLIENT saat offline (dari harga + setting cache).
+   * Uang sudah diterima kasir → saat sync server memakai nilai ini sebagai
+   * OTORITATIF (tidak menolak karena selisih pembulatan/cache basi). PRD §12.
+   */
+  total?: number;
 };
 
 /** Status satu entri antrean. */
