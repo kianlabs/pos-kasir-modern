@@ -3,6 +3,7 @@ import { transaksi } from "@/server/db";
 import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId } from "@/server/tenant";
 import { BillError } from "@/server/meja";
+import { isUniqueConstraintError } from "@/client/offline-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,13 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   } catch (e) {
     if (e instanceof BillError) {
       return NextResponse.json({ error: e.message }, { status: e.status });
+    }
+    // Race dua "buka bill" bersamaan untuk meja yang sama: cek-then-act di atas
+    // bisa lolos di kedua request, lalu partial unique index DB
+    // (tx_one_draft_per_meja, WHERE status='DRAFT') menolak yang kalah dengan
+    // P2002. Itu bukan error server — jawab 409 yang sama seperti jalur cek.
+    if (isUniqueConstraintError(e)) {
+      return NextResponse.json({ error: "Meja sudah punya bill terbuka." }, { status: 409 });
     }
     const message = e instanceof Error ? e.message : "Gagal buka bill.";
     return NextResponse.json({ error: message }, { status: 400 });
