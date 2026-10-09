@@ -23,4 +23,7 @@ export type AuditAction =
   | "MEJA_BAYAR"
   | "MEJA_BATAL"
   | "MEJA_GABUNG"
-  | "MEJA_PISAH";
+  | "MEJA_PISAH"
+  // Sinkronisasi offline (Tahap 4)
+  | "SYNC_BATCH" // batch transaksi offline diterima server
+  | "SYNC_CONFLICT"; // transaksi offline diterima tapi stok kurang saat sync
