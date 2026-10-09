@@ -77,6 +77,8 @@ Setelah `db:seed`, gunakan akun berikut:
 
 ## Deploy (Vercel + Supabase)
 
+**Staging live:** https://pos-kasir-modern-sigma.vercel.app
+
 1. **Supabase** → buat project → ambil dua connection string: pooled (6543) dan direct (5432).
 2. **Vercel** → import repo → set env:
    - `DATABASE_URL` = pooled URL (`?pgbouncer=true&connection_limit=1`)
@@ -85,6 +87,8 @@ Setelah `db:seed`, gunakan akun berikut:
 3. **Migrasi** dijalankan ke DB: `npx prisma migrate deploy` (memakai `DIRECT_URL`).
 4. **Seed warung fiktif:** `npm run db:seed` (idempoten).
 5. Verifikasi: URL staging live, login owner + kasir, jualan penuh (checkout → struk → laporan), PWA installable (HTTPS), isolasi tenant benar.
+
+> **Login demo staging:** owner `owner@warung-berkah-jaya.demo` / `password123`; kasir PIN `123456`; halaman masuk `/masuk/warung-berkah-jaya`.
 
 > **Invarian Postgres:** partial unique index `tx_one_draft_per_meja` (di migrasi `init_postgres`) menegakkan **satu bill DRAFT per meja** di level DB. Di SQLite invarian ini hanya dijaga aplikasi; di Postgres kini dijamin database.
 

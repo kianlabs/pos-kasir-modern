@@ -55,3 +55,4 @@ prisma/*.db.before-*
 learn-supabase/
 *.bak-*
 *.before-*
+.env*
