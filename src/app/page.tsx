@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { rupiah } from "@/lib/rupiah";
 import { productIcon } from "@/lib/meta";
+import { getCache, putCache } from "@/lib/offline/db";
+import { enqueueCheckout } from "@/lib/offline/sync";
+import type { OutboxPayload } from "@/lib/offline/types";
+import { OUTBOX_CHANGED_EVENT } from "./ConnectionBanner";
+
+type TaxInfo = { enabled: boolean; pct: number };
 
 type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 type Cart = Record<string, number>;
@@ -35,9 +41,19 @@ export default function KasirPage() {
     try {
       const res = await fetch("/api/products");
       if (!res.ok) throw new Error();
-      setProducts(await res.json());
+      const data: Product[] = await res.json();
+      setProducts(data);
+      // Simpan salinan lokal agar kasir tetap bisa jualan saat offline.
+      putCache("products", data).catch(() => {});
     } catch {
-      setError("Gagal memuat produk. Cek koneksi lalu refresh halaman.");
+      // Offline / server tak terjangkau → pakai salinan lokal bila ada.
+      const cached = await getCache<Product[]>("products").catch(() => undefined);
+      if (cached && cached.length > 0) {
+        setProducts(cached);
+        setError("");
+      } else {
+        setError("Gagal memuat produk. Cek koneksi lalu refresh halaman.");
+      }
     }
   }
   useEffect(() => {
@@ -48,8 +64,15 @@ export default function KasirPage() {
       .catch(() => setHasShift(null));
     fetch("/api/settings")
       .then((r) => r.json())
-      .then((s) => setTaxInfo({ enabled: !!s.taxEnabled, pct: Number(s.taxPct) || 0 }))
-      .catch(() => {});
+      .then((s) => {
+        const info: TaxInfo = { enabled: !!s.taxEnabled, pct: Number(s.taxPct) || 0 };
+        setTaxInfo(info);
+        putCache("settings", info).catch(() => {});
+      })
+      .catch(async () => {
+        const cached = await getCache<TaxInfo>("settings").catch(() => undefined);
+        if (cached) setTaxInfo(cached);
+      });
   }, []);
 
   const categories = useMemo(
@@ -96,12 +119,44 @@ export default function KasirPage() {
     });
   }
 
+  // Simpan transaksi ke antrean IndexedDB lalu buka struk lokal.
+  // PRD §12: offline TIDAK memblokir penjualan — stok boleh minus sementara,
+  // server memvalidasi ulang saat sync.
+  async function simpanOffline() {
+    const id = crypto.randomUUID();
+    const payload: OutboxPayload = {
+      items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
+      cash: payment === "CASH" ? cashNum : total,
+      payment,
+      discount: discNum,
+    };
+    await enqueueCheckout(id, payload);
+    window.dispatchEvent(new Event(OUTBOX_CHANGED_EVENT));
+    setCart({});
+    setCash("");
+    setDiscount("");
+    router.push(`/struk/offline/${id}`);
+  }
+
   async function bayar() {
     setError("");
     if (lines.length === 0) return setError("Keranjang masih kosong.");
     if (payment === "CASH" && cashNum < total)
       return setError(`Uang kurang ${rupiah(total - cashNum)}.`);
     setLoading(true);
+
+    // Offline terdeteksi → langsung ke antrean lokal (jangan blokir).
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      try {
+        await simpanOffline();
+      } catch {
+        setError("Gagal menyimpan transaksi offline.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -121,7 +176,13 @@ export default function KasirPage() {
       }
       router.push(`/struk/${data.id}`);
     } catch {
-      setError("Tidak bisa hubungi server. Coba lagi.");
+      // Fetch reject = jaringan mati walau navigator.onLine masih true.
+      // Jangan tampilkan error blokir — simpan ke antrean offline.
+      try {
+        await simpanOffline();
+      } catch {
+        setError("Tidak bisa hubungi server. Coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
