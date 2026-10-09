@@ -22,7 +22,7 @@ export default async function MejaPage() {
         </p>
         <Link
           href="/"
-          className="ml-auto rounded-lg bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10"
+          className="ml-auto rounded-lg border border-primary/30 bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10"
         >
           + Bawa pulang / jual langsung
         </Link>
@@ -52,7 +52,7 @@ export default async function MejaPage() {
                     className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       isTerisi
                         ? "bg-primary text-white"
-                        : "bg-emerald-100 text-emerald-700"
+                        : "bg-emerald-600 text-white"
                     }`}
                   >
                     {m.status}
@@ -62,12 +62,12 @@ export default async function MejaPage() {
                 {isTerisi ? (
                   <div className="mt-0.5">
                     <div className="text-sm font-bold text-primary">{rupiah(m.total)}</div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-zinc-600">
                       {m.itemCount} item • ketuk untuk kelola
                     </div>
                   </div>
                 ) : (
-                  <div className="text-xs text-zinc-500">Kosong — ketuk untuk buka bill</div>
+                  <div className="text-xs text-zinc-600">Kosong — ketuk untuk buka bill</div>
                 )}
               </Link>
             );

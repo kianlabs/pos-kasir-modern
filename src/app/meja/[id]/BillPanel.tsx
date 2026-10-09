@@ -312,7 +312,7 @@ export default function BillPanel({
           <button
             onClick={terapkanDiskon}
             disabled={loading}
-            className="rounded-lg bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+            className="rounded-lg border border-primary/30 bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
           >
             Terapkan
           </button>
@@ -441,7 +441,7 @@ export default function BillPanel({
               <button
                 onClick={gabung}
                 disabled={loading || !gabungSource}
-                className="mt-2 w-full rounded-lg bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+                className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
               >
                 Gabung ke sini
               </button>
@@ -471,9 +471,12 @@ export default function BillPanel({
                   const pick = pisahPick[it.id];
                   return (
                     <div key={it.id} className="flex items-center gap-2 text-sm">
-                      <label className="flex min-w-0 flex-1 items-center gap-2">
+                      {/* Label mencakup kotak + nama → area sentuh besar
+                          (min 44px tinggi) agar tidak salah tekan di tablet. */}
+                      <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-1">
                         <input
                           type="checkbox"
+                          className="h-5 w-5 shrink-0 accent-[var(--color-primary)]"
                           checked={!!pick?.on}
                           onChange={(e) => togglePick(it, e.target.checked)}
                         />
@@ -488,9 +491,9 @@ export default function BillPanel({
                           }))
                         }
                         inputMode="numeric"
-                        className="w-14 rounded-md border px-2 py-1 text-center text-xs font-bold outline-none focus:border-primary"
+                        className="h-9 w-14 rounded-md border px-2 text-center text-sm font-bold outline-none focus:border-primary"
                       />
-                      <span className="w-10 text-right text-xs text-zinc-400">/ {it.qty}</span>
+                      <span className="w-10 text-right text-xs text-zinc-500">/ {it.qty}</span>
                     </div>
                   );
                 })}
@@ -498,7 +501,7 @@ export default function BillPanel({
               <button
                 onClick={pisah}
                 disabled={loading || !pisahTarget}
-                className="mt-2 w-full rounded-lg bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+                className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
               >
                 Pisah ke meja tujuan
               </button>
