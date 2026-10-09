@@ -30,7 +30,7 @@ dibayar (`DRAFT → LUNAS`), bukan saat bill dibuka atau item ditambahkan.** Kar
 
 ## Menjalankan
 
-Prasyarat: buat file `.env` dengan **`DATABASE_URL`**, **`DIRECT_URL`** (Postgres/Supabase), dan **`SESSION_SECRET`**.
+Prasyarat: buat file `.env` dengan **`DATABASE_URL`**, **`DIRECT_URL`** (Postgres/Supabase), dan **`SESSION_SECRET`**. Untuk menjalankan test, tambahkan juga **`TEST_DATABASE_URL`** (lihat [Menjalankan test](#menjalankan-test)).
 
 ```bash
 # .env
@@ -54,13 +54,21 @@ npm run dev                # buka http://localhost:3000
 
 ### Menjalankan test
 
-Test membutuhkan koneksi Postgres. Set `TEST_DATABASE_URL` (disarankan, DB terpisah agar tidak menyentuh data dev/produksi) atau biarkan jatuh ke `DATABASE_URL`:
+Test membutuhkan koneksi Postgres dan **WAJIB** diarahkan ke DB terpisah lewat `TEST_DATABASE_URL`:
 
 ```bash
 TEST_DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_TEST" npm test
 ```
 
-`tests/global-setup.ts` menjalankan `prisma migrate deploy` ke URL test sebelum suite berjalan.
+Aturan pengaman (lihat `tests/env-guard.ts`):
+
+- **`TEST_DATABASE_URL` wajib** — test **tidak** fallback ke `DATABASE_URL`/`DIRECT_URL`. Bila kosong, suite langsung gagal dengan pesan jelas. Ini mencegah test menghapus data warung uji di DB dev/produksi.
+- **Host harus berbeda** dari `DATABASE_URL`/`DIRECT_URL`. Bila host-nya sama (mis. sama-sama project Supabase produksi, walau beda port 5432/6543), suite menolak jalan.
+- Gunakan **koneksi direct (port 5432)**, bukan pooled (6543): test memakai interactive transaction yang tak didukung transaction pooler.
+
+Cara paling aman: buat **project Supabase terpisah untuk test** dan pakai connection string-nya sebagai `TEST_DATABASE_URL`.
+
+`tests/global-setup.ts` menjalankan `prisma migrate status` ke URL test sebelum suite berjalan (migrasi sendiri dijalankan manual dengan `npm run db:deploy`).
 
 ## Akun demo
 

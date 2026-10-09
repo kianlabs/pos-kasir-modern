@@ -1,16 +1,14 @@
 import { execSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { loadEnv, resolveTestDatabaseUrl } from "./env-guard";
 
 // Global setup Vitest (lampiran skema §2 aturan #2 & #9 butuh DB nyata).
 //
-// Provider DB = Postgres (Supabase). Test memakai DB TERPISAH dari produksi:
-//
-//   TEST_DATABASE_URL  → URL Postgres khusus test. Bila kosong, fallback ke
-//                        DIRECT_URL. Jangan pooled (6543): test memakai
-//                        interactive transaction yang tak didukung transaction
-//                        pooler.
+// Provider DB = Postgres (Supabase). Test WAJIB memakai DB TERPISAH dari
+// produksi via TEST_DATABASE_URL (lihat tests/env-guard.ts — tidak ada fallback
+// ke DIRECT_URL/DATABASE_URL, dan host yang sama dengan DB dev/produksi ditolak).
+// Jangan pooled (6543): test memakai interactive transaction yang tak didukung
+// transaction pooler.
 //
 // Karena DB Postgres BERSIFAT PERSISTEN (beda dari SQLite yang file-nya dihapus
 // tiap run), setup ini membersihkan warung uji sisa run sebelumnya agar test
@@ -26,26 +24,9 @@ const TEST_SLUG_PREFIXES = [
   "warung-sementara-",
 ];
 
-function loadEnv() {
-  const envPath = resolve(process.cwd(), ".env");
-  if (!existsSync(envPath)) return;
-  for (const line of readFileSync(envPath, "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)="?([^"\n]*)"?$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
-
 export default async function globalSetup() {
   loadEnv();
-  const url =
-    process.env.TEST_DATABASE_URL ||
-    process.env.DIRECT_URL ||
-    process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error(
-      "Test butuh koneksi Postgres. Set TEST_DATABASE_URL (disarankan) atau DIRECT_URL.",
-    );
-  }
+  const url = resolveTestDatabaseUrl();
 
   // Verifikasi koneksi + status migrasi (jangan migrate ulang: itu langkah deploy,
   // dan menjalankannya tiap test-run ke DB remote memicu P1001 flaky).

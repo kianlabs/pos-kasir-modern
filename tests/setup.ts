@@ -1,15 +1,15 @@
+import { loadEnv, resolveTestDatabaseUrl } from "./env-guard";
+
 // Setup per-worker: arahkan Prisma ke DB TEST Postgres sebelum modul apa pun
 // mengimpor `@/server/db`. Env ini harus di-set di sini (bukan di global-setup)
 // karena global-setup jalan di proses terpisah dari worker test.
 //
-// Sumber URL test, berurutan: TEST_DATABASE_URL → DIRECT_URL.
-// (global-setup.ts memakai urutan yang sama.)
-const testUrl = process.env.TEST_DATABASE_URL || process.env.DIRECT_URL;
-if (!testUrl) {
-  throw new Error(
-    "Test butuh koneksi Postgres. Set TEST_DATABASE_URL (disarankan) atau DIRECT_URL.",
-  );
-}
+// Sumber URL test: TEST_DATABASE_URL (WAJIB). Tidak ada fallback ke
+// DIRECT_URL/DATABASE_URL — lihat tests/env-guard.ts. global-setup.ts memakai
+// guard yang sama, sehingga worker dan setup utama selalu sepakat.
+
+loadEnv();
+const testUrl = resolveTestDatabaseUrl();
 
 // Batasi ukuran pool di sisi aplikasi.
 //
