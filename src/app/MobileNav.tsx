@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/types";
@@ -12,8 +12,26 @@ import { bottomOverflow, bottomPrimary, isNavActive } from "@/lib/nav";
 export default function MobileNav({ role }: { role: Role }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
   const primary = bottomPrimary(role);
   const overflow = bottomOverflow(role);
+
+  // a11y: kunci scroll body + fokus panel saat sheet terbuka, tangkap Esc untuk
+  // menutup. Cleanup mengembalikan overflow ke nilai semula.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   // highlight "Lainnya" bila halaman aktif bukan salah satu menu utama.
   const overflowActive = overflow.some((n) => isNavActive(n.href, path));
@@ -21,16 +39,28 @@ export default function MobileNav({ role }: { role: Role }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-40 md:hidden print:hidden" role="dialog" aria-modal="true">
+        <div
+          id="mobile-nav-sheet"
+          className="fixed inset-0 z-40 md:hidden print:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-nav-sheet-title"
+        >
           <button
+            type="button"
             aria-label="Tutup menu"
             className="absolute inset-0 bg-black/40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-4 pb-24 shadow-2xl">
+          <div
+            ref={panelRef}
+            tabIndex={-1}
+            className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-4 pb-24 shadow-2xl outline-none"
+          >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-bold">Menu Lainnya</h2>
+              <h2 id="mobile-nav-sheet-title" className="font-bold">Menu Lainnya</h2>
               <button
+                type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-md px-2 py-1 text-sm font-semibold text-zinc-500"
               >
@@ -83,8 +113,10 @@ export default function MobileNav({ role }: { role: Role }) {
           })}
           {overflow.length > 0 && (
             <button
+              type="button"
               onClick={() => setOpen(true)}
               aria-expanded={open}
+              aria-controls="mobile-nav-sheet"
               className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${
                 overflowActive ? "text-primary" : "text-zinc-500"
               }`}

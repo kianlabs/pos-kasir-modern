@@ -37,12 +37,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
       // Guard (plan §7 keputusan 1): bill DRAFT TIDAK boleh menggantung lintas
       // shift. Bila masih ada bill terbuka di warung → 409.
+      // Hitungan bill DRAFT sengaja WARUNG-WIDE (bukan per-shift): bill tidak
+      // boleh menggantung lintas shift, jadi seluruh warung harus bersih dulu.
       const openBills = await tx.transaction.count({
         where: { warungId, status: "DRAFT" },
       });
       if (openBills > 0) {
         throw new CloseError(
-          `Masih ada ${openBills} bill terbuka. Selesaikan atau batalkan dulu.`,
+          `Masih ada ${openBills} bill terbuka di warung ini. Selesaikan atau batalkan dulu.`,
           409
         );
       }

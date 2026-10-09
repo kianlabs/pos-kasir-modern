@@ -14,7 +14,7 @@ export default async function TransaksiPage() {
     where: { warungId, status: "LUNAS" },
     orderBy: { createdAt: "desc" },
     take: 50,
-    include: { items: { include: { product: true } } },
+    include: { items: true },
   });
 
   return (
@@ -46,7 +46,7 @@ export default async function TransaksiPage() {
                     })}
                   </td>
                   <td className="max-w-[280px] truncate p-3 text-zinc-600">
-                    {t.items.map((i) => `${i.product.name} ×${i.qty}`).join(", ")}
+                    {t.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}
                   </td>
                   <td className="p-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${

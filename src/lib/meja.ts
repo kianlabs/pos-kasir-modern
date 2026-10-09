@@ -14,6 +14,10 @@ type Db = Prisma.TransactionClient;
 //   Transaction {status: DRAFT, mejaId} yang terbuka → bebas race check-then-act.
 // - Satu bill DRAFT terbuka per meja ditegakkan DI DALAM $transaction oleh
 //   pemanggil (aturan #11: pola sama dengan "satu shift BUKA per warung").
+//   Catatan: pada SQLite + Prisma, transaksi interaktif di-serialize sehingga
+//   cek ini efektif atomik antar-request. TIDAK ada constraint DB — saat
+//   migrasi ke Postgres WAJIB tambah partial unique index (warungId, mejaId)
+//   WHERE status='DRAFT' (lihat catatan di schema.prisma).
 // - warungId SELALU dari session (aturan #8), tidak pernah dari client.
 
 export type MejaDenganStatus = {
@@ -109,6 +113,13 @@ export async function requireBillDraft(id: string, warungId: string) {
 // bukan percaya angka client). Uang integer rupiah (aturan #3):
 // discount = min(discount, subtotal), tax = round(...). Reuse di semua mutasi.
 //
+// Fix A13: kembalikan DUA nilai diskon. `rawDiscount` = diskon yang diniatkan
+// kasir (nilai tersimpan, TIDAK di-clamp) — inilah yang WAJIB disimpan ulang
+// oleh pemanggil. `discount` = clamp ke subtotal, dipakai HANYA untuk pajak &
+// total. Tanpa pemisahan ini, menerapkan diskon ke bill kosong (subtotal 0)
+// langsung menulis discount=0 → diskon kasir hilang tanpa jejak, dan diskon
+// yang lebih besar dari subtotal terpotong permanen.
+//
 // PENTING (dibuktikan lewat probe): pada Prisma+SQLite, client ROOT `prisma`
 // TIDAK melihat tulisan yang belum di-commit dari dalam `$transaction` — ia
 // membaca snapshot pra-mutasi (qty via tx=3, via root=0). Karena itu panggil
@@ -118,7 +129,13 @@ export async function hitungUlangBill(
   billId: string,
   warungId: string,
   db: Db = prisma
-): Promise<{ subtotal: number; discount: number; tax: number; total: number }> {
+): Promise<{
+  subtotal: number;
+  rawDiscount: number;
+  discount: number;
+  tax: number;
+  total: number;
+}> {
   const [items, bill] = await Promise.all([
     db.transactionItem.findMany({
       where: { transactionId: billId, warungId },
@@ -131,12 +148,15 @@ export async function hitungUlangBill(
   ]);
 
   const subtotal = items.reduce((n, i) => n + i.price * i.qty, 0);
-  const discount = Math.min(bill?.discount ?? 0, subtotal);
+  // Nilai diskon yang diniatkan kasir (tersimpan di DB) — TIDAK di-clamp.
+  const rawDiscount = Math.max(0, bill?.discount ?? 0);
+  // Clamp ke subtotal: hanya untuk perhitungan pajak/total agar total tak negatif.
+  const discount = Math.min(rawDiscount, subtotal);
 
   const setting = await db.setting.findUnique({ where: { warungId } });
   const taxEnabled = setting ? !!setting.taxEnabled : true;
   const taxPct = setting ? Math.min(100, Math.max(0, Number(setting.taxPct) || 0)) : 10;
   const tax = taxEnabled ? Math.round(((subtotal - discount) * taxPct) / 100) : 0;
 
-  return { subtotal, discount, tax, total: subtotal - discount + tax };
+  return { subtotal, rawDiscount, discount, tax, total: subtotal - discount + tax };
 }

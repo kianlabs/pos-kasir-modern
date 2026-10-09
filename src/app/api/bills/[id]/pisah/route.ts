@@ -48,8 +48,15 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     let newBillId = "";
-    let sourceTotals: { subtotal: number; discount: number; tax: number; total: number } = {
+    let sourceTotals: {
+      subtotal: number;
+      rawDiscount: number;
+      discount: number;
+      tax: number;
+      total: number;
+    } = {
       subtotal: 0,
+      rawDiscount: 0,
       discount: 0,
       tax: 0,
       total: 0,
@@ -137,8 +144,26 @@ export async function POST(req: Request, { params }: Params) {
       // membaca snapshot pra-mutasi (total stale).
       sourceTotals = await hitungUlangBill(source.id, warungId, tx);
       targetTotals = await hitungUlangBill(created.id, warungId, tx);
-      await tx.transaction.update({ where: { id: source.id }, data: sourceTotals });
-      await tx.transaction.update({ where: { id: created.id }, data: targetTotals });
+      // Fix A13: STORE rawDiscount (diskon diniatkan kasir) untuk KEDUA bill —
+      // `discount` yang ter-clamp hanya untuk math pajak/total, jangan disimpan.
+      await tx.transaction.update({
+        where: { id: source.id },
+        data: {
+          subtotal: sourceTotals.subtotal,
+          discount: sourceTotals.rawDiscount,
+          tax: sourceTotals.tax,
+          total: sourceTotals.total,
+        },
+      });
+      await tx.transaction.update({
+        where: { id: created.id },
+        data: {
+          subtotal: targetTotals.subtotal,
+          discount: targetTotals.rawDiscount,
+          tax: targetTotals.tax,
+          total: targetTotals.total,
+        },
+      });
     });
 
     await catat({

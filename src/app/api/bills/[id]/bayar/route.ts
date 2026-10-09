@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getTaxSetting } from "@/lib/settings";
 import { catat } from "@/lib/audit";
 import { readJson } from "@/lib/request";
 import { currentWarungId, currentKasirId } from "@/lib/warung";
-import { requireBillDraft, BillError } from "@/lib/meja";
+import { requireBillDraft, hitungUlangBill, BillError } from "@/lib/meja";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +25,9 @@ export async function POST(req: Request, { params }: Params) {
   const cash = Number(body.cash);
   if (payment === "CASH" && (!Number.isInteger(cash) || cash < 0)) {
     return NextResponse.json({ error: "Nominal tunai tidak valid." }, { status: 400 });
+  }
+  if (payment === "CASH" && cash > 1000000000) {
+    return NextResponse.json({ error: "Nominal tunai di luar batas wajar." }, { status: 400 });
   }
 
   try {
@@ -74,11 +76,15 @@ export async function POST(req: Request, { params }: Params) {
         }
       }
 
-      // Hitung ulang diskon/pajak/total dari subtotal snapshot + diskon tersimpan.
-      const discount = Math.min(bill.discount, subtotal);
-      const taxCfg = await getTaxSetting(tx, warungId);
-      const tax = taxCfg.enabled ? Math.round(((subtotal - discount) * taxCfg.pct) / 100) : 0;
-      const total = subtotal - discount + tax;
+      // Hitung ulang diskon/pajak/total lewat helper bersama (hitungUlangBill)
+      // agar TIDAK ada duplikasi rumus yang bisa divergen (fix A9). `subtotal`
+      // manual di atas tetap dipakai untuk pesan/urutan validasi stok.
+      const totals = await hitungUlangBill(bill.id, warungId, tx);
+      // Fix A13: pada LUNAS simpan diskon TER-CLAMP (min(raw, subtotal)), bukan
+      // rawDiscount — struk dibayar tak boleh punya diskon > subtotal (inkonsisten).
+      const discount = totals.discount;
+      const tax = totals.tax;
+      const total = totals.total;
 
       const paid = payment === "CASH" ? cash : total;
       if (paid < total) throw new BillError(`Uang kurang ${total - paid}.`, 400);

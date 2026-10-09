@@ -21,6 +21,9 @@ type Params = { params: { id: string } };
 // menyentuh stok/StockMove (plan §7 keputusan 3).
 export async function PATCH(req: Request, { params }: Params) {
   const warungId = await currentWarungId();
+  // Re-query DB: pastikan user masih aktif & di warung yang sama. Tanpa ini,
+  // cookie kasir yang sudah dinonaktifkan bisa tetap memutasi bill (fix A2).
+  await currentKasirId(warungId);
 
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
@@ -44,7 +47,14 @@ export async function PATCH(req: Request, { params }: Params) {
     if (!Number.isInteger(qty) || qty === 0) {
       return NextResponse.json({ error: "Qty item tidak valid." }, { status: 400 });
     }
-    merged.set(productId, (merged.get(productId) ?? 0) + (qty as number));
+    if (Math.abs(qty as number) > 100000) {
+      return NextResponse.json({ error: "Qty di luar batas wajar." }, { status: 400 });
+    }
+    const next = (merged.get(productId) ?? 0) + (qty as number);
+    if (Math.abs(next) > 100000) {
+      return NextResponse.json({ error: "Qty di luar batas wajar." }, { status: 400 });
+    }
+    merged.set(productId, next);
   }
 
   // discount opsional: integer rupiah ≥ 0 (aturan #3). Bila tak dikirim,
@@ -54,6 +64,9 @@ export async function PATCH(req: Request, { params }: Params) {
     const d = Number(body.discount);
     if (!Number.isInteger(d) || d < 0) {
       return NextResponse.json({ error: "Diskon tidak valid." }, { status: 400 });
+    }
+    if (d > 100000000) {
+      return NextResponse.json({ error: "Diskon di luar batas wajar." }, { status: 400 });
     }
     discount = d;
   }
@@ -65,6 +78,8 @@ export async function PATCH(req: Request, { params }: Params) {
 
   try {
     // Guard tenant + DRAFT (lempar BillError 404 bila bukan milik warung ini).
+    // Ini hanya 404 cepat + sumber meta audit; Otoritatif untuk critical section
+    // adalah cek ulang DI DALAM $transaction di bawah.
     await requireBillDraft(params.id, warungId);
 
     const items = Array.from(merged.entries());
@@ -131,7 +146,9 @@ export async function PATCH(req: Request, { params }: Params) {
         where: { id: bill.id },
         data: {
           subtotal: totals.subtotal,
-          discount: totals.discount,
+          // Fix A13: simpan diskon yang diniatkan kasir (rawDiscount), bukan yang
+          // sudah di-clamp ke subtotal — agar diskon pada bill kosong tidak hilang.
+          discount: totals.rawDiscount,
           tax: totals.tax,
           total: totals.total,
         },

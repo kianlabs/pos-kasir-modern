@@ -41,6 +41,9 @@ export async function POST(req: Request) {
   if (payment === "CASH" && (!Number.isInteger(cash) || cash < 0)) {
     return NextResponse.json({ error: "Nominal tunai tidak valid." }, { status: 400 });
   }
+  if (payment === "CASH" && cash > 1000000000) {
+    return NextResponse.json({ error: "Nominal tunai di luar batas wajar." }, { status: 400 });
+  }
 
   try {
     const items = Array.from(merged.entries());

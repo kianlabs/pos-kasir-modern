@@ -31,8 +31,15 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     let moved = 0;
-    let totals: { subtotal: number; discount: number; tax: number; total: number } = {
+    let totals: {
+      subtotal: number;
+      rawDiscount: number;
+      discount: number;
+      tax: number;
+      total: number;
+    } = {
       subtotal: 0,
+      rawDiscount: 0,
       discount: 0,
       tax: 0,
       total: 0,
@@ -68,7 +75,17 @@ export async function POST(req: Request, { params }: Params) {
       // yang sama (atomik). Wajib pakai `tx`: hitungUlangBill(`prisma`) di
       // dalam $transaction membaca snapshot pra-mutasi (total stale).
       totals = await hitungUlangBill(target.id, warungId, tx);
-      await tx.transaction.update({ where: { id: target.id }, data: totals });
+      // Fix A13: simpan rawDiscount (diskon diniatkan kasir), bukan `discount`
+      // yang sudah di-clamp ke subtotal — mencegah diskon terpotong permanen.
+      await tx.transaction.update({
+        where: { id: target.id },
+        data: {
+          subtotal: totals.subtotal,
+          discount: totals.rawDiscount,
+          tax: totals.tax,
+          total: totals.total,
+        },
+      });
     });
 
     await catat({

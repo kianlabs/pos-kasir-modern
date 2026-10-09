@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       ...(dateFilter ? { createdAt: dateFilter } : {}),
     },
     orderBy: { createdAt: "asc" },
-    include: { items: { include: { product: true } } },
+    include: { items: true },
   });
 
   const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       [
         t.id,
         t.createdAt.toLocaleString("id-ID"),
-        t.items.map((i) => `${i.product.name} x${i.qty}`).join("; "),
+        t.items.map((i) => `${i.name} x${i.qty}`).join("; "),
         t.subtotal,
         t.discount,
         t.tax,

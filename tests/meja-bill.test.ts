@@ -104,7 +104,16 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
         });
       }
       const totals = await hitungUlangBill(billId, warungId, tx);
-      return tx.transaction.update({ where: { id: billId }, data: totals });
+      // Fix A13: simpan rawDiscount (diskon diniatkan), bukan clamped `discount`.
+      return tx.transaction.update({
+        where: { id: billId },
+        data: {
+          subtotal: totals.subtotal,
+          discount: totals.rawDiscount,
+          tax: totals.tax,
+          total: totals.total,
+        },
+      });
     });
   }
 
@@ -256,6 +265,29 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     await prisma.transaction.delete({ where: { id: bill.id } });
   });
 
+  it("(a2) dua bukaBill bersamaan pada meja sama → tepat 1 sukses, 1 DRAFT", async () => {
+    // Regresi aturan #11: cek-dalam-$transaction harus menolak klik ganda.
+    // Pada SQLite+Prisma transaksi interaktif di-serialize → efektif atomik.
+    await bersihkanDraftA();
+
+    const hasil = await Promise.allSettled([
+      bukaBill(mejaA1.id, warungA.id, kasirA.id),
+      bukaBill(mejaA1.id, warungA.id, kasirA.id),
+    ]);
+
+    const sukses = hasil.filter((h) => h.status === "fulfilled");
+    const gagal = hasil.filter((h) => h.status === "rejected");
+    expect(sukses).toHaveLength(1);
+    expect(gagal).toHaveLength(1);
+
+    const draftCount = await prisma.transaction.count({
+      where: { warungId: warungA.id, mejaId: mejaA1.id, status: "DRAFT" },
+    });
+    expect(draftCount).toBe(1);
+
+    await bersihkanDraftA();
+  });
+
   it("(b) bayar bill DRAFT mengurangi stok SEKALI + catat StockMove + status LUNAS", async () => {
     const before = await getProdukA();
     const bill = await bukaBill(mejaA1.id, warungA.id, kasirA.id);
@@ -315,7 +347,15 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
       });
       await tx.transaction.delete({ where: { id: source.id } });
       const totals = await hitungUlangBill(target.id, warungA.id, tx);
-      await tx.transaction.update({ where: { id: target.id }, data: totals });
+      await tx.transaction.update({
+        where: { id: target.id },
+        data: {
+          subtotal: totals.subtotal,
+          discount: totals.rawDiscount,
+          tax: totals.tax,
+          total: totals.total,
+        },
+      });
     });
 
     // Tidak ada duplikasi: total baris item tetap sama (1 item produk yang sama
@@ -361,8 +401,24 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
       });
       const st = await hitungUlangBill(source.id, warungA.id, tx);
       const tt = await hitungUlangBill(target.id, warungA.id, tx);
-      await tx.transaction.update({ where: { id: source.id }, data: st });
-      await tx.transaction.update({ where: { id: target.id }, data: tt });
+      await tx.transaction.update({
+        where: { id: source.id },
+        data: {
+          subtotal: st.subtotal,
+          discount: st.rawDiscount,
+          tax: st.tax,
+          total: st.total,
+        },
+      });
+      await tx.transaction.update({
+        where: { id: target.id },
+        data: {
+          subtotal: tt.subtotal,
+          discount: tt.rawDiscount,
+          tax: tt.tax,
+          total: tt.total,
+        },
+      });
     });
 
     const itemSumber = await prisma.transactionItem.findUniqueOrThrow({ where: { id: item.id } });
@@ -460,6 +516,60 @@ describe("manajemen meja & bill DRAFT (Tahap 3)", () => {
     expect(after.stock).toBe(8);
 
     // Produk uji tidak dihapus (dirujuk TransactionItem → FK Restrict).
+  });
+
+  it("(a3/REGRESI A13) diskon pada bill KOSONG tidak hilang & bertahan setelah tambah item", async () => {
+    // Bug lama: hitungUlangBill meng-clamp discount = min(discount, subtotal)
+    // dan SEMUA pemanggil menyimpan nilai ter-clamp itu. Akibatnya diskon yang
+    // diterapkan ke bill KOSONG (subtotal 0) langsung menulis discount=0 →
+    // hilang tanpa jejak; diskon > subtotal juga terpotong permanen.
+    // Fix: helper mengembalikan rawDiscount (tak ter-clamp) untuk DISIMPAN, dan
+    // `discount` ter-clamp hanya dipakai untuk math pajak/total.
+    await bersihkanDraftA();
+    const p = await prisma.product.create({
+      data: { warungId: warungA.id, name: `ProdukA13-${Date.now()}`, price: 2000, stock: 50 },
+    });
+    const bill = await bukaBill(mejaA1.id, warungA.id, kasirA.id);
+
+    // Meniru PATCH /api/bills/[id] { discount } pada bill KOSONG: set diskon,
+    // lalu hitung ulang DI DALAM tx dan simpan (persis alur route).
+    await prisma.$transaction(async (tx) => {
+      await tx.transaction.update({ where: { id: bill.id }, data: { discount: 5000 } });
+      const totals = await hitungUlangBill(bill.id, warungA.id, tx);
+      await tx.transaction.update({
+        where: { id: bill.id },
+        data: {
+          subtotal: totals.subtotal,
+          discount: totals.rawDiscount, // A13: simpan nilai diniatkan, bukan clamped
+          tax: totals.tax,
+          total: totals.total,
+        },
+      });
+    });
+
+    // Diskon SELAMAT: tersimpan 5000 walau subtotal masih 0.
+    const setelahDiskon = await prisma.transaction.findUniqueOrThrow({ where: { id: bill.id } });
+    expect(setelahDiskon.subtotal).toBe(0);
+    expect(setelahDiskon.discount).toBe(5000);
+    expect(setelahDiskon.total).toBe(0);
+
+    // Tambah 1 item @2000 → subtotal 2000. Diskon TETAP 5000 (tidak ter-clamp
+    // di kolom tersimpan). Clamp hanya menyentuh math: pajak 0, total 0.
+    await tambahItem(bill.id, warungA.id, p.id, 1);
+    const setelahItem = await prisma.transaction.findUniqueOrThrow({ where: { id: bill.id } });
+    expect(setelahItem.subtotal).toBe(2000);
+    expect(setelahItem.discount).toBe(5000); // ← regresi lama: 0 atau 2000
+    expect(setelahItem.total).toBe(0); // 2000 - min(5000,2000) + 0
+    expect(setelahItem.total).toBeGreaterThanOrEqual(0); // total tak pernah negatif
+
+    // Membuktikan `discount` ter-clamp dipakai untuk math (bukan disimpan):
+    const math = await hitungUlangBill(bill.id, warungA.id);
+    expect(math.rawDiscount).toBe(5000);
+    expect(math.discount).toBe(2000); // min(5000, 2000)
+    expect(math.total).toBe(0);
+
+    // Bersihkan DRAFT agar test (f) bisa membuka meja A1 lagi (mulai bersih).
+    await bersihkanDraftA();
   });
 
   it("(f) DRAFT tidak bocor ke laporan: /transaksi & stats hanya LUNAS (aturan #12)", async () => {
