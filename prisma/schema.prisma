@@ -130,11 +130,11 @@ model Transaction {
 
   @@index([warungId, createdAt])
   @@index([warungId, status]) // derive daftar meja + filter laporan LUNAS
-  // CATATAN MIGRASI POSTGRES: tambah partial unique index untuk menegakkan
-  // "satu DRAFT per meja" di level DB:
+  // Partial unique index "satu DRAFT per meja" DITEGAKKAN DI DB (Postgres):
   //   CREATE UNIQUE INDEX tx_one_draft_per_meja ON transactions(warungId, mejaId)
   //   WHERE status = 'DRAFT' AND mejaId IS NOT NULL;
-  // SQLite tidak mendukung partial unique → invarian ini hanya ditegakkan app.
+  // Lihat prisma/migrations/20261009100000_init_postgres/migration.sql.
+  // Endpoint buka-bill menangkap P2002 dari index ini dan menjawab 409.
   @@map("transactions")
 }
 

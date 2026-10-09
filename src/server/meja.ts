@@ -13,11 +13,10 @@ type Db = Prisma.TransactionClient;
 // - Meja TIDAK punya kolom `status`. KOSONG/TERISI di-derive dari ada/tidaknya
 //   Transaction {status: DRAFT, mejaId} yang terbuka → bebas race check-then-act.
 // - Satu bill DRAFT terbuka per meja ditegakkan DI DALAM $transaction oleh
-//   pemanggil (aturan #11: pola sama dengan "satu shift BUKA per warung").
-//   Catatan: pada SQLite + Prisma, transaksi interaktif di-serialize sehingga
-//   cek ini efektif atomik antar-request. TIDAK ada constraint DB — saat
-//   migrasi ke Postgres WAJIB tambah partial unique index (warungId, mejaId)
-//   WHERE status='DRAFT' (lihat catatan di schema.prisma).
+//   pemanggil DAN di level DB lewat partial unique index `tx_one_draft_per_meja`
+//   (Postgres; lihat migrations/20261009100000_init_postgres). Endpoint buka-bill
+//   menangkap P2002 → 409. Invarian "satu shift BUKA per warung" juga ditegakkan
+//   DB lewat index `shifts_one_buka_per_warung` (migrations/20261009120000_shift_one_open).
 // - warungId SELALU dari session (aturan #8), tidak pernah dari client.
 
 export type MejaDenganStatus = {

@@ -15,10 +15,9 @@ export const dynamic = "force-dynamic";
 // - WAJIB ada shift BUKA (alur kasir: login → shift aktif → pilih meja);
 // Semua pengecekan dilakukan DI DALAM $transaction agar bebas race
 // check-then-act (dua klik "buka bill" bersamaan tidak menghasilkan 2 DRAFT).
-// Catatan: pada SQLite + Prisma, transaksi interaktif di-serialize sehingga cek
-// ini efektif atomik antar-request. TIDAK ada constraint DB — saat migrasi ke
-// Postgres WAJIB tambah partial unique index (warungId, mejaId) WHERE
-// status='DRAFT' (lihat schema.prisma).
+// Di level DB, partial unique index `tx_one_draft_per_meja` (Postgres,
+// migrations/20261009100000_init_postgres) menjadi jaring kedua: bila dua
+// request lolos cek bersamaan, yang kalah kena P2002 → ditangkap di catch → 409.
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const warungId = await currentWarungId();
   const cashierId = await currentKasirId(warungId);
