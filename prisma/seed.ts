@@ -1,5 +1,27 @@
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+// Muat .env secara eksplisit bila DIRECT_URL belum di-resolve oleh Prisma.
+if (!process.env.DIRECT_URL) {
+  const envPath = resolve(process.cwd(), ".env");
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, "utf8").split("\n")) {
+      const m = line.match(/^([A-Z_]+)="?([^"\n]*)"?$/);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+    }
+  }
+}
+
+// Seed memakai koneksi DIRECT/SESSION (DIRECT_URL), bukan pooled (DATABASE_URL),
+// karena ia memakai interactive transaction ($transaction async) + loop tulis
+// panjang — tak didukung transaction pooler (6543). Pola sama dengan migrasi.
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DIRECT_URL || process.env.DATABASE_URL,
+});
+
+
 
 // Helper slugify
 function slugify(text: string): string {
@@ -71,7 +93,9 @@ export async function seedWarung(nama: string) {
   const ownerPasswordHash = await bcrypt.hash("password123", 10);
   const kasirPinHash = await bcrypt.hash("123456", 10);
 
-  // Buat Warung lengkap dalam transaksi
+  // Buat Warung lengkap dalam transaksi.
+  // timeout dinaikkan: Supabase (pooler Sydney) berlatensi tinggi, dan satu
+  // transaksi ini meng-insert 1 warung + 2 user + setting + 10 meja + 38 produk.
   const result = await prisma.$transaction(async (tx) => {
     const warung = await tx.warung.create({
       data: {
@@ -151,7 +175,7 @@ export async function seedWarung(nama: string) {
     });
 
     return warung;
-  });
+  }, { maxWait: 15_000, timeout: 60_000 });
 
   console.log(`[SEED] Sukses membuat warung: "${nama}" (${slug}) - ID: ${result.id}`);
   return result;
