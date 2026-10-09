@@ -15,10 +15,25 @@ type TaxInfo = { enabled: boolean; pct: number };
 type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 type Cart = Record<string, number>;
 
+// Struk offline yang ditampilkan inline (tanpa navigasi) agar kasir tidak pindah
+// halaman — route /struk/* dinamis TIDAK ter-cache SW, jadi push offline = chrome-error.
+type OfflineReceipt = {
+  id: string;
+  createdAt: number;
+  lines: { key: string; name: string; qty: number; price: number }[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  cash: number;
+  payment: "CASH" | "QRIS";
+  change: number;
+};
+
 const QUICK_CASH = [10000, 20000, 50000, 100000];
 
 function stockStyle(stock: number): string {
-  if (stock === 0) return "bg-red-100 text-red-700";
+  if (stock <= 0) return "bg-red-100 text-red-700";
   if (stock <= 5) return "bg-amber-100 text-amber-700";
   return "bg-emerald-100 text-emerald-700";
 }
@@ -36,6 +51,7 @@ export default function KasirPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Semua");
+  const [offlineReceipt, setOfflineReceipt] = useState<OfflineReceipt | null>(null);
 
   async function load() {
     try {
@@ -105,7 +121,9 @@ export default function KasirPage() {
 
   function add(id: string) {
     const p = products.find((x) => x.id === id);
-    if (!p || p.stock === 0) return;
+    // <= 0 (bukan == 0): stok bisa MINUS setelah sync offline (PRD §12);
+    // Math.min dengan stok negatif akan membuat qty negatif & keranjang rusak.
+    if (!p || p.stock <= 0) return;
     setCart((c) => ({ ...c, [id]: Math.min((c[id] ?? 0) + 1, p.stock) }));
     setError("");
   }
@@ -119,23 +137,46 @@ export default function KasirPage() {
     });
   }
 
-  // Simpan transaksi ke antrean IndexedDB lalu buka struk lokal.
+  // Simpan transaksi ke antrean IndexedDB lalu TAMPILKAN struk inline (tanpa navigasi).
   // PRD §12: offline TIDAK memblokir penjualan — stok boleh minus sementara,
   // server memvalidasi ulang saat sync.
+  // Struk dirender dari data di memori (bukan baca IndexedDB / route dinamis) agar
+  // tetap aman saat offline & tidak bergantung pada cache service worker.
   async function simpanOffline() {
     const id = crypto.randomUUID();
-    const payload: OutboxPayload = {
-      items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
+    const createdAt = Date.now();
+    const receipt: OfflineReceipt = {
+      id,
+      createdAt,
+      lines: lines.map((l) => ({
+        key: l.product.id,
+        name: l.product.name,
+        qty: l.qty,
+        price: l.product.price,
+      })),
+      subtotal,
+      discount: discNum,
+      tax: taxNum,
+      total,
       cash: payment === "CASH" ? cashNum : total,
       payment,
+      change: payment === "CASH" ? Math.max(0, kembalian) : 0,
+    };
+    const payload: OutboxPayload = {
+      items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
+      cash: receipt.cash,
+      payment,
       discount: discNum,
+      // Total otoritatif yang dihitung client (harga cache) — uang sudah diterima
+      // saat offline; server memakainya agar sync tak ditolak karena selisih. PRD §12.
+      total,
     };
     await enqueueCheckout(payload, { id });
     window.dispatchEvent(new Event(OUTBOX_CHANGED_EVENT));
     setCart({});
     setCash("");
     setDiscount("");
-    router.push(`/struk/offline/${id}`);
+    setOfflineReceipt(receipt);
   }
 
   async function bayar() {
@@ -190,6 +231,78 @@ export default function KasirPage() {
 
   return (
     <div>
+      {offlineReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border bg-white p-6 font-mono text-sm shadow-xl">
+            <h2 className="text-center text-lg font-bold">🧾 Struk</h2>
+            <p className="text-center text-xs text-zinc-500">
+              {new Date(offlineReceipt.createdAt).toLocaleString("id-ID")} • #
+              {offlineReceipt.id.slice(0, 8).toUpperCase()}
+            </p>
+            <div className="mt-2 flex justify-center">
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+                ⏳ Belum tersinkron
+              </span>
+            </div>
+            <div className="my-3 border-t-2 border-dashed" />
+            {offlineReceipt.lines.map((l) => (
+              <div key={l.key} className="mb-1.5">
+                <div className="font-bold">{l.name}</div>
+                <div className="flex justify-between text-zinc-700">
+                  <span>
+                    {l.qty} × {rupiah(l.price)}
+                  </span>
+                  <span>{rupiah(l.price * l.qty)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="my-3 border-t-2 border-dashed" />
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{rupiah(offlineReceipt.subtotal)}</span>
+            </div>
+            {offlineReceipt.discount > 0 && (
+              <div className="flex justify-between">
+                <span>Diskon</span>
+                <span>−{rupiah(offlineReceipt.discount)}</span>
+              </div>
+            )}
+            {offlineReceipt.tax > 0 && (
+              <div className="flex justify-between">
+                <span>Pajak</span>
+                <span>+{rupiah(offlineReceipt.tax)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-base font-bold">
+              <span>TOTAL</span>
+              <span>{rupiah(offlineReceipt.total)}</span>
+            </div>
+            <div className="mt-1 flex justify-between">
+              <span>{offlineReceipt.payment === "CASH" ? "Tunai" : "QRIS"}</span>
+              <span>{rupiah(offlineReceipt.cash)}</span>
+            </div>
+            {offlineReceipt.payment === "CASH" && (
+              <div className="flex justify-between">
+                <span>Kembali</span>
+                <span>{rupiah(offlineReceipt.change)}</span>
+              </div>
+            )}
+            <div className="my-3 border-t-2 border-dashed" />
+            <p className="text-center text-xs text-zinc-500">
+              Terima kasih & sampai jumpa 🙏
+              <br />
+              Struk ini tersimpan lokal & akan tersinkron otomatis.
+            </p>
+            <button
+              type="button"
+              onClick={() => setOfflineReceipt(null)}
+              className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover"
+            >
+              Selesai / Transaksi baru
+            </button>
+          </div>
+        </div>
+      )}
       {hasShift === false && (
         <Link href="/shift" className="mb-4 block rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
           ⚠️ Belum buka shift — transaksi tidak tercatat di rekap kas. Buka shift dulu →
@@ -234,7 +347,7 @@ export default function KasirPage() {
               <button
                 key={p.id}
                 onClick={() => add(p.id)}
-                disabled={p.stock === 0}
+                disabled={p.stock <= 0}
                 className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 <div className="flex items-start justify-between">
@@ -242,7 +355,7 @@ export default function KasirPage() {
                     {productIcon(p)}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${stockStyle(p.stock)}`}>
-                    {p.stock === 0 ? "Habis" : `Stok ${p.stock}`}
+                    {p.stock <= 0 ? "Habis" : `Stok ${p.stock}`}
                   </span>
                 </div>
                 <div className="mt-2 truncate text-sm font-semibold">{p.name}</div>
