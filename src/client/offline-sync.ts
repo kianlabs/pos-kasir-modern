@@ -30,6 +30,18 @@ import type {
 
 export type CheckoutLine = { productId: string; qty: number };
 
+// ── Batas aman integer rupiah ────────────────────────────────────────────
+//
+// Kolom uang/qty di Prisma bertipe `Int` = Postgres int4 (maks 2_147_483_647).
+// Nilai dari client (khususnya jalur SYNC yang mempercayai `totalDariClient`)
+// TIDAK boleh dipercaya mentah-mentah: qty/total absurd bisa overflow int32
+// (error DB / nilai negatif setelah wrap) atau membuat diskon/pajak aneh.
+// Karena itu semua besaran uang di-clamp/di-guard ke [0, BATAS_UANG], konsisten
+// dengan guard cash yang sudah ada di /api/checkout (<= 1e9).
+export const BATAS_UANG = 1_000_000_000; // 1e9 rupiah
+/** Batas qty per baris item — menahan subtotal (price*qty) tetap di bawah int32. */
+export const BATAS_QTY = 1_000_000;
+
 export type ProsesCheckoutInput = {
   /** UUID dari client (opsional). Ada = jalur offline/retry → idempotent. */
   id: string | null;
@@ -118,7 +130,7 @@ export async function prosesCheckout(
     if (!item || typeof item.productId !== "string" || !item.productId) {
       throw new Error("Item keranjang tidak valid.");
     }
-    if (!Number.isInteger(item.qty) || item.qty <= 0) {
+    if (!Number.isInteger(item.qty) || item.qty <= 0 || item.qty > BATAS_QTY) {
       throw new Error("Item keranjang tidak valid.");
     }
     merged.set(item.productId, (merged.get(item.productId) ?? 0) + item.qty);
@@ -147,6 +159,12 @@ export async function prosesCheckout(
     subtotal += p.price * qty;
   }
 
+  // Guard overflow: subtotal (dan turunannya) harus tetap dalam int32. qty sudah
+  // dibatasi BATAS_QTY, tapi harga produk absurd tetap bisa melampaui → tolak.
+  if (!Number.isSafeInteger(subtotal) || subtotal > BATAS_UANG) {
+    throw new Error("Nilai keranjang di luar batas wajar.");
+  }
+
   // (4) Uang integer rupiah.
   //  - JALUR ONLINE: hitung total dari server; tolak bila uang kurang.
   //  - JALUR SYNC OFFLINE (allowStokMinus + totalDariClient): uang SUDAH diterima
@@ -154,29 +172,41 @@ export async function prosesCheckout(
   //    Diskon/pajak tersimpan disesuaikan agar invarian uang
   //    `subtotal - discount + tax === total` PERSIS (integer rupiah), dengan
   //    subtotal tetap dari snapshot harga server.
+  //
+  // Diskon: input SUDAH dinormalisasi pemanggil (>= 0), tapi kita clamp eksplisit
+  // di sini juga (defensif) ke [0, BATAS_UANG] sebelum dipakai, agar satu sumber
+  // kebenaran dan tak bergantung pemanggil.
+  const discountIn = Math.min(Math.max(Math.floor(input.discount) || 0, 0), BATAS_UANG);
+
   let disc: number;
   let tax: number;
   let total: number;
   // Pajak acuan dari setting (dipakai untuk menyerap selisih pada jalur offline).
   const tax0 = input.taxCfg.enabled
-    ? Math.round(((subtotal - Math.min(input.discount, subtotal)) * input.taxCfg.pct) / 100)
+    ? Math.round(((subtotal - Math.min(discountIn, subtotal)) * input.taxCfg.pct) / 100)
     : 0;
   if (
     input.allowStokMinus &&
     typeof input.totalDariClient === "number" &&
     Number.isInteger(input.totalDariClient) &&
-    input.totalDariClient >= 0
+    input.totalDariClient >= 0 &&
+    input.totalDariClient <= BATAS_UANG
   ) {
     total = input.totalDariClient;
     // Diskon di-clamp [0, subtotal] menyerap selisih total-client vs subtotal-server,
     // dengan acuan pajak setting, agar invarian tetap eksak.
-    disc = Math.min(Math.max(input.discount, subtotal + tax0 - total), subtotal);
+    disc = Math.min(Math.max(discountIn, subtotal + tax0 - total), subtotal);
     // Pajak tersimpan = sisa penyeimbang → `subtotal - discount + tax === total` SELALU.
     tax = total - (subtotal - disc);
   } else {
-    disc = Math.min(input.discount, subtotal);
+    disc = Math.min(discountIn, subtotal);
     tax = tax0;
     total = subtotal - disc + tax;
+  }
+
+  // Jaring pengaman terakhir: nilai tersimpan tak boleh melampaui int32/negatif.
+  if (total < 0 || disc < 0 || total > BATAS_UANG) {
+    throw new Error("Total transaksi di luar batas wajar.");
   }
 
   // paid: QRIS = total; CASH = nominal tunai. Jalur offline: cash apa adanya.
