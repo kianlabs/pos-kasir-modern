@@ -49,3 +49,9 @@ prisma/*.db.before-*
 
 # herdr/agent run artifacts (bukan bagian proyek)
 .omo/
+
+# AI/agent artifacts (plan, workspace belajar, sesi agent) — bukan bagian proyek
+.kilo/
+learn-supabase/
+*.bak-*
+*.before-*
