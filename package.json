@@ -9,6 +9,10 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "db:validate": "prisma validate",
+    "db:deploy": "prisma migrate deploy",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

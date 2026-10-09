@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl dipakai untuk migrasi/introspection (koneksi langsung, bukan
+  // pooler). Supabase: DATABASE_URL = pooled (pgbouncer, port 6543),
+  // DIRECT_URL = direct (port 5432). Lihat README §Deploy.
+  directUrl = env("DIRECT_URL")
 }
 
 // ── Master tenant ──────────────────────────────────────────────
