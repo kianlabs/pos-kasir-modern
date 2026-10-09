@@ -85,6 +85,27 @@ export default function BillPanel({
   const kembalian = cashNum - total;
   const canPay = items.length > 0 && !loading && (payment === "QRIS" || cashNum >= total);
 
+  // Sisa stok "efektif" = stok produk − qty yang sudah ada di bill INI.
+  // Sebelum bayar stok belum berkurang (§7), jadi tanpa ini dropdown
+  // menampilkan stok lama dan menyesatkan kasir.
+  const qtyDiBill = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of items) m.set(it.productId, (m.get(it.productId) ?? 0) + it.qty);
+    return m;
+  }, [items]);
+  const sisaStok = (p: Product) => p.stock - (qtyDiBill.get(p.id) ?? 0);
+
+  // Item bill yang qty-nya melebihi stok tersedia → bayar pasti gagal (stok
+  // dicek saat bayar). Beri peringatan proaktif agar kasir tidak kaget.
+  const kurangStok = useMemo(() => {
+    const out: { name: string; butuh: number; ada: number }[] = [];
+    for (const [pid, qty] of Array.from(qtyDiBill.entries())) {
+      const p = products.find((x) => x.id === pid);
+      if (p && qty > p.stock) out.push({ name: p.name, butuh: qty, ada: p.stock });
+    }
+    return out;
+  }, [qtyDiBill, products]);
+
   async function mutate(url: string, method: string, body?: unknown): Promise<{ ok: boolean; data: { error?: string; id?: string } }> {
     setError("");
     setLoading(true);
@@ -199,7 +220,9 @@ export default function BillPanel({
   }
 
   const err = error && (
-    <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">⚠️ {error}</p>
+    <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+      ⚠️ {error}
+    </p>
   );
 
   // ── Meja KOSONG: tombol buka bill ─────────────────────────────
@@ -242,11 +265,14 @@ export default function BillPanel({
               <optgroup key={c} label={c}>
                 {products
                   .filter((p) => p.category === c)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {productIcon(p)} {p.name} — {rupiah(p.price)} (stok {p.stock})
-                    </option>
-                  ))}
+                  .map((p) => {
+                    const sisa = Math.max(0, sisaStok(p));
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {productIcon(p)} {p.name} — {rupiah(p.price)} (sisa {sisa})
+                      </option>
+                    );
+                  })}
               </optgroup>
             ))}
           </select>
@@ -381,6 +407,14 @@ export default function BillPanel({
         >
           {loading ? "Memproses…" : `Bayar ${rupiah(total)}`}
         </button>
+
+        {kurangStok.length > 0 && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+            ⚠️ Stok kurang untuk:{" "}
+            {kurangStok.map((k) => `${k.name} (butuh ${k.butuh}, ada ${k.ada})`).join(", ")}. Kurangi
+            qty atau kulakan dulu sebelum bayar.
+          </p>
+        )}
       </section>
 
       {/* Gabung & pisah */}
