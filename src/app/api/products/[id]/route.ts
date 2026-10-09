@@ -3,6 +3,7 @@ import { prisma } from "@/server/db";
 import { readJson } from "@/server/http";
 import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/server/tenant";
+import { isRecordNotFound } from "@/client/offline-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -83,8 +84,15 @@ export async function PATCH(req: Request, { params }: Params) {
       });
     }
     return NextResponse.json(product);
-  } catch {
-    return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+  } catch (e) {
+    // P2025 = record tak ditemukan (mis. terhapus di antara findFirst & update).
+    // Selain itu (DB down, koneksi, dsb.) JANGAN disamarkan sebagai 404 — itu
+    // menyesatkan; beri 500 dengan pesan asli.
+    if (isRecordNotFound(e)) {
+      return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+    }
+    console.error("PATCH /api/products/[id] gagal:", e);
+    return NextResponse.json({ error: "Gagal memperbarui produk." }, { status: 500 });
   }
 }
 
@@ -119,7 +127,11 @@ export async function DELETE(_req: Request, { params }: Params) {
       meta: { name: before.name },
     });
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+  } catch (e) {
+    if (isRecordNotFound(e)) {
+      return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+    }
+    console.error("DELETE /api/products/[id] gagal:", e);
+    return NextResponse.json({ error: "Gagal menghapus produk." }, { status: 500 });
   }
 }

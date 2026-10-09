@@ -282,6 +282,11 @@ export function isUniqueConstraintError(e: unknown): boolean {
   return typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2002";
 }
 
+/** True bila error Prisma = record tidak ditemukan (P2025) — mis. update/delete gagal. */
+export function isRecordNotFound(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2025";
+}
+
 // ════════════════════════════════════════════════════════════════════
 // BAGIAN CLIENT — penggerak antrean IndexedDB ↔ /api/sync
 // ════════════════════════════════════════════════════════════════════

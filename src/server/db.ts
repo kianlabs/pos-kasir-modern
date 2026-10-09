@@ -38,15 +38,46 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 const TX_MAX_WAIT_MS = 15_000; // tunggu antre koneksi dari pool
 const TX_TIMEOUT_MS = 60_000; // durasi maksimum transaksi itu sendiri
 
+// Retry untuk write-conflict/deadlock. Postgres membatalkan SATU transaksi saat
+// deadlock (40P01) atau serialization failure (40001); Prisma melaporkannya
+// sebagai P2034. Karena transaksi di-abort penuh (bukan commit parsial), aman
+// diulang. Tanpa retry, kasir bisa melihat error "deadlock detected" sporadis.
+const TX_MAX_RETRY = 3;
+const TX_RETRY_BASE_MS = 50;
+
+function isRetryableTxError(e: unknown): boolean {
+  const code = (e as { code?: unknown } | null)?.code;
+  // P2034 = write conflict / deadlock (Prisma). Aman di-retry karena transaksi
+  // sudah di-abort penuh, bukan commit parsial.
+  return code === "P2034";
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 /**
- * Jalankan interactive transaction dengan timeout yang tahan latensi cloud.
+ * Jalankan interactive transaction dengan timeout yang tahan latensi cloud,
+ * plus retry terbatas untuk write-conflict/deadlock (P2034).
  * Pakai ini sebagai ganti `prisma.$transaction(async (tx) => ...)` langsung.
  */
-export function transaksi<T>(
+export async function transaksi<T>(
   fn: (tx: Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0]) => Promise<T>,
 ): Promise<T> {
-  return prisma.$transaction(fn, {
-    maxWait: TX_MAX_WAIT_MS,
-    timeout: TX_TIMEOUT_MS,
-  });
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= TX_MAX_RETRY; attempt++) {
+    try {
+      return await prisma.$transaction(fn, {
+        maxWait: TX_MAX_WAIT_MS,
+        timeout: TX_TIMEOUT_MS,
+      });
+    } catch (e) {
+      if (!isRetryableTxError(e) || attempt === TX_MAX_RETRY) throw e;
+      lastErr = e;
+      // Backoff eksponensial ringan + jitter.
+      await sleep(TX_RETRY_BASE_MS * 2 ** attempt + Math.floor(Math.random() * 25));
+    }
+  }
+  // Tidak tercapai — loop selalu return atau throw.
+  throw lastErr;
 }

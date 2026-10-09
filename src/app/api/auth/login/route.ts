@@ -48,8 +48,11 @@ export async function POST(req: Request) {
         where: { warungId: warung.id, role: "OWNER", email, aktif: true },
       });
 
-      const rl = owner ? checkLoginRate(owner.id) : null;
-      if (rl?.blocked) {
+      // Key rate-limit: id owner bila ada, else email yang dikirim — agar
+      // percobaan dengan email tak dikenal pun terhitung (batasi enumerasi/tebak).
+      const ownerKey = owner ? owner.id : `owner-email:${email}`;
+      const rl = checkLoginRate(ownerKey);
+      if (rl.blocked) {
         return NextResponse.json(
           { error: `Terlalu banyak percobaan. Coba lagi dalam ${rl.retryAfterSeconds} detik.` },
           { status: 429 }
@@ -58,14 +61,18 @@ export async function POST(req: Request) {
 
       const ok = owner && owner.password ? await bcrypt.compare(password, owner.password) : false;
       if (!owner || !ok) {
-        if (owner) {
-          recordLoginFailure(owner.id);
-          await catat({ warungId: warung.id, userId: owner.id, action: "LOGIN_FAIL", meta: { mode } });
+        const after = recordLoginFailure(ownerKey);
+        await catat({ warungId: warung.id, userId: owner?.id ?? null, action: "LOGIN_FAIL", meta: { mode } });
+        if (after.blocked) {
+          return NextResponse.json(
+            { error: `Terlalu banyak percobaan. Diblokir ${Math.ceil(after.retryAfterSeconds / 60)} menit.` },
+            { status: 429 }
+          );
         }
         return NextResponse.json({ error: "Email atau kata sandi salah." }, { status: 401 });
       }
 
-      recordLoginSuccess(owner.id);
+      recordLoginSuccess(ownerKey);
       await catat({ warungId: warung.id, userId: owner.id, action: "LOGIN_OK", meta: { mode } });
       return finish(owner);
     }
@@ -77,15 +84,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Kasir dan PIN wajib diisi." }, { status: 400 });
     }
 
-    // userId harus milik warung ini, role KASIR, dan aktif.
-    const kasir = await prisma.user.findFirst({
-      where: { id: userId, warungId: warung.id, role: "KASIR", aktif: true },
-    });
-    if (!kasir) {
-      return NextResponse.json({ error: "Kasir tidak ditemukan." }, { status: 401 });
-    }
-
-    const rl = checkLoginRate(kasir.id);
+    // Rate-limit di-key pada userId YANG DIKIRIM (bukan hanya kasir valid), dan
+    // dicek SEBELUM lookup. Tanpa ini, penyerang yang mengirim userId acak tak
+    // pernah tercatat (bash userId valid tak pernah kena blok). Kegagalan apa pun
+    // — termasuk "kasir tidak ditemukan" — dihitung.
+    const rl = checkLoginRate(userId);
     if (rl.blocked) {
       return NextResponse.json(
         { error: `PIN diblokir sementara. Coba lagi dalam ${rl.retryAfterSeconds} detik.` },
@@ -93,9 +96,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // userId harus milik warung ini, role KASIR, dan aktif.
+    const kasir = await prisma.user.findFirst({
+      where: { id: userId, warungId: warung.id, role: "KASIR", aktif: true },
+    });
+    if (!kasir) {
+      const after = recordLoginFailure(userId);
+      await catat({ warungId: warung.id, userId: null, action: "LOGIN_FAIL", meta: { mode, alasan: "kasir_tidak_ditemukan" } });
+      if (after.blocked) {
+        return NextResponse.json(
+          { error: `Percobaan berlebih. Diblokir ${Math.ceil(after.retryAfterSeconds / 60)} menit.` },
+          { status: 429 }
+        );
+      }
+      return NextResponse.json({ error: "Kasir tidak ditemukan." }, { status: 401 });
+    }
+
     const ok = kasir.pin ? await bcrypt.compare(pin, kasir.pin) : false;
     if (!ok) {
-      const after = recordLoginFailure(kasir.id);
+      const after = recordLoginFailure(userId);
       await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_FAIL", meta: { mode } });
       if (after.blocked) {
         return NextResponse.json(
@@ -109,7 +128,7 @@ export async function POST(req: Request) {
       );
     }
 
-    recordLoginSuccess(kasir.id);
+    recordLoginSuccess(userId);
     await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_OK", meta: { mode } });
     return finish(kasir);
   } catch (e) {
