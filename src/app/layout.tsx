@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import SidebarNav from "./SidebarNav";
+import MobileNav from "./MobileNav";
 import LogoutButton from "./LogoutButton";
 import "./globals.css";
 import { currentWarung, getSession } from "@/lib/warung";
@@ -59,23 +59,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </aside>
 
           <div className="min-w-0 flex-1">
-            <header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur md:hidden print:hidden">
-              <div className="flex items-center gap-4 overflow-x-auto px-4 py-3 text-sm font-semibold">
-                <span className="mr-auto shrink-0">🧾 KRING!</span>
-                <Link href="/">Kasir</Link>
-                {session.role === "OWNER" && (
-                  <>
-                    <Link href="/produk">Produk</Link>
-                    <Link href="/laporan">Laporan</Link>
-                    <Link href="/pengaturan">⚙️</Link>
-                  </>
-                )}
-                <Link href="/transaksi">Transaksi</Link>
-                <Link href="/shift">Shift</Link>
-                <Link href="/stok">Stok</Link>
+            <header className="sticky top-0 z-20 border-b bg-white shadow-sm md:hidden print:hidden">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-lg">
+                  🧾
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold leading-tight">KRING!</div>
+                  <div className="truncate text-[11px] text-zinc-500">{warung.nama}</div>
+                </div>
+                <div className="text-right text-xs text-zinc-500">
+                  <div className="truncate font-semibold text-secondary">
+                    {session.role === "OWNER" ? "🔑" : "👤"} {session.name}
+                  </div>
+                  <LogoutButton />
+                </div>
               </div>
             </header>
-            <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+            <div className="mx-auto max-w-7xl px-4 py-6 pb-28 md:px-6 md:pb-6">
               <p className="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-400 print:hidden">
                 {today}
               </p>
@@ -83,6 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </div>
         </div>
+        <MobileNav role={session.role} />
       </body>
     </html>
   );

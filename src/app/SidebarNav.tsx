@@ -3,28 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/types";
+import { isNavActive, navForRole } from "@/lib/nav";
 
-// Menu per role (PRD §6.2): kasir hanya jualan + lihat shift/stok/transaksi;
-// owner dapat semua termasuk produk, laporan, pengaturan.
-const NAV: { href: string; label: string; icon: string; roles: Role[] }[] = [
-  { href: "/", label: "Kasir", icon: "🛒", roles: ["OWNER", "KASIR"] },
-  { href: "/meja", label: "Meja", icon: "🍽️", roles: ["OWNER", "KASIR"] },
-  { href: "/transaksi", label: "Transaksi", icon: "🧾", roles: ["OWNER", "KASIR"] },
-  { href: "/shift", label: "Shift", icon: "⏰", roles: ["OWNER", "KASIR"] },
-  { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },
-  { href: "/produk", label: "Produk", icon: "📦", roles: ["OWNER"] },
-  { href: "/laporan", label: "Laporan", icon: "📊", roles: ["OWNER"] },
-  { href: "/pengaturan", label: "Pengaturan", icon: "⚙️", roles: ["OWNER"] },
-];
-
+// Sidebar desktop (md+). Definisi menu ada di lib/nav.ts (satu sumber
+// kebenaran, dipakai juga oleh bottom-nav mobile).
 export default function SidebarNav({ role }: { role: Role }) {
   const path = usePathname();
-  const items = NAV.filter((n) => n.roles.includes(role));
+  const items = navForRole(role);
 
   return (
     <nav className="flex flex-col gap-1 p-3">
       {items.map((n) => {
-        const active = n.href === "/" ? path === "/" : path.startsWith(n.href);
+        const active = isNavActive(n.href, path);
         return (
           <Link
             key={n.href}
