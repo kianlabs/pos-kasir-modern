@@ -17,6 +17,9 @@
 
 import { rupiah } from "@/shared/rupiah";
 import { generateNarrative } from "@/server/ai/llm";
+import { getAiConfig } from "@/server/ai/config";
+import { catatUsage } from "@/server/ai/usage";
+import type { UsageInfo } from "@/server/ai/types";
 import { getRingkasanHari, getRekapShift, getStokMenipis, getTren } from "@/server/ai/tools";
 
 // ── Bentuk hasil narasi yang dipakai endpoint ───────────────────────────────
@@ -57,6 +60,23 @@ function labelSelisih(selisih: number): string {
   if (selisih === 0) return "pas";
   const arah = selisih > 0 ? "lebih" : "kurang";
   return `${arah} ${rupiah(Math.abs(selisih))}`;
+}
+
+// ── Pencatatan pemakaian token AI (lampiran §8, §11) ────────────────────────
+//
+// Catat sukses (ok:true + token) MAUPUN gagal (ok:false, 0 token) agar jumlah
+// panggilan jujur. `catatUsage` tak pernah melempar → aman di-await di sini
+// (kegagalan billing tidak boleh mengubah hasil narasi, §1).
+async function rekamUsageNarasi(
+  warungId: string,
+  hasil: { ok: true; usage?: UsageInfo } | { ok: false },
+): Promise<void> {
+  await catatUsage(warungId, {
+    jenis: "NARRATIVE",
+    model: getAiConfig().model,
+    usage: hasil.ok ? hasil.usage : undefined,
+    ok: hasil.ok,
+  });
 }
 
 // ── Template angka deterministik (§9 fallback resmi) ────────────────────────
@@ -176,6 +196,9 @@ export async function generateNarasiHari(
     maxTokens: 512,
   });
 
+  // Lampiran §8/§11: catat pemakaian token (sukses maupun gagal).
+  await rekamUsageNarasi(warungId, hasil);
+
   if (!hasil.ok) {
     // Degradasi (§9): provider down/timeout → tetap kirim template angka.
     return template;
@@ -272,6 +295,9 @@ export async function generateNarasiShift(
     ],
     maxTokens: 512,
   });
+
+  // Lampiran §8/§11: catat pemakaian token (sukses maupun gagal).
+  await rekamUsageNarasi(warungId, hasil);
 
   if (!hasil.ok) {
     return template;

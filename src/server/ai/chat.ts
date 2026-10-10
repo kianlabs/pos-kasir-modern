@@ -28,6 +28,8 @@ import {
   getAnomaliAktif,
 } from "@/server/ai/tools";
 import { generateNarrative } from "@/server/ai/llm";
+import { getAiConfig } from "@/server/ai/config";
+import { catatUsage } from "@/server/ai/usage";
 
 // ── Batas (§8: pangkas riwayat, jaga biaya token) ───────────────────────────
 //
@@ -395,6 +397,14 @@ export async function jawabChat(
     system: siap.system,
     messages: siap.messages,
     maxTokens: 400,
+  });
+
+  // Lampiran §8/§11: catat token jalur chat (sukses & gagal; catatUsage tak melempar).
+  await catatUsage(warungId, {
+    jenis: "CHAT",
+    model: getAiConfig().model,
+    usage: narasi.ok ? narasi.usage : undefined,
+    ok: narasi.ok,
   });
 
   if (narasi.ok) {

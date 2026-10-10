@@ -36,6 +36,7 @@ model Warung {
   auditLogs       AuditLog[]
   notifikasi      Notifikasi[] // outbox notifikasi (Fase 2 §7a)
   promos          Promo[]      // promo engine (Fase 2 §7a) — beli 1 gratis 1, happy hour, voucher
+  aiUsage         AiUsage[]    // pelacakan pemakaian token AI (lampiran AI §8, §11)
 
   @@unique([slug])
   @@map("warungs")
@@ -294,6 +295,30 @@ model Insight {
 
   @@index([warungId, createdAt])
   @@map("insights")
+}
+
+// Pelacakan pemakaian token AI per panggilan LLM (lampiran AI §8, §11).
+//
+// Acceptance §11: "Token terukur < Rp5.000/warung/bln selama 2 minggu pilot".
+// Tabel ini PERSIS yang membuat angka itu terukur: tiap panggilan LLM (narasi
+// tutup-shift, anomali, chat) mencatat usage provider di sini, lalu endpoint
+// GET /api/ai/usage mengagregasinya per bulan (WIB). SENGAJA bukan jalur uang —
+// AI sudah termasuk langganan Rp99rb (§13), jadi tak ada penagihan per pemakaian.
+model AiUsage {
+  id       String @id @default(uuid())
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  jenis            String   // NARRATIVE | ANOMALY | CHAT (String + const union, bukan enum)
+  model            String?  // nama model yang dipakai saat panggilan (audit harga)
+  promptTokens     Int      @default(0) // token input provider (0 bila tak dilaporkan)
+  completionTokens Int      @default(0) // token output provider
+  totalTokens      Int      @default(0) // total token provider
+  ok               Boolean  @default(true) // false = panggilan gagal (tetap dihitung: kejujuran call count)
+  createdAt        DateTime @default(now())
+
+  @@index([warungId, createdAt])
+  @@map("ai_usage")
 }
 
 // Promo engine (Fase 2 §7a) — beli 1 gratis 1, diskon jam sepi (happy hour),
