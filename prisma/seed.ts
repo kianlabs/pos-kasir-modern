@@ -90,8 +90,13 @@ export async function seedWarung(nama: string) {
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 30);
 
-  const ownerPasswordHash = await bcrypt.hash("password123", 10);
-  const kasirPinHash = await bcrypt.hash("123456", 10);
+  // Kredensial seed dapat dikonfigurasi via env. Default dipertahankan agar
+  // dev lokal & test tetap jalan tanpa setup tambahan.
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD || "password123";
+  const kasirPin = process.env.SEED_KASIR_PIN || "123456";
+
+  const ownerPasswordHash = await bcrypt.hash(ownerPassword, 10);
+  const kasirPinHash = await bcrypt.hash(kasirPin, 10);
 
   // Buat Warung lengkap dalam transaksi.
   // timeout dinaikkan: Supabase (pooler Sydney) berlatensi tinggi, dan satu
@@ -184,8 +189,17 @@ export async function seedWarung(nama: string) {
 // Guard keselamatan: menolak seed ke DB NON-lokal (mis. produksi Supabase).
 // Seed membuat warung demo + kredensial lemah (password123 / PIN 123456) — tak
 // boleh bocor ke DB nyata. Override sengaja dengan `ALLOW_SEED_NON_LOCAL=1`.
+//
+// Lapis kedua: meski ALLOW_SEED_NON_LOCAL=1, bila kredensial masih DEFAULT
+// (SEED_OWNER_PASSWORD / SEED_KASIR_PIN tidak diubah) seed tetap ditolak kecuali
+// operator juga menegaskan `ALLOW_WEAK_SEED_CREDS=1`. Ini mencegah kredensial
+// demo lemah ikut ter-seed ke non-lokal tanpa disadari.
 function tolakJikaNonLokal(): void {
   const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD || "password123";
+  const kasirPin = process.env.SEED_KASIR_PIN || "123456";
+  const kredensialDefault = ownerPassword === "password123" && kasirPin === "123456";
+
   if (!url) return;
 
   let host: string;
@@ -196,18 +210,33 @@ function tolakJikaNonLokal(): void {
   }
 
   const lokal = host === "localhost" || host === "127.0.0.1" || host === "::1";
-  if (lokal || process.env.ALLOW_SEED_NON_LOCAL === "1") return;
+  if (lokal) return;
 
-  console.error(
-    [
-      `[SEED] DITOLAK: target DB bukan lokal (host: "${host}").`,
-      "Seed membuat warung demo + kredensial lemah (password123 / PIN 123456)",
-      "yang TIDAK boleh masuk ke database produksi/non-lokal.",
-      "Bila memang disengaja (mis. staging), jalankan ulang dengan:",
-      "  ALLOW_SEED_NON_LOCAL=1 npm run db:seed",
-    ].join("\n"),
-  );
-  process.exit(1);
+  if (process.env.ALLOW_SEED_NON_LOCAL !== "1") {
+    console.error(
+      [
+        `[SEED] DITOLAK: target DB bukan lokal (host: "${host}").`,
+        "Seed membuat warung demo + kredensial lemah (password123 / PIN 123456)",
+        "yang TIDAK boleh masuk ke database produksi/non-lokal.",
+        "Bila memang disengaja (mis. staging), jalankan ulang dengan:",
+        "  ALLOW_SEED_NON_LOCAL=1 npm run db:seed",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
+
+  if (kredensialDefault && process.env.ALLOW_WEAK_SEED_CREDS !== "1") {
+    console.error(
+      [
+        `[SEED] DITOLAK: target DB bukan lokal (host: "${host}") dan kredensial`,
+        "masih DEFAULT (password123 / PIN 123456). Ubah kredensial terlebih dahulu:",
+        "  SEED_OWNER_PASSWORD=<kuat> SEED_KASIR_PIN=<kuat> ALLOW_SEED_NON_LOCAL=1 npm run db:seed",
+        "Atau, bila kredensial lemah memang disengaja di non-lokal:",
+        "  ALLOW_WEAK_SEED_CREDS=1 ... npm run db:seed",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
 }
 
 async function main() {
