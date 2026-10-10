@@ -13,7 +13,10 @@ export const NAV: NavItem[] = [
   { href: "/shift", label: "Shift", icon: "⏰", roles: ["OWNER", "KASIR"] },
   { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },
   { href: "/produk", label: "Produk", icon: "📦", roles: ["OWNER"] },
+  { href: "/promo", label: "Promo", icon: "🏷️", roles: ["OWNER"] },
   { href: "/laporan", label: "Laporan", icon: "📊", roles: ["OWNER"] },
+  // Dashboard live owner (Fase 2 §7a) — pantau penjualan realtime dari HP.
+  { href: "/dashboard", label: "Live", icon: "📡", roles: ["OWNER"] },
   // Owner-only (lampiran AI §1.3): kasir tak pernah melihat tautan ini;
   // proxy + handler juga menolak aksesnya.
   { href: "/insight", label: "Insight", icon: "✨", roles: ["OWNER"] },

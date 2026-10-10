@@ -77,6 +77,28 @@ const defaultProducts = [
   { name: "Tumis Kangkung", price: 7000, stock: 20, category: "Sayur", icon: "🥬" },
 ];
 
+// Promo contoh (Fase 2 §7a) — 1 promo otomatis persen + 1 happy hour sore.
+const defaultPromos = [
+  {
+    kode: null as string | null,
+    nama: "Diskon Hemat 10%",
+    tipe: "PERSEN",
+    nilai: 10,
+    minSubtotal: 20000,
+    jamMulai: null as string | null,
+    jamSelesai: null as string | null,
+  },
+  {
+    kode: null as string | null,
+    nama: "Happy Hour Sore",
+    tipe: "HAPPY_HOUR",
+    nilai: 15,
+    minSubtotal: 0,
+    jamMulai: "14:00",
+    jamSelesai: "17:00",
+  },
+];
+
 export async function seedWarung(nama: string) {
   const slug = slugify(nama);
 
@@ -166,6 +188,25 @@ export async function seedWarung(nama: string) {
           stock: p.stock,
           category: p.category,
           icon: p.icon,
+        },
+      });
+    }
+
+    // 2 promo contoh (Fase 2 §7a): promo otomatis 10% + happy hour sore.
+    // Hanya dibuat di sini → idempoten karena warung (dan blok transaksi ini)
+    // dilewati ketika slug sudah ada.
+    for (const promo of defaultPromos) {
+      await tx.promo.create({
+        data: {
+          warungId: warung.id,
+          kode: promo.kode,
+          nama: promo.nama,
+          tipe: promo.tipe,
+          nilai: promo.nilai,
+          minSubtotal: promo.minSubtotal,
+          jamMulai: promo.jamMulai,
+          jamSelesai: promo.jamSelesai,
+          aktif: true,
         },
       });
     }

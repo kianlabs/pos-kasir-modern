@@ -34,4 +34,10 @@ export type AuditAction =
   | "CHECKOUT_TANPA_SHIFT"
   // Fitur AI "KRING! Insight" (lampiran AI §5): chat owner. Teks chat TIDAK
   // disimpan penuh — hanya hash + preview ≤120 char di meta (privasi & biaya log).
-  | "AI_CHAT";
+  | "AI_CHAT"
+  // Promo engine (Fase 2 §7a): perubahan katalog promo (owner-only).
+  | "PROMO_CREATE"
+  | "PROMO_UPDATE"
+  | "PROMO_DELETE"
+  // Whatsapp (Fase 2 §7a): pengiriman notifikasi keluar via provider WA.
+  | "WA_KIRIM";

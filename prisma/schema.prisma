@@ -35,6 +35,7 @@ model Warung {
   insights        Insight[]   // dari lampiran AI (PRD-lampiran-ai.md §5)
   auditLogs       AuditLog[]
   notifikasi      Notifikasi[] // outbox notifikasi (Fase 2 §7a)
+  promos          Promo[]      // promo engine (Fase 2 §7a) — beli 1 gratis 1, happy hour, voucher
 
   @@unique([slug])
   @@map("warungs")
@@ -293,4 +294,31 @@ model Insight {
 
   @@index([warungId, createdAt])
   @@map("insights")
+}
+
+// Promo engine (Fase 2 §7a) — beli 1 gratis 1, diskon jam sepi (happy hour),
+// voucher. PENTING: model ini adalah KATALOG + KALKULATOR saja — bukan jalur
+// uang. Diskon promo dihitung app-side (src/server/promo.ts) lalu kasir
+// mengirim (diskon manual + diskon promo) lewat field `discount` yang sudah
+// ada di checkout. prosesCheckout & hitungUang TIDAK disentuh oleh fitur ini.
+model Promo {
+  id       String @id @default(uuid())
+  warungId String
+  warung   Warung @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  kode    String? // kode voucher (mis. "HEMAT10"); null = promo otomatis (bukan voucher)
+  nama    String // label tampil, mis. "Happy Hour Sore"
+  tipe    String // PERSEN | NOMINAL | BELI_1_GRATIS_1 | HAPPY_HOUR (const union)
+  nilai   Int    @default(0) // PERSEN: 0-100; NOMINAL/HAPPY_HOUR: rupiah; B1G1: tak dipakai
+  minSubtotal Int @default(0) // syarat minimum subtotal (rupiah) agar promo berlaku
+
+  // Jam berlaku WIB "HH:MM" — hanya dipakai HAPPY_HOUR.
+  jamMulai   String?
+  jamSelesai String?
+
+  aktif     Boolean  @default(true) // false = promo dimatikan owner
+  createdAt DateTime @default(now())
+
+  @@index([warungId])
+  @@map("promos")
 }
