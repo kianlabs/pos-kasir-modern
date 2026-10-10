@@ -19,6 +19,12 @@ import type { ChatMessage, NarrativeResult, UsageInfo } from "@/server/ai/types"
 // Batas waktu satu panggilan LLM (ms). Timeout → AbortController → ok:false.
 const TIMEOUT_MS = 20_000;
 
+// Batas diam di TENGAH stream (ms). AbortController di atas hanya menjaga
+// koneksi awal; bila provider berhenti mengirim chunk tanpa menutup socket,
+// reader.read() bisa menggantung selamanya. Timer ini di-reset tiap chunk dan
+// menutup stream bila tak ada data baru — jaring pengaman terakhir (§9).
+const STREAM_IDLE_MS = 30_000;
+
 // Bentuk respons minimal endpoint OpenAI-compatible yang kita pakai.
 type ChatCompletionResponse = {
   choices?: { message?: { content?: string } }[];
@@ -215,51 +221,137 @@ export async function streamNarrative(
     return null;
   }
 
-  // Baca SSE OpenAI-compatible: baris "data: {json}\n\n", diakhiri "data: [DONE]".
+  // Baca SSE OpenAI-compatible: baris "data: {json}\n\n".
+  //   - Provider OpenAI standar mengakhiri dengan "data: [DONE]".
+  //   - Gateway 9router (ag/gemini-3.8-flash) TIDAK mengirim [DONE]; chunk
+  //     terakhir cuma memuat choices[0].finish_reason ("stop") dan socket tidak
+  //     segera ditutup. Tanpa penanganan finish_reason, reader.read() berikutnya
+  //     menggantung → endpoint /api/ai/chat macet. Karena itu finish_reason
+  //     diperlakukan sebagai terminator setara [DONE].
+  //
+  //   - PENTING (model reasoning): `ag/gemini-3.8-flash` mengirim rantai berpikir
+  //     sebagai `delta.reasoning_content` LEBIH DULU, baru `delta.content` di
+  //     akhir. Chunk reasoning tak punya `content` sama sekali. Karena itu `pull`
+  //     TIDAK boleh cuma membaca SATU chunk lalu menyerah: ReadableStream
+  //     pull-based hanya memanggil ulang `pull` setelah promise sebelumnya
+  //     selesai, dan pada runtime ini bila `pull` selesai TANPA meng-enqueue apa
+  //     pun, stream berhenti memicu `pull` → read pembaca menggantung sampai idle
+  //     guard menutupnya (0 karakter). Solusinya: loop di dalam `pull` — terus
+  //     baca chunk sampai benar-benar ada delta teks yang di-enqueue (atau
+  //     stream berakhir/terminator) sehingga reasoning yang panjang tetap
+  //     dialirkan tanpa macet.
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  // Penanda agar close() hanya sekali (cegah double-close saat [DONE] diikuti
+  // socket close, atau idle-guard balapan dengan finish_reason).
+  let selesai = false;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // Bersihkan SEMUA timer di jalur keluar (finish_reason / [DONE] / done /
+  // error / cancel).
+  const bersihkan = () => {
+    clearTimeout(timeout);
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = undefined;
+  };
+
+  // Tutup stream + koneksi provider sekali saja; idempoten.
+  const tutupDenganBersih = (streamController: ReadableStreamDefaultController<string>) => {
+    if (selesai) return;
+    selesai = true;
+    bersihkan();
+    reader.cancel().catch(() => {});
+    try {
+      streamController.close();
+    } catch {
+      // Sudah tertutup — abaikan.
+    }
+  };
+
+  // Jaring pengaman: provider diam > STREAM_IDLE_MS di tengah stream → tutup.
+  const resetIdle = (streamController: ReadableStreamDefaultController<string>) => {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      tutupDenganBersih(streamController);
+    }, STREAM_IDLE_MS);
+  };
+
+  // Proses satu baris SSE. Mengembalikan "tutup" bila stream harus berhenti
+  // (terminator), "teks" bila ada delta yang di-enqueue, selain itu "lewati".
+  const prosesBaris = (
+    line: string,
+    streamController: ReadableStreamDefaultController<string>,
+  ): "tutup" | "teks" | "lewati" => {
+    const teks = line.trim();
+    if (!teks.startsWith("data:")) return "lewati";
+    const payload = teks.slice(5).trim();
+    if (payload === "[DONE]") {
+      // Terminator 1: sentinel OpenAI standar.
+      tutupDenganBersih(streamController);
+      return "tutup";
+    }
+    try {
+      const json = JSON.parse(payload) as {
+        choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
+      };
+      const delta = json.choices?.[0]?.delta?.content;
+      if (delta) streamController.enqueue(delta);
+      // Terminator 2: finish_reason non-null (9router). Delta final sudah
+      // di-enqueue di atas; tutup tanpa menunggu [DONE]/socket close.
+      if (json.choices?.[0]?.finish_reason) {
+        tutupDenganBersih(streamController);
+        return "tutup";
+      }
+      return delta ? "teks" : "lewati";
+    } catch {
+      // Baris SSE cacat — lewati, jangan gagalkan seluruh stream.
+      return "lewati";
+    }
+  };
 
   return new ReadableStream<string>({
+    start(streamController) {
+      resetIdle(streamController);
+    },
     async pull(streamController) {
+      // Loop baca sampai minimal satu teks ter-enqueue atau stream selesai —
+      // jangan pernah selesai dengan antrean kosong (lihat catatan reasoning di
+      // atas), karena itu yang membuat pull tak dipicu ulang & read menggantung.
       try {
-        const { done, value } = await reader.read();
-        if (done) {
-          clearTimeout(timeout);
-          streamController.close();
-          return;
-        }
-        buffer += decoder.decode(value, { stream: true });
-
-        // Proses tiap baris lengkap yang berakhir newline.
-        const baris = buffer.split("\n");
-        buffer = baris.pop() ?? "";
-
-        for (const b of baris) {
-          const line = b.trim();
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (payload === "[DONE]") {
-            clearTimeout(timeout);
-            streamController.close();
+        while (!selesai) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // Socket ditutup provider (fallback bila tak ada [DONE]/finish_reason).
+            tutupDenganBersih(streamController);
             return;
           }
-          try {
-            const json = JSON.parse(payload) as { choices?: { delta?: { content?: string } }[] };
-            const delta = json.choices?.[0]?.delta?.content;
-            if (delta) streamController.enqueue(delta);
-          } catch {
-            // Baris SSE cacat — lewati, jangan gagalkan seluruh stream.
+          resetIdle(streamController);
+          buffer += decoder.decode(value, { stream: true });
+
+          // Proses tiap baris lengkap yang berakhir newline.
+          const baris = buffer.split("\n");
+          buffer = baris.pop() ?? "";
+
+          let adaTeks = false;
+          for (const b of baris) {
+            const hasil = prosesBaris(b, streamController);
+            if (hasil === "tutup") return;
+            if (hasil === "teks") adaTeks = true;
           }
+          // Ada teks nyata → biarkan stream memicu pull berikutnya. Bila hanya
+          // reasoning/role (tanpa teks), lanjut baca chunk demi chunk.
+          if (adaTeks) return;
         }
       } catch {
         // Kegagalan baca di tengah stream → tutup dengan bersih (degradasi).
-        clearTimeout(timeout);
-        streamController.close();
+        tutupDenganBersih(streamController);
       }
     },
     cancel() {
-      clearTimeout(timeout);
+      if (selesai) return;
+      selesai = true;
+      bersihkan();
       reader.cancel().catch(() => {});
     },
   });
