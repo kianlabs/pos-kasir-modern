@@ -17,6 +17,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { deleteOutbox, listOutbox, putOutbox } from "@/client/offline-db";
+import { hitungUang, seimbangkanKeTotal } from "@/shared/hitung-uang";
 import type {
   OutboxEntry,
   OutboxPayload,
@@ -234,16 +235,19 @@ export async function prosesCheckout(
   let disc: number;
   let tax: number;
   let total: number;
-  // Pajak acuan dari setting (dipakai untuk menyerap selisih pada jalur offline).
-  const tax0 = input.taxCfg.enabled
-    ? Math.round(((subtotal - Math.min(discountIn, subtotal)) * input.taxCfg.pct) / 100)
-    : 0;
-  // Hasil FORMULA NORMAL (server menghitung sendiri, tanpa total client). Dipakai
-  // untuk (a) jalur online, dan (b) deteksi M4: apakah diskon/pajak tersimpan
-  // jalur offline menyimpang dari yang seharusnya.
-  const discNormal = Math.min(discountIn, subtotal);
-  const taxNormal = tax0;
-  const totalNormal = subtotal - discNormal + taxNormal;
+  // Formula NORMAL (server menghitung sendiri) via helper kanonik (m5):
+  // disk=min(discountIn,subtotal), pajak dari (subtotal-disk), total exact.
+  // `tax0` = pajak acuan setting (dipakai menyerap selisih pada jalur offline).
+  const normal = hitungUang({
+    subtotal,
+    discount: discountIn,
+    taxEnabled: input.taxCfg.enabled,
+    taxPct: input.taxCfg.pct,
+  });
+  const discNormal = normal.discount;
+  const tax0 = normal.tax;
+  const taxNormal = normal.tax;
+  const totalNormal = normal.total;
   if (
     input.allowStokMinus &&
     typeof input.totalDariClient === "number" &&
@@ -252,11 +256,11 @@ export async function prosesCheckout(
     input.totalDariClient <= BATAS_UANG
   ) {
     total = input.totalDariClient;
-    // Diskon di-clamp [0, subtotal] menyerap selisih total-client vs subtotal-server,
-    // dengan acuan pajak setting, agar invarian tetap eksak.
-    disc = Math.min(Math.max(discountIn, subtotal + tax0 - total), subtotal);
-    // Pajak tersimpan = sisa penyeimbang → `subtotal - discount + tax === total` SELALU.
-    tax = total - (subtotal - disc);
+    // Diskon/tax di-clamp agar invarian `subtotal - discount + tax === total` SELALU
+    // eksak, menyerap selisih total-client vs subtotal-server (acuan pajak tax0).
+    const seimbang = seimbangkanKeTotal({ subtotal, discountIn, tax0, total });
+    disc = seimbang.discount;
+    tax = seimbang.tax;
   } else {
     disc = discNormal;
     tax = taxNormal;

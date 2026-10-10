@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db";
 import type { Prisma } from "@prisma/client";
 import type { StatusMeja } from "@/types";
+import { clampTaxPct, hitungUang } from "@/shared/hitung-uang";
 
 // Client minimal yang dibutuhkan helper ini — bisa `prisma` maupun `tx` di
 // dalam $transaction. Tipe `Prisma.TransactionClient` kompatibel dengan
@@ -154,8 +155,11 @@ export async function hitungUlangBill(
 
   const setting = await db.setting.findUnique({ where: { warungId } });
   const taxEnabled = setting ? !!setting.taxEnabled : true;
-  const taxPct = setting ? Math.min(100, Math.max(0, Number(setting.taxPct) || 0)) : 10;
-  const tax = taxEnabled ? Math.round(((subtotal - discount) * taxPct) / 100) : 0;
+  const taxPct = setting ? clampTaxPct(Number(setting.taxPct) || 0) : 10;
+  // Rumus uang kanonik (shared/hitung-uang) — satu sumber kebenaran (m5).
+  // `discount` sengaja dipakai apa adanya (sudah di-clamp di atas) dan
+  // dihitung ulang oleh helper dengan hasil identik.
+  const { tax, total } = hitungUang({ subtotal, discount, taxEnabled, taxPct });
 
-  return { subtotal, rawDiscount, discount, tax, total: subtotal - discount + tax };
+  return { subtotal, rawDiscount, discount, tax, total };
 }

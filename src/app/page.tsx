@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { rupiah } from "@/shared/rupiah";
 import { productIcon } from "@/shared/category-icon";
+import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, putCache } from "@/client/offline-db";
 import { enqueueCheckout } from "@/client/offline-sync";
 import type { OutboxPayload } from "@/client/offline-types";
@@ -111,9 +112,16 @@ export default function KasirPage() {
   );
   const subtotal = lines.reduce((n, l) => n + l.product.price * l.qty, 0);
   const itemCount = lines.reduce((n, l) => n + l.qty, 0);
-  const discNum = Math.min(Number(discount) || 0, subtotal);
-  const taxNum = taxInfo.enabled ? Math.round(((subtotal - discNum) * taxInfo.pct) / 100) : 0;
-  const total = subtotal - discNum + taxNum;
+  // Rumus uang kanonik (shared/hitung-uang) — satu sumber kebenaran (m5).
+  const uang = hitungUang({
+    subtotal,
+    discount: Number(discount) || 0,
+    taxEnabled: taxInfo.enabled,
+    taxPct: taxInfo.pct,
+  });
+  const discNum = uang.discount;
+  const taxNum = uang.tax;
+  const total = uang.total;
   const cashNum = Number(cash) || 0;
   const kembalian = cashNum - total;
   const canPay =
