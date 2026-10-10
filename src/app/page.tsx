@@ -7,6 +7,7 @@ import { rupiah } from "@/shared/rupiah";
 import ReceiptView from "@/shared/ReceiptView";
 import { productIcon } from "@/shared/category-icon";
 import { hitungUang } from "@/shared/hitung-uang";
+import { PaymentMethods, QuickCash, Kembalian } from "./_components/PaymentControls";
 import { getCache, putCache } from "@/client/offline-db";
 import { enqueueCheckout } from "@/client/offline-sync";
 import type { OutboxPayload } from "@/client/offline-types";
@@ -31,8 +32,6 @@ type OfflineReceipt = {
   payment: "CASH" | "QRIS";
   change: number;
 };
-
-const QUICK_CASH = [10000, 20000, 50000, 100000];
 
 function stockStyle(stock: number): string {
   if (stock <= 0) return "bg-red-100 text-red-700";
@@ -434,31 +433,11 @@ export default function KasirPage() {
             <span>{rupiah(total)}</span>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-bold">
-            <button onClick={() => setPayment("CASH")}
-              className={`rounded-lg border py-2 ${payment === "CASH" ? "border-primary bg-primary text-white" : "bg-white"}`}>
-              💵 Tunai
-            </button>
-            <button onClick={() => setPayment("QRIS")}
-              className={`rounded-lg border py-2 ${payment === "QRIS" ? "border-primary bg-primary text-white" : "bg-white"}`}>
-              📱 QRIS
-            </button>
-          </div>
+          <PaymentMethods payment={payment} onChange={setPayment} />
 
           {payment === "CASH" ? (
             <>
-              <div className="mt-3 grid grid-cols-4 gap-1.5">
-                <button onClick={() => setCash(String(total))}
-                  className="rounded-md bg-accent-bg py-1.5 text-xs font-bold text-primary hover:bg-primary/10">
-                  Uang pas
-                </button>
-                {QUICK_CASH.map((v) => (
-                  <button key={v} onClick={() => setCash(String(v))}
-                    className="rounded-md bg-zinc-100 py-1.5 text-xs font-bold hover:bg-zinc-200">
-                    {v / 1000}rb
-                  </button>
-                ))}
-              </div>
+              <QuickCash total={total} onPick={setCash} />
               <input
                 value={cash ? Number(cash).toLocaleString("id-ID") : ""}
                 onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
@@ -466,12 +445,7 @@ export default function KasirPage() {
                 placeholder="Nominal diterima…"
                 className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-right text-lg font-bold outline-none focus:border-primary"
               />
-              <div className="mt-1.5 flex justify-between text-sm font-semibold">
-                <span className="text-zinc-500">Kembalian</span>
-                <span className={kembalian < 0 ? "text-danger" : "text-secondary"}>
-                  {cash ? rupiah(Math.max(0, kembalian)) : "—"}
-                </span>
-              </div>
+              <Kembalian cash={cash} kembalian={kembalian} />
             </>
           ) : (
             <p className="mt-3 rounded-lg bg-zinc-900 p-3 text-center text-xs text-zinc-300">
