@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import InsightList, { type Insight } from "./InsightList";
+import { rupiah } from "@/shared/rupiah";
+import InsightList, { type Insight, type StatusKirim } from "./InsightList";
 
 // Dashboard "KRING! Insight" (lampiran AI §6, §9, §11).
 //
@@ -18,6 +19,14 @@ const PESAN_OFFLINE = "Fitur Insight butuh internet. Sambungkan perangkat lalu c
 
 type Preview = { id: string; title: string; body: string; source: string | null; viaAi: boolean };
 
+// Ringkasan pemakaian AI bulan ini (GET /api/ai/usage) — lampiran §8, §11.
+type Usage = {
+  bulan: string;
+  totalTokens: number;
+  calls: number;
+  estimasiRupiah: number;
+};
+
 export default function InsightPage() {
   const [items, setItems] = useState<Insight[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -25,6 +34,8 @@ export default function InsightPage() {
   const [sibuk, setSibuk] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [statusKirim, setStatusKirim] = useState<Record<string, StatusKirim | undefined>>({});
+  const [usage, setUsage] = useState<Usage | null>(null);
 
   const muat = useCallback(() => {
     fetch("/api/ai/insights")
@@ -34,6 +45,14 @@ export default function InsightPage() {
       })
       .then((rows: Insight[]) => setItems(rows))
       .catch(() => setFailed(true));
+  }, []);
+
+  // Soft-fail: kartu pemakaian cukup disembunyikan bila 403 (kasir) / gagal.
+  useEffect(() => {
+    fetch("/api/ai/usage")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u: Usage | null) => setUsage(u))
+      .catch(() => setUsage(null));
   }, []);
 
   useEffect(() => {
@@ -54,6 +73,27 @@ export default function InsightPage() {
     setItems((prev) =>
       prev ? prev.map((x) => (x.id === id ? { ...x, readAt: new Date().toISOString() } : x)) : prev
     );
+  }
+
+  // Enqueue satu Insight ke outbox WhatsApp owner (§6/§12-D). Ini HANYA mengantre
+  // (baris notifikasi PENDING) — pengiriman nyata lewat /api/notifikasi/[id]/kirim.
+  // 403/404 → tandai gagal dengan pesan jelas (bukan diam-diam).
+  async function kirimKeWa(id: string) {
+    setStatusKirim((prev) => ({ ...prev, [id]: "sibuk" }));
+    try {
+      const r = await fetch(`/api/ai/insights/${id}/kirim`, { method: "POST" });
+      if (r.status === 403 || r.status === 404) {
+        setStatusKirim((prev) => ({ ...prev, [id]: "gagal" }));
+        return;
+      }
+      if (!r.ok) {
+        setStatusKirim((prev) => ({ ...prev, [id]: "gagal" }));
+        return;
+      }
+      setStatusKirim((prev) => ({ ...prev, [id]: "terkirim" }));
+    } catch {
+      setStatusKirim((prev) => ({ ...prev, [id]: "gagal" }));
+    }
   }
 
   async function ringkasHariIni() {
@@ -139,6 +179,19 @@ export default function InsightPage() {
             </p>
           )}
 
+          {usage && (
+            <div className="mt-3 rounded-xl border bg-zinc-50 p-3 text-sm">
+              <b>Pemakaian AI bulan ini</b>
+              <p className="mt-1 text-text-muted">
+                {usage.totalTokens.toLocaleString("id-ID")} token · {usage.calls} panggilan ·{" "}
+                estimasi {rupiah(usage.estimasiRupiah)}
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                Estimasi untuk pemantauan (target &lt; Rp5.000/warung/bln); angka final dari provider.
+              </p>
+            </div>
+          )}
+
           {preview && (
             <div className="mt-3 rounded-xl border-2 border-primary bg-white p-4 shadow-xs">
               <div className="flex flex-wrap items-center gap-2">
@@ -166,7 +219,12 @@ export default function InsightPage() {
             ) : !items ? (
               <p className="text-zinc-500">Memuat insight…</p>
             ) : (
-              <InsightList items={items} onRead={tandaiBaca} />
+              <InsightList
+                items={items}
+                onRead={tandaiBaca}
+                onKirim={kirimKeWa}
+                statusKirim={statusKirim}
+              />
             )}
           </div>
         </>

@@ -19,6 +19,7 @@
 import { prisma } from "@/server/db";
 import { rupiah } from "@/shared/rupiah";
 import { tulisInsight } from "@/server/ai/insight";
+import { enqueueInsightKeWa } from "@/server/ai/wa-bridge";
 import type { AnomaliRule, AnomaliSeverity, TemuanAnomali } from "@/server/ai/types";
 
 // ── Zona waktu WIB (kompensasi audit §4: semua date-math AI dipaksa WIB) ────
@@ -432,6 +433,12 @@ function sumberUntuk(ctx: AnomaliContext): string {
  *
  * `findings` = daftar temuan ringkas (bukti angka) untuk verifikasi owner.
  * Mengembalikan jumlah insight yang ditulis (0 bila tidak ada temuan).
+ *
+ * Setelah Insight ANOMALY tersimpan, temuan JUGA di-enqueue ke outbox WhatsApp
+ * owner (lampiran §6, §12-D) agar terkirim lapisan WA Fase 2a. Enqueue DIBUNGKUS
+ * try/catch sendiri (failure-isolated): kegagalan enqueue HANYA dilog dan TIDAK
+ * PERNAH menggagalkan scan/persist anomali — jalur deterministik tak boleh
+ * bergantung pada WA (prinsip §1.1).
  */
 export async function simpanAnomali(
   warungId: string,
@@ -456,7 +463,7 @@ export async function simpanAnomali(
     ...temuanList.map((t) => `• [${t.rule}] ${t.bukti}`),
   ].join("\n");
 
-  await tulisInsight(warungId, {
+  const { id } = await tulisInsight(warungId, {
     type: "ANOMALY",
     title: `${JUDUL_RULE[tertinggi.rule]} (+${temuanList.length - 1} temuan lain)`,
     body,
@@ -464,5 +471,20 @@ export async function simpanAnomali(
     source,
   });
 
+  // Enqueue ke outbox WA (failure-isolated). Enqueue = murni baris DB PENDING;
+  // pengiriman nyata tetap tugas lapisan WA. AI tidak mengirim WA langsung (§6).
+  await enqueueAnomaliKeWa(warungId, id);
+
   return 1;
+}
+
+// Enqueue temuan → outbox WA, dibungkus sendiri agar kegagalan WA TIDAK PERNAH
+// menggagalkan scan anomali / tutup shift (pola sama dengan enqueueLaporanShift
+// di close/route.ts). Kegagalan cukup dicatat ke console.
+async function enqueueAnomaliKeWa(warungId: string, insightId: string): Promise<void> {
+  try {
+    await enqueueInsightKeWa(warungId, insightId);
+  } catch (e) {
+    console.error("[ai] gagal enqueue insight anomali ke WA", insightId, e);
+  }
 }

@@ -12,8 +12,10 @@ Aplikasi kasir warung makan single-codebase: **Next.js 16 + TypeScript + Tailwin
 - **Stok** (`/stok`) — kartu stok: tiap penjualan/kulakan/koreksi tercatat
 - **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
 - **Laporan** (`/laporan`) — filter tanggal, export CSV, grafik 7 hari, produk terlaris, stok menipis
+- **Insight AI** (`/insight`) — narasi ringkasan + deteksi anomali; tiap insight bisa dikirim ke antrean WhatsApp owner (📤 Kirim ke WA → outbox notifikasi, dikirim lapisan WA Fase 2a)
 - **Pengaturan** (`/pengaturan`) — pajak otomatis on/off + tarif
 - **Auth & RBAC** (`/masuk/[slug]`) — login multi-role: owner (email + password) & kasir (PIN); session HMAC cookie; kasir dibatasi (403 di `/produk`, `/laporan`, `/pengaturan`)
+- **Insight AI** (`/insight`) — ringkasan otomatis, chat owner, deteksi anomali. **Pemakaian token AI dicatat per warung** (`ai_usage`) & diringkas di `/api/ai/usage` + kartu "Pemakaian AI bulan ini" — acceptance PRD lampiran AI §8/§11: token terukur < Rp5.000/warung/bln (angka kartu = estimasi; tagihan final dari provider)
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
 
 ### Perilaku stok pada bill meja (disengaja)

@@ -7,7 +7,8 @@ import Link from "next/link";
 // Tipe: NARRATIVE (ringkasan tutup-shift/harian), ANOMALY ("mata owner"), dan
 // CHAT_SUMMARY. Setiap kartu menampilkan badge tipe, judul, badan narasi,
 // tautan sumber (angka harus bisa diverifikasi, §1.6), tombol "Tandai dibaca",
-// dan — bila ada — daftar temuan rule §4 sebagai bukti angka.
+// aksi "Kirim ke WA" (enqueue ke outbox WhatsApp, §6/§12-D), dan — bila ada —
+// daftar temuan rule §4 sebagai bukti angka.
 
 export type Insight = {
   id: string;
@@ -19,6 +20,10 @@ export type Insight = {
   readAt: string | null;
   createdAt: string;
 };
+
+// Status antrean kirim per kartu (dikelola pemanggil): null = belum, "sibuk" =
+// sedang enqueue, "terkirim" = sudah masuk antrean WA, "gagal" = enqueue gagal.
+export type StatusKirim = "sibuk" | "terkirim" | "gagal";
 
 // Tipe Insight sinkron dengan backend (String + const union, lampiran §5).
 const TIPE: Record<string, { label: string; icon: string; cls: string }> = {
@@ -58,9 +63,13 @@ function temuan(findings: string | null): string[] {
 export default function InsightList({
   items,
   onRead,
+  onKirim,
+  statusKirim,
 }: {
   items: Insight[];
   onRead: (id: string) => void;
+  onKirim: (id: string) => void;
+  statusKirim: Record<string, StatusKirim | undefined>;
 }) {
   if (items.length === 0) {
     return (
@@ -112,6 +121,24 @@ export default function InsightList({
                 >
                   Tandai dibaca
                 </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onKirim(n.id)}
+                disabled={statusKirim[n.id] === "sibuk"}
+                className="rounded-lg border px-3.5 py-1.5 text-sm font-semibold text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {statusKirim[n.id] === "sibuk" ? "Mengantre…" : "📤 Kirim ke WA"}
+              </button>
+              {statusKirim[n.id] === "terkirim" && (
+                <span role="status" className="text-sm font-semibold text-tertiary">
+                  ✓ Terkirim ke antrean WA
+                </span>
+              )}
+              {statusKirim[n.id] === "gagal" && (
+                <span role="status" className="text-sm font-semibold text-danger">
+                  Gagal mengantre. Coba lagi.
+                </span>
               )}
               {n.source && (
                 <Link
