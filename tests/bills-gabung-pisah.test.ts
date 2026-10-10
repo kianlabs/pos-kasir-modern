@@ -147,7 +147,7 @@ describe("route /api/bills/[id]/gabung & /pisah (handler asli)", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    return POST(req, { params: { id } });
+    return POST(req, { params: Promise.resolve({ id }) });
   }
 
   async function panggilPisah(id: string, body: unknown) {
@@ -158,7 +158,7 @@ describe("route /api/bills/[id]/gabung & /pisah (handler asli)", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    return POST(req, { params: { id } });
+    return POST(req, { params: Promise.resolve({ id }) });
   }
 
   // ── 1. gabung: pindah item, bukan salin ─────────────────────────────────

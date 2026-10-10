@@ -35,7 +35,7 @@ export default function PengaturanPage() {
   return (
     <div className="max-w-md">
       <h1 className="mb-4 text-xl font-bold">Pengaturan</h1>
-      <form onSubmit={simpan} className="rounded-xl border bg-white p-4 shadow-sm">
+      <form onSubmit={simpan} className="rounded-xl border bg-white p-4 shadow-xs">
         <h2 className="mb-3 font-bold">🧾 Pajak otomatis (PB1)</h2>
         <label className="flex cursor-pointer items-center justify-between rounded-lg bg-zinc-50 px-3 py-2.5 text-sm font-semibold">
           <span>Kenakan pajak di setiap struk</span>
@@ -47,7 +47,7 @@ export default function PengaturanPage() {
             className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-primary" : "bg-zinc-300"}`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
                 enabled ? "left-[22px]" : "left-0.5"
               }`}
             />

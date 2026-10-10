@@ -21,7 +21,7 @@ export default function SidebarNav({ role }: { role: Role }) {
             href={n.href}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
               active
-                ? "bg-primary text-white shadow"
+                ? "bg-primary text-white shadow-sm"
                 : "text-zinc-400 hover:bg-stone-800 hover:text-white"
             }`}
           >

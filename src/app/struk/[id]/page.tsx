@@ -8,7 +8,8 @@ import PrintButton from "./PrintButton";
 
 export const dynamic = "force-dynamic";
 
-export default async function StrukPage({ params }: { params: { id: string } }) {
+export default async function StrukPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const trx = await prisma.transaction.findFirst({
     where: { id: params.id, warungId },
@@ -27,7 +28,7 @@ export default async function StrukPage({ params }: { params: { id: string } }) 
 
   return (
     <div>
-      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-sm">
+      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-xs">
         <h1 className="text-center text-lg font-bold">🧾 {receiptName}</h1>
         <p className="text-center text-xs text-zinc-500">
           {alamat}

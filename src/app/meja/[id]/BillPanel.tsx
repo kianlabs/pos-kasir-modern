@@ -272,7 +272,7 @@ export default function BillPanel({
           type="button"
           onClick={bukaBill}
           disabled={!hasShift || loading}
-          className="w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
+          className="w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover disabled:opacity-40"
         >
           {loading ? "Memproses…" : "Buka Bill Meja Ini"}
         </button>
@@ -291,7 +291,7 @@ export default function BillPanel({
       {err}
 
       {/* Tambah item */}
-      <section className="rounded-xl border bg-white p-4 shadow-sm">
+      <section className="rounded-xl border bg-white p-4 shadow-xs">
         <h3 className="mb-2 font-bold">Tambah Item</h3>
 
         {/* Pencarian + filter kategori — kasir jam sibuk tak perlu scroll dropdown panjang. */}
@@ -424,7 +424,7 @@ export default function BillPanel({
       </section>
 
       {/* Diskon */}
-      <section className="rounded-xl border bg-white p-4 shadow-sm">
+      <section className="rounded-xl border bg-white p-4 shadow-xs">
         <h3 className="mb-2 font-bold">Diskon</h3>
         <div className="flex gap-2">
           <input
@@ -452,7 +452,7 @@ export default function BillPanel({
       </section>
 
       {/* Bayar */}
-      <section className="rounded-xl border bg-white p-4 shadow-sm">
+      <section className="rounded-xl border bg-white p-4 shadow-xs">
         <h3 className="mb-2 font-bold">Bayar</h3>
         <div className="mb-3 flex justify-between text-sm text-zinc-600">
           <span>Subtotal</span>
@@ -548,7 +548,7 @@ export default function BillPanel({
           type="button"
           onClick={bayar}
           disabled={!canPay}
-          className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
+          className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover disabled:opacity-40"
         >
           {loading ? "Memproses…" : `Bayar ${rupiah(total)}`}
         </button>
@@ -566,7 +566,7 @@ export default function BillPanel({
       {(otherBills.length > 0 || emptyMejas.length > 0) && (
         <section className="grid gap-4 sm:grid-cols-2">
           {otherBills.length > 0 && (
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
+            <div className="rounded-xl border bg-white p-4 shadow-xs">
               <h3 className="mb-2 font-bold">Gabung Bill</h3>
               <p className="mb-2 text-xs text-zinc-500">
                 Pindahkan semua item dari meja lain ke bill ini.
@@ -595,7 +595,7 @@ export default function BillPanel({
           )}
 
           {emptyMejas.length > 0 && items.length > 0 && (
-            <div className="rounded-xl border bg-white p-4 shadow-sm">
+            <div className="rounded-xl border bg-white p-4 shadow-xs">
               <h3 className="mb-2 font-bold">Pisah Bill</h3>
               <p className="mb-2 text-xs text-zinc-500">
                 Pindahkan sebagian item ke meja kosong lain.

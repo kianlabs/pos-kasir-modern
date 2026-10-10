@@ -29,7 +29,7 @@ export default async function MejaPage() {
       </div>
 
       {mejas.length === 0 ? (
-        <p className="rounded-xl border bg-white p-8 text-center text-sm text-zinc-500 shadow-sm">
+        <p className="rounded-xl border bg-white p-8 text-center text-sm text-zinc-500 shadow-xs">
           Belum ada meja terdaftar.
         </p>
       ) : (
@@ -40,7 +40,7 @@ export default async function MejaPage() {
               <Link
                 key={m.id}
                 href={`/meja/${m.id}`}
-                className={`rounded-xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                className={`rounded-xl border p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md ${
                   isTerisi
                     ? "border-primary/40 bg-accent-bg"
                     : "border-zinc-200 bg-white"

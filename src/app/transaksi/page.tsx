@@ -20,7 +20,7 @@ export default async function TransaksiPage() {
   return (
     <div>
       <h1 className="mb-4 text-xl font-bold">Transaksi</h1>
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>

@@ -21,7 +21,7 @@ function memoize<Args extends unknown[], Return>(
 export const getSession = memoize(async (): Promise<SessionPayload | null> => {
   let token: string | undefined;
   try {
-    token = cookies().get(SESSION_COOKIE)?.value;
+    token = (await cookies()).get(SESSION_COOKIE)?.value;
   } catch {
     // Di luar request context (build / script)
     return null;

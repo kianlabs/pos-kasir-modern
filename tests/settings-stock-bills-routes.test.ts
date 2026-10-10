@@ -132,14 +132,14 @@ describe("rute settings / stock-moves / bills — handler asli", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    return PATCH(req, { params: { id } });
+    return PATCH(req, { params: Promise.resolve({ id }) });
   }
 
   async function panggilBillDelete(id: string) {
     vi.resetModules();
     const { DELETE } = await import("@/app/api/bills/[id]/route");
     const req = new Request(`http://localhost/api/bills/${id}`, { method: "DELETE" });
-    return DELETE(req, { params: { id } });
+    return DELETE(req, { params: Promise.resolve({ id }) });
   }
 
   // Buat bill DRAFT + item via Prisma (setup), bukan lewat route — yang diuji

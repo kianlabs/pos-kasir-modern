@@ -7,7 +7,7 @@ import { hitungUlangBill, BillError } from "@/server/meja";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // POST /api/bills/[id]/gabung { sourceBillId }
 // Pindahkan SEMUA TransactionItem dari bill sumber ke bill tujuan [id]
@@ -16,7 +16,8 @@ type Params = { params: { id: string } };
 // Prinsip (plan §4.3, §7 keputusan 3): gabung TIDAK menyentuh stok — hanya
 // memindahkan baris item. Item dipindah (update transactionId), BUKAN disalin,
 // sehingga snapshot name/price tiap item tetap utuh dan tidak ada duplikasi.
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: Request, props: Params) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 

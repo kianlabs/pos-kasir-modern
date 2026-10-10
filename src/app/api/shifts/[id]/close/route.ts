@@ -7,7 +7,8 @@ import { currentWarungId, currentKasirId } from "@/server/tenant";
 export const dynamic = "force-dynamic";
 
 // POST /api/shifts/[id]/close { kasFisik } → tutup shift + hitung selisih
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 

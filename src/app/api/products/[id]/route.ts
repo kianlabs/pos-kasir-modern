@@ -7,10 +7,11 @@ import { isRecordNotFound } from "@/client/offline-sync";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // PATCH /api/products/[id] → owner-only (ubah harga/Stok/katalog).
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, props: Params) {
+  const params = await props.params;
   const denied = await requireOwnerResponse();
   if (denied) return denied;
 
@@ -106,7 +107,8 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 // DELETE /api/products/[id] → owner-only.
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, props: Params) {
+  const params = await props.params;
   const denied = await requireOwnerResponse();
   if (denied) return denied;
 

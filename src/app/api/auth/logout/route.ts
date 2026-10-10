@@ -12,7 +12,7 @@ export async function POST() {
   if (session) {
     await catat({ warungId: session.wid, userId: session.uid, action: "LOGOUT" });
   }
-  cookies().set(SESSION_COOKIE, "", {
+  (await cookies()).set(SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

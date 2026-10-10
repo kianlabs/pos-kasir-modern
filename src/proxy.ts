@@ -1,14 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 
-// Gate sesi/role di edge (lampiran skema §2 aturan #1, #8).
+// Gate sesi/role di edge (lampiran skema §2 aturan #1, #8). Next 16: konvensi
+// `middleware` diganti `proxy` (default runtime Node.js).
 //
-// Catatan penting: middleware berjalan di edge runtime dan TIDAK boleh memakai
-// node:crypto atau Prisma. Karena itu ia hanya memeriksa *keberadaan* cookie,
-// bukan memverifikasi tanda tangannya. Verifikasi tanda tangan yang sebenarnya
-// dilakukan di setiap route/halaman lewat lib/warung.getSession() (Node runtime).
-// Middleware di sini adalah lapisan UX (redirect cepat) + guard kasar role;
-// guard yang mengikat tetap di handler.
+// Catatan penting: proxy TIDAK boleh memakai node:crypto atau Prisma. Karena
+// itu ia hanya memeriksa *keberadaan* cookie, bukan memverifikasi tanda
+// tangannya. Verifikasi tanda tangan yang sebenarnya dilakukan di setiap
+// route/halaman lewat lib/warung.getSession() (Node runtime). Proxy di sini
+// adalah lapisan UX (redirect cepat) + guard kasar role; guard yang mengikat
+// tetap di handler.
 
 const OWNER_ONLY_API = ["/api/settings", "/api/export"];
 const OWNER_ONLY_PAGES = ["/produk", "/laporan", "/pengaturan"];
@@ -27,7 +28,7 @@ function decodeRoleUnsafe(token: string | undefined): SessionPayload["role"] | n
   return null;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   if (

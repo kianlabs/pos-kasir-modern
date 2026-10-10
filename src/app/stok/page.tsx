@@ -48,7 +48,7 @@ export default function StokPage() {
           className="ml-auto w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary sm:max-w-xs"
         />
       </div>
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>

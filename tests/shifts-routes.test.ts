@@ -55,7 +55,7 @@ describe("rute /api/shifts (buka / active / close) — handler asli", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    const res = await closeShift(req, { params: { id } });
+    const res = await closeShift(req, { params: Promise.resolve({ id }) });
     return { status: res.status, body: await res.json() };
   }
 

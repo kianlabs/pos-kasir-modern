@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic";
 // Di level DB, partial unique index `tx_one_draft_per_meja` (Postgres,
 // migrations/20261009100000_init_postgres) menjadi jaring kedua: bila dua
 // request lolos cek bersamaan, yang kalah kena P2002 → ditangkap di catch → 409.
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const cashierId = await currentKasirId(warungId);
 

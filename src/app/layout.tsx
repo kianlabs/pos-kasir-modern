@@ -70,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </aside>
 
           <div className="min-w-0 flex-1">
-            <header className="sticky top-0 z-20 border-b bg-white shadow-sm md:hidden print:hidden">
+            <header className="sticky top-0 z-20 border-b bg-white shadow-xs md:hidden print:hidden">
               <div className="flex items-center gap-3 px-4 py-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-lg">
                   🧾

@@ -7,7 +7,7 @@ import { hitungUlangBill, BillError } from "@/server/meja";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 type PisahItem = { transactionItemId: string; qty: number };
 
@@ -20,7 +20,8 @@ type PisahItem = { transactionItemId: string; qty: number };
 //   data produk hidup). qty = penuh → baris dipindah (update transactionId).
 // - Stok TIDAK disentuh (§7 keputusan 3).
 // - Meja tujuan pindah di sini juga menutup kebutuhan "pindah meja".
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: Request, props: Params) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 
