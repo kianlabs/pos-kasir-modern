@@ -103,6 +103,12 @@ export type ShiftOrphanDetail = {
 
 export type ProsesCheckoutResult = {
   id: string;
+  /**
+   * shiftId transaksi hasil (shift BUKA yang diatribusikan saat checkout dibuat),
+   * atau `null` bila tak ada shift BUKA. Route ONLINE memakainya untuk audit
+   * CHECKOUT_TANPA_SHIFT (M3); jalur sync memakai `shiftOrphan` (M2).
+   */
+  shiftId: string | null;
   /** true = transaksi id ini sudah ada → tidak menyentuh stok (idempotent hit). */
   sudahAda: boolean;
   /** true = diterima walau stok kurang (hanya mungkin saat allowStokMinus). */
@@ -161,6 +167,7 @@ export async function prosesCheckout(
       }
       return {
         id: existing.id,
+        shiftId: null,
         sudahAda: true,
         konflikStok: false,
         konfliks: [],
@@ -363,6 +370,7 @@ export async function prosesCheckout(
 
   return {
     id: created.id,
+    shiftId: shift?.id ?? null,
     sudahAda: false,
     konflikStok: konfliks.length > 0,
     konfliks,

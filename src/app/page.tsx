@@ -187,7 +187,15 @@ export default function KasirPage() {
     setLoading(true);
 
     // Offline terdeteksi → langsung ke antrean lokal (jangan blokir).
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
+    const online = !(typeof navigator !== "undefined" && !navigator.onLine);
+    // M3: saat ONLINE tanpa shift BUKA, JANGAN jual — kas tak akan masuk rekap
+    // shift mana pun & tak bisa direkonsiliasi. Blokir SEBELUM simpan/sync.
+    // Jalur OFFLINE (online === false) TIDAK terpengaruh: tetap ke antrean lokal.
+    if (online && hasShift === false) {
+      setLoading(false);
+      return setError("Belum buka shift. Buka shift dulu di menu Shift sebelum menerima pembayaran.");
+    }
+    if (!online) {
       try {
         await simpanOffline();
       } catch {
@@ -305,7 +313,7 @@ export default function KasirPage() {
       )}
       {hasShift === false && (
         <Link href="/shift" className="mb-4 block rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
-          ⚠️ Belum buka shift — transaksi tidak tercatat di rekap kas. Buka shift dulu →
+          ⚠️ Belum buka shift — pembayaran ONLINE diblokir sampai shift dibuka. Sale offline tetap bisa disimpan. Buka shift dulu →
         </Link>
       )}
     <div className="grid items-start gap-5 xl:grid-cols-[1fr_360px]">
