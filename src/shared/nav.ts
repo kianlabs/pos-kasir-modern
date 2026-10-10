@@ -14,6 +14,9 @@ export const NAV: NavItem[] = [
   { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },
   { href: "/produk", label: "Produk", icon: "📦", roles: ["OWNER"] },
   { href: "/laporan", label: "Laporan", icon: "📊", roles: ["OWNER"] },
+  // Owner-only (lampiran AI §1.3): kasir tak pernah melihat tautan ini;
+  // proxy + handler juga menolak aksesnya.
+  { href: "/insight", label: "Insight", icon: "✨", roles: ["OWNER"] },
   { href: "/notifikasi", label: "Notifikasi", icon: "📨", roles: ["OWNER"] },
   { href: "/pengaturan", label: "Pengaturan", icon: "⚙️", roles: ["OWNER"] },
 ];

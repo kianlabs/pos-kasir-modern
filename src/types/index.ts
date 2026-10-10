@@ -31,4 +31,7 @@ export type AuditAction =
   | "SYNC_ORPHAN_SHIFT" // transaksi offline tanpa shift / di luar jendela shift yang dipilih
   // Checkout ONLINE tanpa shift BUKA (M3) — dijual saat tak ada shift terbuka,
   // jadi kasnya tak bisa direkonsiliasi. "Tandai, jangan blokir" (offline-safe).
-  | "CHECKOUT_TANPA_SHIFT";
+  | "CHECKOUT_TANPA_SHIFT"
+  // Fitur AI "KRING! Insight" (lampiran AI §5): chat owner. Teks chat TIDAK
+  // disimpan penuh — hanya hash + preview ≤120 char di meta (privasi & biaya log).
+  | "AI_CHAT";

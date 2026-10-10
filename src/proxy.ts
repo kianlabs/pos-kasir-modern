@@ -12,7 +12,7 @@ import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 // tetap di handler.
 
 const OWNER_ONLY_API = ["/api/settings", "/api/export"];
-const OWNER_ONLY_PAGES = ["/produk", "/laporan", "/pengaturan"];
+const OWNER_ONLY_PAGES = ["/produk", "/laporan", "/pengaturan", "/insight"];
 
 function decodeRoleUnsafe(token: string | undefined): SessionPayload["role"] | null {
   if (!token) return null;
