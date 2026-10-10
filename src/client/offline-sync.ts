@@ -258,10 +258,14 @@ export async function prosesCheckout(
         price: p.price,
       },
     });
-    await tx.product.update({
-      where: { id: p.id },
+    // WAJIB difilter warungId (aturan #1): isolasi tenant. updateMany tak
+    // melempar P2025 saat 0 baris → cek count eksplisit (produk wajib ada,
+    // sudah divalidasi di langkah (3), jadi 0 = anomali tenant).
+    const upd = await tx.product.updateMany({
+      where: { id: p.id, warungId },
       data: { stock: { decrement: qty } },
     });
+    if (upd.count !== 1) throw new Error("Produk tidak ditemukan.");
     await tx.stockMove.create({
       data: {
         warungId,
