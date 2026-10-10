@@ -4,6 +4,7 @@ import { readJson } from "@/server/http";
 import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId } from "@/server/tenant";
 import { buatLaporanShift } from "@/server/notif";
+import { jalankanAnomali, simpanAnomali } from "@/server/ai/anomaly";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +87,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     // shift (menutup shift harus selalu sukses).
     await enqueueLaporanShift(warungId, params.id);
 
+    // Lampiran AI §4 (step B): pemicu scan anomali deterministik saat tutup
+    // shift. Dijalankan SETELAH shift tersimpan & laporan di-enqueue, dan
+    // dibungkus try/catch-nya sendiri: gagal scan TIDAK boleh menggagalkan
+    // tutup shift (jalur kasir selalu deterministik, §1.1). Body temuan disusun
+    // deterministik (tanpa LLM) → temuan tetap tersimpan walau provider AI mati.
+    await scanAnomaliShift(warungId, params.id);
+
     return NextResponse.json({
       ...result.closed,
       expected: result.expected,
@@ -107,6 +115,20 @@ async function enqueueLaporanShift(warungId: string, shiftId: string): Promise<v
     await buatLaporanShift(prisma, { warungId, shiftId });
   } catch (e) {
     console.error("[notif] gagal enqueue laporan shift", shiftId, e);
+  }
+}
+
+// Lampiran AI §4 (step B): scan anomali deterministik untuk shift yang baru
+// ditutup, lalu simpan temuan sebagai Insight ANOMALY. Sama seperti
+// enqueueLaporanShift: DIBUNGKUS sendiri — kegagalan apa pun (provider AI mati,
+// error DB, temuan kosong) HANYA dilog dan TIDAK PERNAH melempar, sehingga
+// respons tutup shift tak bisa berubah. `warungId` dari session (aturan #4).
+async function scanAnomaliShift(warungId: string, shiftId: string): Promise<void> {
+  try {
+    const temuan = await jalankanAnomali(warungId, { shiftId });
+    await simpanAnomali(warungId, temuan, { shiftId });
+  } catch (e) {
+    console.error("[ai] gagal scan anomali shift", shiftId, e);
   }
 }
 
