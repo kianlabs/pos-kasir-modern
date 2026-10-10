@@ -91,7 +91,7 @@ setiap klaim di tabel di atas dijalankan ulang manual.
 | Fase | Scope | Status | Bukti |
 |---|---|---|---|
 | **Fase 1 MVP §6.2** | multi-tenant, login multi-role+RBAC, meja, offline+sync, PWA, deploy | ✅ **100%** | semua ada; live https://pos-kasir-modern-sigma.vercel.app |
-| **Fase 2 §7a** | WA struk, WA laporan harian, dashboard realtime, barcode, promo engine, kios | 🔴 **0%** | nol kode/env/skema |
+| **Fase 2 §7a** | WA struk, WA laporan harian, dashboard realtime, barcode, promo engine, kios | 🟡 **~15%** | Laporan harian: **fondasi selesai** (outbox `notifikasi` + generator laporan shift + UI semi-manual, branch `feat/fase2-notif-outbox`). Sisa: transport WA, struk WA, realtime, barcode, promo, kios |
 | **Fase 2 §7b (AI)** | Insight naratif, anomali, chat owner | 🟡 **~5%** | tabel `Insight` ada tapi **tak dipakai**; nol `/api/ai/*`, nol dep AI SDK, nol config provider |
 
 **Prasyarat Fase 2:** lampiran AI menyebut "Fase 1 auth harus selesai & test isolasi
