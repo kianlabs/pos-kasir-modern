@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/server/db";
 import { verifySession } from "@/server/session";
 import { __resetRateLimit } from "@/server/rate-limit";
@@ -15,8 +15,13 @@ import { bersihkanWarungUji } from "./helpers";
 // Cara: mock `next/headers` cookies() → route men-set cookie sesi lewat
 // `cookies().set(...)` (bukan NextResponse.cookies), jadi kita tangkap argumen
 // set() untuk verifikasi cookie. Handler diimpor SEKALI (tanpa vi.resetModules)
-// supaya state rate-limit in-memory tetap satu instance dengan __resetRateLimit
-// di beforeEach.
+// supaya __resetRateLimit (kini hapus baris tabel DB) menyasar state yang sama.
+//
+// Rate-limit PERSISTEN di DB (tabel login_attempts) — bukan in-memory — agar
+// berlaku lintas-instance saat deploy serverless. Konsekuensi untuk test: state
+// tak lagi terisolasi per proses, jadi file ini WAJIB membersihkannya: await
+// __resetRateLimit() di beforeEach (isolasi antar-test) DAN afterEach/afterAll
+// (jangan tinggalkan blok yang mengunci login test file lain yang berbagi DB).
 //
 // Butuh DB test (TEST_DATABASE_URL). Seed warung uji via seedWarung: owner
 // password "password123", kasir PIN "123456".
@@ -70,9 +75,13 @@ describe("POST /api/auth/login (route asli)", () => {
     await prisma.$disconnect();
   });
 
-  beforeEach(() => {
-    __resetRateLimit();
+  beforeEach(async () => {
+    await __resetRateLimit();
     setCookie = undefined;
+  });
+
+  afterEach(async () => {
+    await __resetRateLimit();
   });
 
   it("owner login benar → 200 + cookie sesi ter-set (role OWNER)", async () => {

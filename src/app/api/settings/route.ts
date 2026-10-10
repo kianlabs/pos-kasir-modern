@@ -3,6 +3,7 @@ import { prisma } from "@/server/db";
 import { readJson } from "@/server/http";
 import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/server/tenant";
+import { clampTaxPct } from "@/shared/hitung-uang";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export async function PATCH(req: Request) {
     updateData.taxEnabled = Boolean(body.taxEnabled);
   }
   if (body.taxPct !== undefined) {
-    updateData.taxPct = Math.min(100, Math.max(0, Number(body.taxPct) || 0));
+    updateData.taxPct = clampTaxPct(Number(body.taxPct) || 0);
   }
   if (body.receiptName !== undefined) {
     updateData.receiptName = body.receiptName ? String(body.receiptName).trim() : null;

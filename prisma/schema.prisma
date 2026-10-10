@@ -236,6 +236,19 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// Rate-limit login (lampiran skema §2 aturan #9). Persisten di DB — bukan
+// in-memory — agar tetap berlaku saat deploy multi-instance/serverless (Vercel):
+// state in-memory per proses tidak terbagi antar-instance sehingga brute-force
+// PIN bisa lolos. Key = userId (kasir) atau "owner-email:<email>" (owner), unik.
+model LoginAttempt {
+  key          String    @id // userId ATAU "owner-email:<email>"
+  failures     Int       @default(0)
+  blockedUntil DateTime? // null = tidak terkunci; > now = terkunci
+  updatedAt    DateTime  @updatedAt
+
+  @@map("login_attempts")
+}
+
 // dari lampiran AI (PRD-lampiran-ai.md §5) — model kosong sampai AI aktif
 model Insight {
   id        String   @id @default(uuid())
@@ -243,7 +256,8 @@ model Insight {
   warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
 
   type      String   // NARRATIVE | ANOMALY | CHAT_SUMMARY  (String + const union —
-                     // jangan enum: dev masih SQLite, Prisma SQLite tidak support enum)
+                     // dulu dihindari enum karena dev masih SQLite; dipertahankan
+                     // agar tak perlu migrasi enum Postgres yang belum perlu)
   title     String
   body      String   // narasi hasil AI (atau template fallback)
   findings  String?  // JSON ringan: temuan rule §4 (bukti angka, untuk verifikasi)

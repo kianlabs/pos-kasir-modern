@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { rupiah } from "@/shared/rupiah";
 import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, getOutbox } from "@/client/offline-db";
 import type { OutboxEntry } from "@/client/offline-types";
 
@@ -69,12 +70,16 @@ export default function StrukOfflinePage({ params }: { params: { id: string } })
       });
 
       const subtotal = lines.reduce((n, l) => n + l.price * l.qty, 0);
-      const discount = Math.min(entry.payload.discount, subtotal);
-      const tax =
-        settings?.enabled === true
-          ? Math.round(((subtotal - discount) * (settings.pct || 0)) / 100)
-          : 0;
-      const total = subtotal - discount + tax;
+      // Rumus uang kanonik (shared/hitung-uang) — satu sumber kebenaran (m5).
+      const uang = hitungUang({
+        subtotal,
+        discount: entry.payload.discount,
+        taxEnabled: settings?.enabled === true,
+        taxPct: settings?.pct || 0,
+      });
+      const discount = uang.discount;
+      const tax = uang.tax;
+      const total = uang.total;
       const cash = entry.payload.cash;
       const change = entry.payload.payment === "CASH" ? Math.max(0, cash - total) : 0;
 

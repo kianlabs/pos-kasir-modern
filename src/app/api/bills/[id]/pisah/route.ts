@@ -116,16 +116,18 @@ export async function POST(req: Request, { params }: Params) {
         }
         if (moveQty === it.qty) {
           // Pindah utuh: cukup ganti pemilik baris, snapshot ikut terbawa.
-          await tx.transactionItem.update({
-            where: { id: it.id },
+          const upd = await tx.transactionItem.updateMany({
+            where: { id: it.id, warungId },
             data: { transactionId: created.id },
           });
+          if (upd.count !== 1) throw new BillError("Item tidak ditemukan.", 404);
         } else {
           // Pisah sebagian: kurangi baris asal, buat baris baru dengan snapshot sama.
-          await tx.transactionItem.update({
-            where: { id: it.id },
+          const upd = await tx.transactionItem.updateMany({
+            where: { id: it.id, warungId },
             data: { qty: it.qty - moveQty },
           });
+          if (upd.count !== 1) throw new BillError("Item tidak ditemukan.", 404);
           await tx.transactionItem.create({
             data: {
               warungId,
@@ -146,8 +148,8 @@ export async function POST(req: Request, { params }: Params) {
       targetTotals = await hitungUlangBill(created.id, warungId, tx);
       // Fix A13: STORE rawDiscount (diskon diniatkan kasir) untuk KEDUA bill —
       // `discount` yang ter-clamp hanya untuk math pajak/total, jangan disimpan.
-      await tx.transaction.update({
-        where: { id: source.id },
+      await tx.transaction.updateMany({
+        where: { id: source.id, warungId },
         data: {
           subtotal: sourceTotals.subtotal,
           discount: sourceTotals.rawDiscount,
@@ -155,8 +157,8 @@ export async function POST(req: Request, { params }: Params) {
           total: sourceTotals.total,
         },
       });
-      await tx.transaction.update({
-        where: { id: created.id },
+      await tx.transaction.updateMany({
+        where: { id: created.id, warungId },
         data: {
           subtotal: targetTotals.subtotal,
           discount: targetTotals.rawDiscount,

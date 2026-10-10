@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db";
 import { currentWarungId } from "@/server/tenant";
+import { clampTaxPct } from "@/shared/hitung-uang";
 
 type SettingDb = {
   setting: {
@@ -20,6 +21,6 @@ export async function getTaxSetting(tx: SettingDb = prisma, warungId?: string) {
   }
 
   const enabled = !!row.taxEnabled;
-  const pct = Math.min(100, Math.max(0, Number(row.taxPct) || 0));
+  const pct = clampTaxPct(Number(row.taxPct) || 0);
   return { enabled, pct };
 }

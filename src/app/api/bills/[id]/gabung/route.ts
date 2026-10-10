@@ -69,7 +69,10 @@ export async function POST(req: Request, { params }: Params) {
       moved = res.count;
 
       // Hapus bill sumber (item sudah kosong → cascade tidak menyisakan apa pun).
-      await tx.transaction.delete({ where: { id: source.id } });
+      // WAJIB difilter warungId (aturan #1): isolasi tenant, hapus tak boleh
+      // menyentuh bill warung lain walau id-nya bocor.
+      const del = await tx.transaction.deleteMany({ where: { id: source.id, warungId } });
+      if (del.count !== 1) throw new BillError("Bill sumber tidak ditemukan.", 404);
 
       // Hitung ulang total bill tujuan dari item hasil gabung, DI DALAM tx
       // yang sama (atomik). Wajib pakai `tx`: hitungUlangBill(`prisma`) di
@@ -77,8 +80,9 @@ export async function POST(req: Request, { params }: Params) {
       totals = await hitungUlangBill(target.id, warungId, tx);
       // Fix A13: simpan rawDiscount (diskon diniatkan kasir), bukan `discount`
       // yang sudah di-clamp ke subtotal — mencegah diskon terpotong permanen.
-      await tx.transaction.update({
-        where: { id: target.id },
+      // WAJIB difilter warungId (aturan #1): isolasi tenant.
+      const upd = await tx.transaction.updateMany({
+        where: { id: target.id, warungId },
         data: {
           subtotal: totals.subtotal,
           discount: totals.rawDiscount,
@@ -86,6 +90,7 @@ export async function POST(req: Request, { params }: Params) {
           total: totals.total,
         },
       });
+      if (upd.count !== 1) throw new BillError("Bill tujuan tidak ditemukan.", 404);
     });
 
     await catat({

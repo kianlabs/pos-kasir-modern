@@ -17,6 +17,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { deleteOutbox, listOutbox, putOutbox } from "@/client/offline-db";
+import { hitungUang, seimbangkanKeTotal } from "@/shared/hitung-uang";
 import type {
   OutboxEntry,
   OutboxPayload,
@@ -76,14 +77,59 @@ export type ProsesCheckoutInput = {
 
 export type KonflikStok = { productId: string; name: string; butuh: number; sisa: number };
 
+/**
+ * Detail "uang direkalkulasi" (M4) — dikirim ke audit SYNC_MONEY_RECOMPUTED.
+ * Angka saja: membandingkan diskon/pajak TERSIMPAN (hasil menyerap total client)
+ * dengan yang akan dihasilkan formula NORMAL (server menghitung sendiri).
+ */
+export type MoneyRecomputedDetail = {
+  subtotal: number;
+  discountStored: number;
+  discountEntered: number;
+  taxStored: number;
+  totalClient: number;
+  totalComputedNormal: number;
+};
+
+/**
+ * Detail "shift meragukan" (M2) — dikirim ke audit SYNC_ORPHAN_SHIFT.
+ * shiftId dapat `null` (tak ada shift BUKA), atau `createdAt` transaksi jatuh
+ * di LUAR jendela [openedAt, closedAt ?? now] shift yang dipilih.
+ */
+export type ShiftOrphanDetail = {
+  shiftId: string | null;
+  createdAt: Date | null;
+  shiftOpenedAt: Date | null;
+};
+
 export type ProsesCheckoutResult = {
   id: string;
+  /**
+   * shiftId transaksi hasil (shift BUKA yang diatribusikan saat checkout dibuat),
+   * atau `null` bila tak ada shift BUKA. Route ONLINE memakainya untuk audit
+   * CHECKOUT_TANPA_SHIFT (M3); jalur sync memakai `shiftOrphan` (M2).
+   */
+  shiftId: string | null;
   /** true = transaksi id ini sudah ada → tidak menyentuh stok (idempotent hit). */
   sudahAda: boolean;
   /** true = diterima walau stok kurang (hanya mungkin saat allowStokMinus). */
   konflikStok: boolean;
   /** Detail produk yang stoknya kurang (untuk audit SYNC_CONFLICT). */
   konfliks: KonflikStok[];
+  /**
+   * true = diskon/pajak TERSIMPAN berbeda dari formula normal karena total dari
+   * client diterima (jalur sync). Route memancarkan audit SYNC_MONEY_RECOMPUTED.
+   * Selalu false di jalur online (tak ada totalDariClient di sana).
+   */
+  moneyRecomputed: boolean;
+  moneyDetail?: MoneyRecomputedDetail;
+  /**
+   * true = transaksi offline diatribusikan ke shift yang meragukan: shiftId
+   * `null`, ATAU `createdAt` (bila ada) di luar jendela shift terpilih.
+   * Route memancarkan audit SYNC_ORPHAN_SHIFT. false di jalur online normal.
+   */
+  shiftOrphan: boolean;
+  shiftDetail?: ShiftOrphanDetail;
 };
 
 /**
@@ -98,10 +144,10 @@ export type ProsesCheckoutResult = {
  *   + decrement stok, semua dalam `tx` yang sama.
  *
  * Catatan race: cek-lalu-create di dalam `$transaction` mengandalkan serialisasi
- * transaksi interaktif Prisma/SQLite (pola sama dengan buka-shift & buka-bill).
+ * transaksi interaktif Prisma (pola sama dengan buka-shift & buka-bill).
  * Bila dua request id sama benar-benar balapan, satu kalah unique (P2002);
  * pemanggil menangkapnya via `isUniqueConstraintError` dan mengembalikan yang
- * ada (tetap idempotent). Saat migrasi ke Postgres: `id` sudah PK → aman.
+ * ada (tetap idempotent). `id` sudah PK di Postgres → aman.
  */
 export async function prosesCheckout(
   tx: Prisma.TransactionClient,
@@ -120,7 +166,15 @@ export async function prosesCheckout(
       if (existing.warungId !== warungId) {
         throw new Error("Transaksi tidak ditemukan.");
       }
-      return { id: existing.id, sudahAda: true, konflikStok: false, konfliks: [] };
+      return {
+        id: existing.id,
+        shiftId: null,
+        sudahAda: true,
+        konflikStok: false,
+        konfliks: [],
+        moneyRecomputed: false,
+        shiftOrphan: false,
+      };
     }
   }
 
@@ -181,10 +235,19 @@ export async function prosesCheckout(
   let disc: number;
   let tax: number;
   let total: number;
-  // Pajak acuan dari setting (dipakai untuk menyerap selisih pada jalur offline).
-  const tax0 = input.taxCfg.enabled
-    ? Math.round(((subtotal - Math.min(discountIn, subtotal)) * input.taxCfg.pct) / 100)
-    : 0;
+  // Formula NORMAL (server menghitung sendiri) via helper kanonik (m5):
+  // disk=min(discountIn,subtotal), pajak dari (subtotal-disk), total exact.
+  // `tax0` = pajak acuan setting (dipakai menyerap selisih pada jalur offline).
+  const normal = hitungUang({
+    subtotal,
+    discount: discountIn,
+    taxEnabled: input.taxCfg.enabled,
+    taxPct: input.taxCfg.pct,
+  });
+  const discNormal = normal.discount;
+  const tax0 = normal.tax;
+  const taxNormal = normal.tax;
+  const totalNormal = normal.total;
   if (
     input.allowStokMinus &&
     typeof input.totalDariClient === "number" &&
@@ -193,16 +256,19 @@ export async function prosesCheckout(
     input.totalDariClient <= BATAS_UANG
   ) {
     total = input.totalDariClient;
-    // Diskon di-clamp [0, subtotal] menyerap selisih total-client vs subtotal-server,
-    // dengan acuan pajak setting, agar invarian tetap eksak.
-    disc = Math.min(Math.max(discountIn, subtotal + tax0 - total), subtotal);
-    // Pajak tersimpan = sisa penyeimbang → `subtotal - discount + tax === total` SELALU.
-    tax = total - (subtotal - disc);
+    // Diskon/tax di-clamp agar invarian `subtotal - discount + tax === total` SELALU
+    // eksak, menyerap selisih total-client vs subtotal-server (acuan pajak tax0).
+    const seimbang = seimbangkanKeTotal({ subtotal, discountIn, tax0, total });
+    disc = seimbang.discount;
+    tax = seimbang.tax;
   } else {
-    disc = Math.min(discountIn, subtotal);
-    tax = tax0;
-    total = subtotal - disc + tax;
+    disc = discNormal;
+    tax = taxNormal;
+    total = totalNormal;
   }
+  // M4: jalur offline (totalDariClient diterima) menghasilkan diskon/pajak yang
+  // BUKAN yang akan dicetak formula normal → tandai agar route mengauditnya.
+  const moneyRecomputed = disc !== discNormal || tax !== taxNormal;
 
   // Jaring pengaman terakhir: nilai tersimpan tak boleh melampaui int32/negatif.
   if (total < 0 || disc < 0 || total > BATAS_UANG) {
@@ -223,6 +289,23 @@ export async function prosesCheckout(
     where: { warungId, status: "BUKA" },
     orderBy: { openedAt: "desc" },
   });
+
+  // M2: atribusi shift transaksi offline. Meragukan bila (a) tak ada shift BUKA
+  // (shiftId jadi null), atau (b) transaksi dibuat di luar jendela shift terpilih
+  // [openedAt, closedAt ?? now]. Route memakai flag ini untuk audit SYNC_ORPHAN_SHIFT.
+  // Jalur online tak mengisi `createdAt` → hanya syarat (a)/(b) dengan createdAt null.
+  const shiftOpenedAt = shift?.openedAt ?? null;
+  const shiftWindowEnd = shift ? (shift.closedAt ?? new Date()) : null;
+  const createdAtOutOfWindow = !!(
+    input.createdAt &&
+    shift &&
+    shiftOpenedAt &&
+    (input.createdAt < shiftOpenedAt || input.createdAt > shiftWindowEnd!)
+  );
+  const shiftOrphan = !shift || createdAtOutOfWindow;
+  const shiftDetail: ShiftOrphanDetail | undefined = shiftOrphan
+    ? { shiftId: shift?.id ?? null, createdAt: input.createdAt, shiftOpenedAt }
+    : undefined;
 
   // (6) Simpan transaksi. `id` client dipakai bila ada (idempotent saat retry).
   const created = await tx.transaction.create({
@@ -258,10 +341,14 @@ export async function prosesCheckout(
         price: p.price,
       },
     });
-    await tx.product.update({
-      where: { id: p.id },
+    // WAJIB difilter warungId (aturan #1): isolasi tenant. updateMany tak
+    // melempar P2025 saat 0 baris → cek count eksplisit (produk wajib ada,
+    // sudah divalidasi di langkah (3), jadi 0 = anomali tenant).
+    const upd = await tx.product.updateMany({
+      where: { id: p.id, warungId },
       data: { stock: { decrement: qty } },
     });
+    if (upd.count !== 1) throw new Error("Produk tidak ditemukan.");
     await tx.stockMove.create({
       data: {
         warungId,
@@ -274,7 +361,28 @@ export async function prosesCheckout(
     });
   }
 
-  return { id: created.id, sudahAda: false, konflikStok: konfliks.length > 0, konfliks };
+  const moneyDetail: MoneyRecomputedDetail | undefined = moneyRecomputed
+    ? {
+        subtotal,
+        discountStored: disc,
+        discountEntered: discountIn,
+        taxStored: tax,
+        totalClient: total,
+        totalComputedNormal: totalNormal,
+      }
+    : undefined;
+
+  return {
+    id: created.id,
+    shiftId: shift?.id ?? null,
+    sudahAda: false,
+    konflikStok: konfliks.length > 0,
+    konfliks,
+    moneyRecomputed,
+    moneyDetail,
+    shiftOrphan,
+    shiftDetail,
+  };
 }
 
 /** True bila error Prisma adalah pelanggaran unique (P2002) — mis. race id. */

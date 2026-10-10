@@ -90,8 +90,8 @@ export async function POST(req: Request, { params }: Params) {
       if (paid < total) throw new BillError(`Uang kurang ${total - paid}.`, 400);
 
       // Transisi DRAFT → LUNAS + isi field pembayaran (mejaId dipertahankan).
-      await tx.transaction.update({
-        where: { id: bill.id },
+      const paidRes = await tx.transaction.updateMany({
+        where: { id: bill.id, warungId },
         data: {
           status: "LUNAS",
           subtotal,
@@ -103,14 +103,16 @@ export async function POST(req: Request, { params }: Params) {
           payment,
         },
       });
+      if (paidRes.count !== 1) throw new BillError("Bill tidak ditemukan.", 404);
 
       // Decrement stok + StockMove per PRODUK (qty teragregasi) — hanya di
       // jalur bayar. Satu StockMove per produk, konsisten dengan kartu stok.
       for (const [productId, agg] of Array.from(qtyByProduct.entries())) {
-        await tx.product.update({
-          where: { id: productId },
+        const dec = await tx.product.updateMany({
+          where: { id: productId, warungId },
           data: { stock: { decrement: agg.qty } },
         });
+        if (dec.count !== 1) throw new BillError(`Produk ${agg.name} tidak ditemukan.`, 400);
         await tx.stockMove.create({
           data: {
             warungId,

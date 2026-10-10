@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { rupiah } from "@/shared/rupiah";
 import { productIcon } from "@/shared/category-icon";
+import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, putCache } from "@/client/offline-db";
 import { enqueueCheckout } from "@/client/offline-sync";
 import type { OutboxPayload } from "@/client/offline-types";
@@ -111,9 +112,16 @@ export default function KasirPage() {
   );
   const subtotal = lines.reduce((n, l) => n + l.product.price * l.qty, 0);
   const itemCount = lines.reduce((n, l) => n + l.qty, 0);
-  const discNum = Math.min(Number(discount) || 0, subtotal);
-  const taxNum = taxInfo.enabled ? Math.round(((subtotal - discNum) * taxInfo.pct) / 100) : 0;
-  const total = subtotal - discNum + taxNum;
+  // Rumus uang kanonik (shared/hitung-uang) — satu sumber kebenaran (m5).
+  const uang = hitungUang({
+    subtotal,
+    discount: Number(discount) || 0,
+    taxEnabled: taxInfo.enabled,
+    taxPct: taxInfo.pct,
+  });
+  const discNum = uang.discount;
+  const taxNum = uang.tax;
+  const total = uang.total;
   const cashNum = Number(cash) || 0;
   const kembalian = cashNum - total;
   const canPay =
@@ -187,7 +195,15 @@ export default function KasirPage() {
     setLoading(true);
 
     // Offline terdeteksi → langsung ke antrean lokal (jangan blokir).
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
+    const online = !(typeof navigator !== "undefined" && !navigator.onLine);
+    // M3: saat ONLINE tanpa shift BUKA, JANGAN jual — kas tak akan masuk rekap
+    // shift mana pun & tak bisa direkonsiliasi. Blokir SEBELUM simpan/sync.
+    // Jalur OFFLINE (online === false) TIDAK terpengaruh: tetap ke antrean lokal.
+    if (online && hasShift === false) {
+      setLoading(false);
+      return setError("Belum buka shift. Buka shift dulu di menu Shift sebelum menerima pembayaran.");
+    }
+    if (!online) {
       try {
         await simpanOffline();
       } catch {
@@ -305,7 +321,7 @@ export default function KasirPage() {
       )}
       {hasShift === false && (
         <Link href="/shift" className="mb-4 block rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
-          ⚠️ Belum buka shift — transaksi tidak tercatat di rekap kas. Buka shift dulu →
+          ⚠️ Belum buka shift — pembayaran ONLINE diblokir sampai shift dibuka. Sale offline tetap bisa disimpan. Buka shift dulu →
         </Link>
       )}
     <div className="grid items-start gap-5 xl:grid-cols-[1fr_360px]">

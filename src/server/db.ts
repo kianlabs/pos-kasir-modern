@@ -31,10 +31,10 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Ambang timeout interactive transaction.
 //
-// Default Prisma = 5 detik, cukup untuk DB lokal (SQLite ~ms). Tapi di Postgres
-// remote (mis. Supabase region jauh) satu transaksi multi-query bisa >5s karena
-// latensi per round-trip, sehingga gagal dengan P2028 "Transaction already
-// closed". Karena itu kita naikkan timeout terpusat di sini, bukan tersebar.
+// Default Prisma = 5 detik, cukup untuk DB lokal (Postgres lokal ~ms). Tapi di
+// Postgres remote (mis. Supabase region jauh) satu transaksi multi-query bisa
+// >5s karena latensi per round-trip, sehingga gagal dengan P2028 "Transaction
+// already closed". Karena itu kita naikkan timeout terpusat di sini, bukan tersebar.
 const TX_MAX_WAIT_MS = 15_000; // tunggu antre koneksi dari pool
 const TX_TIMEOUT_MS = 60_000; // durasi maksimum transaksi itu sendiri
 

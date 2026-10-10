@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma, transaksi } from "@/server/db";
 import { getTaxSetting } from "@/server/settings";
 import { readJson } from "@/server/http";
+import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId } from "@/server/tenant";
 import {
   prosesCheckout,
@@ -80,6 +81,19 @@ export async function POST(req: Request) {
         allowStokMinus: false, // jalur online: stok kurang ditolak
       });
     });
+
+    // M3 — checkout ONLINE diterima saat TAK ada shift BUKA → cash tersimpan
+    // dengan shiftId null, tak bisa direkonsiliasi ke rekap kas shift mana pun.
+    // Tetap DITERIMA (offline-safe: jangan pernah memblokir uang yang sudah
+    // diterima kasir), tapi ditandai lewat audit untuk review owner.
+    if (!result.sudahAda && result.shiftId === null) {
+      await catat({
+        warungId,
+        userId: cashierId,
+        action: "CHECKOUT_TANPA_SHIFT",
+        meta: { transactionId: result.id, shiftId: null },
+      });
+    }
 
     return NextResponse.json({ id: result.id }, { status: result.sudahAda ? 200 : 201 });
   } catch (e) {

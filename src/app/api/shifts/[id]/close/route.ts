@@ -54,9 +54,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         .reduce((n, t) => n + t.total, 0);
       const expected = shift.modalAwal + tunai;
 
-      const closed = await tx.shift.update({
-        where: { id: params.id },
+      // WAJIB difilter warungId (aturan #1): isolasi tenant — update tak boleh
+      // menutup shift warung lain walau id-nya bocor. updateMany tak melempar
+      // P2025 saat 0 baris → cek count eksplisit & samakan hasil lama (404).
+      const upd = await tx.shift.updateMany({
+        where: { id: params.id, warungId },
         data: { status: "TUTUP", closedAt: new Date(), kasFisik },
+      });
+      if (upd.count !== 1) {
+        throw new CloseError("Shift tidak ditemukan / sudah tutup.", 404);
+      }
+      const closed = await tx.shift.findFirstOrThrow({
+        where: { id: params.id, warungId },
       });
 
       return { closed, expected };
