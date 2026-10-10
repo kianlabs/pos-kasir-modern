@@ -107,7 +107,7 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
 
   if (loading) {
     return (
-      <p className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center text-sm text-zinc-500">
+      <p className="mx-auto max-w-sm rounded-xl border border-ink-200 bg-surface p-8 text-center text-body-sm font-body-sm text-ink-500">
         Memuat struk…
       </p>
     );
@@ -115,16 +115,18 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
 
   if (notFound || !receipt) {
     return (
-      <div className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center shadow-xs">
-        <p className="text-sm font-semibold text-zinc-700">Struk tidak ditemukan.</p>
-        <p className="mt-1 text-xs text-zinc-500">
+      <div className="mx-auto max-w-sm rounded-xl border border-ink-200 bg-surface p-8 text-center">
+        <p className="text-label-md font-label-md font-semibold text-ink-950">
+          Struk tidak ditemukan.
+        </p>
+        <p className="mt-1 text-caption font-caption text-ink-500">
           Transaksi ini mungkin sudah tersinkron ke server.
         </p>
         <Link
           href="/"
-          className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover"
+          className="mt-4 inline-block rounded-xl bg-ink-950 px-4 py-2.5 text-label-md font-label-md font-semibold text-surface transition-all hover:opacity-90 active:scale-[0.98]"
         >
-          Transaksi baru
+          Transaksi Baru
         </Link>
       </div>
     );
@@ -145,8 +147,9 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
         cash={receipt.cash}
         change={receipt.change}
         badge={
-          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-            ⏳ Belum tersinkron
+          <span className="inline-flex items-center gap-1 rounded border border-ink-200 bg-ink-100 px-2.5 py-0.5 text-caption font-caption font-semibold text-ink-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-ink-500" />
+            Belum Tersinkron
           </span>
         }
         footerNote="Struk ini tersimpan lokal & akan tersinkron otomatis."
@@ -154,14 +157,14 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
           <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
             <Link
               href="/"
-              className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
+              className="flex-1 rounded-xl border border-ink-200 bg-surface py-3 text-center text-label-md font-label-md font-semibold text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
             >
-              Transaksi baru
+              Transaksi Baru
             </Link>
             <button
               type="button"
               onClick={() => window.print()}
-              className="flex-1 rounded-lg border bg-white py-2.5 text-center text-sm font-bold hover:bg-zinc-50"
+              className="flex-1 rounded-xl bg-ink-950 py-3 text-center text-label-md font-label-md font-semibold text-surface transition-all hover:opacity-90 active:scale-[0.98]"
             >
               Cetak
             </button>

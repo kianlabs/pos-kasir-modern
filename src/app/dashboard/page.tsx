@@ -37,10 +37,10 @@ type Snapshot = {
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border bg-surface p-4 shadow-xs">
-      <div className="text-xs font-semibold uppercase tracking-wide text-text-muted">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-text-muted">{sub}</div>}
+    <div className="rounded-2xl border border-ink-200 bg-surface p-4">
+      <div className="text-caption uppercase tracking-wide text-ink-500">{label}</div>
+      <div className="mt-1 text-numeral-lg tabular-nums text-ink-950">{value}</div>
+      {sub && <div className="mt-0.5 text-caption text-ink-500">{sub}</div>}
     </div>
   );
 }
@@ -111,26 +111,26 @@ export default function DashboardPage() {
     return <p className="text-danger">Gagal memuat dashboard. Refresh halaman.</p>;
   }
 
-  if (!snap) return <p className="text-text-muted">Memuat dashboard…</p>;
+  if (!snap) return <p className="text-ink-500">Memuat dashboard…</p>;
 
   const maxJam = Math.max(1, ...snap.omzetPerJam.map((j) => j.total));
 
   return (
     <div>
       {!online && (
-        <div className="mb-3 rounded-lg border border-amber-300 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
+        <div className="mb-3 rounded-xl border border-ink-300 bg-ink-100 px-3 py-2 text-body-sm text-ink-700">
           📵 Butuh internet — data mungkin tidak terbaru.
         </div>
       )}
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-bold">Dashboard Live</h1>
-        <span className="flex items-center gap-1.5 rounded-full bg-accent-bg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-tertiary" />
+        <h1 className="text-headline-md text-ink-950">Dashboard Live</h1>
+        <span className="flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-caption uppercase tracking-wide text-ink-700">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-ink-950" />
           Live
         </span>
         {diperbarui && (
-          <span className="ml-auto text-xs text-text-muted">
+          <span className="ml-auto text-caption text-ink-500">
             Diperbarui {diperbarui.toLocaleTimeString("id-ID")}
           </span>
         )}
@@ -142,41 +142,39 @@ export default function DashboardPage() {
         <Card label="Rata-rata / trx" value={rupiah(snap.rataRata)} />
       </div>
 
-      {/* Sparkline omzet per jam — murni CSS/div, tanpa chart library. */}
-      <div className="mt-4 rounded-xl border bg-surface p-4 shadow-xs">
-        <h2 className="mb-3 font-bold">📈 Omzet per jam (12 jam WIB terakhir)</h2>
+      <div className="mt-4 rounded-2xl border border-ink-200 bg-surface p-4">
+        <h2 className="mb-3 text-headline-sm text-ink-950">📈 Omzet per jam (12 jam WIB terakhir)</h2>
         <div className="flex h-32 items-stretch gap-1.5">
           {snap.omzetPerJam.map((j) => (
             <div key={j.jam} className="flex flex-1 flex-col items-center gap-1">
-              <span className="text-[10px] font-bold text-text-muted">
+              <span className="text-caption tabular-nums text-ink-700">
                 {j.total > 0 ? `${Math.round(j.total / 1000)}rb` : ""}
               </span>
               <div className="flex w-full flex-1 items-end">
                 <div
-                  className="w-full rounded-t-md bg-primary"
+                  className="w-full rounded-t-md bg-ink-950"
                   style={{ height: `${Math.max(3, (j.total / maxJam) * 100)}%` }}
                   title={rupiah(j.total)}
                 />
               </div>
-              <span className="text-[10px] font-semibold text-text-muted">{j.jam}</span>
+              <span className="text-caption tabular-nums text-ink-500">{j.jam}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Feed 5 transaksi terakhir — efek "kasir bunyi". */}
-      <div className="mt-4 rounded-xl border bg-surface p-4 shadow-xs">
-        <h2 className="mb-2 font-bold">🧾 Transaksi terakhir</h2>
+      <div className="mt-4 rounded-2xl border border-ink-200 bg-surface p-4">
+        <h2 className="mb-2 text-headline-sm text-ink-950">🧾 Transaksi terakhir</h2>
         {snap.transaksiTerakhir.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada penjualan.</p>
+          <p className="text-body-sm text-ink-500">Belum ada penjualan.</p>
         ) : (
           snap.transaksiTerakhir.map((t) => (
             <Link
               key={t.id}
               href={`/struk/${t.id}`}
-              className="flex justify-between border-b py-2 text-sm last:border-0 hover:bg-accent-bg"
+              className="flex justify-between border-b border-ink-200 py-2 text-body-sm last:border-0 hover:bg-ink-100"
             >
-              <span>
+              <span className="text-ink-700">
                 {new Date(t.createdAt).toLocaleTimeString("id-ID", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -184,11 +182,11 @@ export default function DashboardPage() {
                 })}
                 {" "}• {t.itemCount} item • {t.payment}
               </span>
-              <b>{rupiah(t.total)}</b>
+              <b className="tabular-nums text-ink-950">{rupiah(t.total)}</b>
             </Link>
           ))
         )}
-        <Link href="/transaksi" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
+        <Link href="/transaksi" className="mt-2 inline-block text-label-lg text-ink-950 hover:underline">
           Semua transaksi →
         </Link>
       </div>

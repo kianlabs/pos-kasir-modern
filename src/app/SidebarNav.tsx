@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import type { Role } from "@/types";
 import { isNavActive, navForRole } from "@/shared/nav";
 
-// Sidebar desktop (md+). Definisi menu ada di lib/nav.ts (satu sumber
-// kebenaran, dipakai juga oleh bottom-nav mobile).
 export default function SidebarNav({ role }: { role: Role }) {
   const path = usePathname();
   const items = navForRole(role);
@@ -19,14 +17,14 @@ export default function SidebarNav({ role }: { role: Role }) {
           <Link
             key={n.href}
             href={n.href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+            className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-body-md font-body-md transition ${
               active
-                ? "bg-primary text-white shadow-sm"
-                : "text-zinc-400 hover:bg-stone-800 hover:text-white"
+                ? "bg-ink-950 text-surface font-semibold shadow-sm"
+                : "text-ink-700 hover:bg-ink-100 hover:text-ink-950"
             }`}
           >
             <span className="text-lg">{n.icon}</span>
-            {n.label}
+            <span>{n.label}</span>
           </Link>
         );
       })}

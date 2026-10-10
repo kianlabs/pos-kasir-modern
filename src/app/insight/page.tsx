@@ -141,14 +141,14 @@ export default function InsightPage() {
   return (
     <div>
       <div className="mb-4">
-        <h1 className="text-xl font-bold">✨ Insight</h1>
-        <p className="mt-0.5 text-sm text-text-muted">
+        <h1 className="text-headline-md text-ink-950">✨ Insight</h1>
+        <p className="mt-0.5 text-body-sm text-ink-500">
           Ringkasan otomatis, deteksi anomali, dan tanya-laporan untuk owner.
         </p>
       </div>
 
       {!online ? (
-        <p className="rounded-xl border border-amber-300 bg-warning-bg p-4 text-sm font-semibold text-warning">
+        <p className="rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
           📶 {PESAN_OFFLINE}
         </p>
       ) : (
@@ -158,13 +158,13 @@ export default function InsightPage() {
               type="button"
               onClick={ringkasHariIni}
               disabled={sibuk}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-ink-950 px-4 py-2 text-label-lg text-surface hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sibuk ? "Menyusun ringkasan…" : "✨ Lihat ringkasan hari ini"}
             </button>
             <Link
               href="/insight/chat"
-              className="rounded-lg border px-4 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-50"
+              className="rounded-xl border border-ink-200 px-4 py-2 text-label-lg text-ink-950 hover:bg-ink-100"
             >
               💬 Tanya owner
             </Link>
@@ -173,38 +173,39 @@ export default function InsightPage() {
           {notice && (
             <p
               role="status"
-              className="mt-3 rounded-xl border border-amber-300 bg-warning-bg p-3 text-sm font-semibold text-warning"
+              className="mt-3 rounded-2xl border border-ink-300 bg-ink-100 p-3 text-body-sm text-ink-700"
             >
               {notice}
             </p>
           )}
 
           {usage && (
-            <div className="mt-3 rounded-xl border bg-zinc-50 p-3 text-sm">
-              <b>Pemakaian AI bulan ini</b>
-              <p className="mt-1 text-text-muted">
-                {usage.totalTokens.toLocaleString("id-ID")} token · {usage.calls} panggilan ·{" "}
-                estimasi {rupiah(usage.estimasiRupiah)}
+            <div className="mt-3 rounded-2xl border border-ink-200 bg-ink-100 p-3 text-body-sm">
+              <b className="text-ink-950">Pemakaian AI bulan ini</b>
+              <p className="mt-1 text-ink-700">
+                <span className="tabular-nums">{usage.totalTokens.toLocaleString("id-ID")}</span> token ·{" "}
+                <span className="tabular-nums">{usage.calls}</span> panggilan · estimasi{" "}
+                <span className="tabular-nums">{rupiah(usage.estimasiRupiah)}</span>
               </p>
-              <p className="mt-0.5 text-xs text-zinc-500">
+              <p className="mt-0.5 text-caption text-ink-500">
                 Estimasi untuk pemantauan (target &lt; Rp5.000/warung/bln); angka final dari provider.
               </p>
             </div>
           )}
 
           {preview && (
-            <div className="mt-3 rounded-xl border-2 border-primary bg-white p-4 shadow-xs">
+            <div className="mt-3 rounded-2xl border-2 border-ink-950 bg-surface p-4">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-accent-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary">
+                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption uppercase tracking-wide text-ink-700">
                   {preview.viaAi ? "Ringkasan AI" : "Ringkasan angka"}
                 </span>
-                <b className="text-body-sm">{preview.title}</b>
+                <b className="text-body-sm text-ink-950">{preview.title}</b>
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-body-sm">{preview.body}</p>
+              <p className="mt-2 whitespace-pre-wrap text-body-sm text-ink-700">{preview.body}</p>
               {preview.source && (
                 <Link
                   href={preview.source}
-                  className="mt-2 inline-block text-sm font-semibold text-primary hover:underline"
+                  className="mt-2 inline-block text-body-sm text-label-lg text-ink-950 hover:underline"
                 >
                   Lihat sumber angka →
                 </Link>
@@ -213,11 +214,11 @@ export default function InsightPage() {
           )}
 
           <div className="mt-5">
-            <h2 className="mb-2 font-bold">Daftar insight</h2>
+            <h2 className="mb-2 text-headline-sm text-ink-950">Daftar insight</h2>
             {failed ? (
               <p className="text-danger">Gagal memuat insight. Refresh halaman.</p>
             ) : !items ? (
-              <p className="text-zinc-500">Memuat insight…</p>
+              <p className="text-ink-500">Memuat insight…</p>
             ) : (
               <InsightList
                 items={items}

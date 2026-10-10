@@ -16,10 +16,10 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
 
   if (!meja) {
     return (
-      <div className="mx-auto max-w-md rounded-xl border bg-white p-8 text-center shadow-xs">
+      <div className="mx-auto max-w-md rounded-2xl border border-ink-200 bg-surface p-8 text-center text-body-md text-ink-700">
         Meja tidak ditemukan.
         <br />
-        <Link href="/meja" className="font-bold text-primary hover:underline">
+        <Link href="/meja" className="font-bold text-ink-950 hover:underline">
           ← Kembali ke peta meja
         </Link>
       </div>
@@ -59,30 +59,31 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link href="/meja" className="text-sm font-semibold text-primary hover:underline">
+        <Link href="/meja" className="text-label-md text-ink-500 transition-colors hover:text-ink-950">
           ← Peta meja
         </Link>
-        <h1 className="text-xl font-bold">🍽️ Meja {meja.nomor}</h1>
+        <h1 className="text-headline-md text-ink-950">Meja {meja.nomor}</h1>
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-            bill ? "bg-primary text-white" : "bg-emerald-100 text-emerald-700"
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold ${
+            bill ? "bg-ink-950 text-surface" : "border border-ink-200 bg-surface text-ink-500"
           }`}
         >
-          {bill ? "TERISI" : "KOSONG"}
+          <span className={`h-1.5 w-1.5 rounded-full ${bill ? "bg-success" : "bg-ink-300"}`} />
+          {bill ? "Terisi" : "Kosong"}
         </span>
       </div>
 
       {!bill && (
-        <div className="rounded-xl border bg-white p-6 shadow-xs">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-6">
           {!shift && (
-            <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800">
+            <p className="mb-4 rounded-xl border border-danger/30 bg-danger-bg px-4 py-2.5 text-body-sm font-semibold text-danger">
               ⚠️ Belum ada shift terbuka — buka shift dulu sebelum membuka bill.{" "}
               <Link href="/shift" className="underline">
                 Buka shift →
               </Link>
             </p>
           )}
-          <p className="mb-4 text-sm text-zinc-500">
+          <p className="mb-4 text-body-md text-ink-500">
             Meja ini kosong. Buka bill untuk mulai mencatat pesanan tamu.
           </p>
           <BillPanel
@@ -106,16 +107,18 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
         // aksi (tambah/bayar/gabung/pisah). Di mobile tetap 1 kolom bertumpuk.
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="lg:sticky lg:top-4 lg:self-start">
-            <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
-              <div className="flex items-center justify-between border-b px-4 py-3">
-                <h2 className="font-bold">
-                  Bill <span className="text-sm font-normal text-zinc-500">({itemCount} item)</span>
+            <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
+              <div className="flex items-center justify-between border-b border-ink-200 px-4 py-3">
+                <h2 className="text-headline-sm text-ink-950">
+                  Bill <span className="text-body-sm font-normal text-ink-500">({itemCount} item)</span>
                 </h2>
-                <span className="font-mono text-xs text-zinc-400">#{bill.id.slice(0, 8).toUpperCase()}</span>
+                <span className="font-receipt text-caption text-ink-500">
+                  #{bill.id.slice(0, 8).toUpperCase()}
+                </span>
               </div>
 
               {bill.items.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-zinc-400">
+                <p className="px-4 py-8 text-center text-body-sm text-ink-500">
                   Belum ada item. Tambahkan pesanan di bawah 👇
                 </p>
               ) : (
@@ -123,40 +126,42 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
                   {bill.items.map((i) => (
                     <div
                       key={i.id}
-                      className="flex items-center gap-3 border-b py-2.5 text-sm last:border-0"
+                      className="flex min-h-12 items-center gap-3 border-b border-ink-200 py-2.5 text-body-sm last:border-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold">{i.name}</div>
-                        <div className="text-xs text-zinc-500">
+                        <div className="truncate font-semibold text-ink-950">{i.name}</div>
+                        <div className="text-caption text-ink-500 tabular-nums">
                           {i.qty} × {rupiah(i.price)}
                         </div>
                       </div>
-                      <div className="font-bold">{rupiah(i.price * i.qty)}</div>
+                      <div className="text-label-lg text-ink-950 tabular-nums">
+                        {rupiah(i.price * i.qty)}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="border-t bg-zinc-50 px-4 py-3 text-sm">
-                <div className="flex justify-between text-zinc-600">
+              <div className="border-t border-ink-200 bg-canvas px-4 py-3 text-body-sm">
+                <div className="flex justify-between text-ink-700">
                   <span>Subtotal</span>
-                  <span>{rupiah(bill.subtotal)}</span>
+                  <span className="tabular-nums">{rupiah(bill.subtotal)}</span>
                 </div>
                 {bill.discount > 0 && (
-                  <div className="flex justify-between text-zinc-600">
+                  <div className="flex justify-between text-ink-700">
                     <span>Diskon</span>
-                    <span>−{rupiah(bill.discount)}</span>
+                    <span className="tabular-nums">−{rupiah(bill.discount)}</span>
                   </div>
                 )}
                 {bill.tax > 0 && (
-                  <div className="flex justify-between text-zinc-600">
+                  <div className="flex justify-between text-ink-700">
                     <span>Pajak</span>
-                    <span>+{rupiah(bill.tax)}</span>
+                    <span className="tabular-nums">+{rupiah(bill.tax)}</span>
                   </div>
                 )}
-                <div className="mt-1.5 flex justify-between text-xl font-extrabold">
+                <div className="mt-1.5 flex justify-between text-numeral-lg text-ink-950">
                   <span>Total</span>
-                  <span>{rupiah(bill.total)}</span>
+                  <span className="tabular-nums">{rupiah(bill.total)}</span>
                 </div>
               </div>
             </div>

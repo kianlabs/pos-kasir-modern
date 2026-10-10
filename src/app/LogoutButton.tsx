@@ -22,7 +22,7 @@ export default function LogoutButton() {
       type="button"
       onClick={keluar}
       disabled={loading}
-      className="mt-2 w-full rounded-md bg-stone-800 py-1.5 text-[11px] font-semibold text-zinc-300 transition hover:bg-stone-700 hover:text-white disabled:opacity-50"
+      className="mt-2 w-full rounded-lg border border-ink-200 bg-surface py-1.5 text-caption font-caption text-ink-950 transition hover:bg-ink-100 disabled:opacity-50"
     >
       {loading ? "Keluar…" : "Keluar"}
     </button>

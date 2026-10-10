@@ -160,7 +160,7 @@ export default function ChatPanel() {
 
   if (!online) {
     return (
-      <p className="rounded-xl border border-amber-300 bg-warning-bg p-4 text-sm font-semibold text-warning">
+      <p className="rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
         📶 {PESAN_OFFLINE}
       </p>
     );
@@ -169,8 +169,8 @@ export default function ChatPanel() {
   return (
     <div className="flex flex-col gap-3">
       {pesan.length === 0 && (
-        <div className="rounded-xl border bg-white p-4 shadow-xs">
-          <p className="text-sm text-text-muted">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-4">
+          <p className="text-body-sm text-ink-500">
             Tanyakan apa saja tentang warung Anda. Contoh:
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -179,7 +179,7 @@ export default function ChatPanel() {
                 key={c}
                 type="button"
                 onClick={() => kirim(c)}
-                className="rounded-full border bg-neutral px-3 py-1.5 text-sm font-medium hover:bg-accent-bg"
+                className="rounded-full border border-ink-200 bg-ink-100 px-3 py-1.5 text-body-sm text-ink-700 hover:bg-ink-200"
               >
                 {c}
               </button>
@@ -196,20 +196,20 @@ export default function ChatPanel() {
       >
         {pesan.map((p, i) =>
           p.role === "user" ? (
-            <div key={i} className="self-end rounded-xl bg-primary px-4 py-2 text-sm text-white">
+            <div key={i} className="self-end rounded-2xl bg-ink-950 px-4 py-2 text-body-sm text-surface">
               {p.content}
             </div>
           ) : (
-            <div key={i} className="self-start rounded-xl border bg-white px-4 py-2 shadow-xs">
-              <p className="whitespace-pre-wrap text-body-sm">{p.content || "…"}</p>
+            <div key={i} className="self-start rounded-2xl border border-ink-200 bg-surface px-4 py-2">
+              <p className="whitespace-pre-wrap text-body-sm text-ink-700">{p.content || "…"}</p>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 {p.tool && TOOL_LABEL[p.tool] && (
-                  <span className="rounded-full bg-accent-bg px-2 py-0.5 text-[11px] font-bold text-primary">
+                  <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
                     sumber: {TOOL_LABEL[p.tool]}
                   </span>
                 )}
                 {p.degradasi && (
-                  <span className="rounded-full bg-warning-bg px-2 py-0.5 text-[11px] font-bold text-warning">
+                  <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
                     mode offline angka
                   </span>
                 )}
@@ -222,7 +222,7 @@ export default function ChatPanel() {
       {galat && (
         <p
           role="status"
-          className="rounded-xl border border-amber-300 bg-warning-bg p-3 text-sm font-semibold text-warning"
+          className="rounded-2xl border border-ink-300 bg-ink-100 p-3 text-body-sm text-ink-700"
         >
           {galat}
         </p>
@@ -251,12 +251,12 @@ export default function ChatPanel() {
           rows={2}
           maxLength={300}
           placeholder="Contoh: stok apa yang menipis hari ini?"
-          className="flex-1 resize-none rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+          className="flex-1 resize-none rounded-2xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
         />
         <button
           type="submit"
           disabled={mengirim || !input.trim()}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-ink-950 px-4 py-2 text-label-lg text-surface hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {mengirim ? "…" : "Kirim"}
         </button>

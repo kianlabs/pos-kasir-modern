@@ -13,12 +13,12 @@ export default function InsightChatPage() {
       <div className="mb-4">
         <Link
           href="/insight"
-          className="text-sm font-semibold text-primary hover:underline"
+          className="text-body-sm text-label-lg text-ink-950 hover:underline"
         >
           ← Kembali ke Insight
         </Link>
-        <h1 className="mt-1 text-xl font-bold">💬 Tanya Insight</h1>
-        <p className="mt-0.5 text-sm text-text-muted">
+        <h1 className="mt-1 text-headline-md text-ink-950">💬 Tanya Insight</h1>
+        <p className="mt-0.5 text-body-sm text-ink-500">
           Tanya tentang omzet, tren, produk terlaris, stok, kasir, atau anomali —
           jawaban memakai data warung Anda sendiri.
         </p>

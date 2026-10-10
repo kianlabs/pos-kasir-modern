@@ -72,28 +72,35 @@ export default function LoginClient({
   return (
     <main className="mx-auto flex w-full max-w-[520px] flex-col items-center">
       <header className="mb-6 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-3xl">🧾</span>
-          <h1 className="text-3xl font-extrabold tracking-tight">KRING!</h1>
+        <div className="mb-1.5 inline-flex items-center justify-center gap-2">
+          <span className="text-3xl leading-none">🧾</span>
+          <h1 className="font-display-hero text-display-hero leading-none tracking-tight text-ink-950">
+            KRING!
+          </h1>
         </div>
-        <p className="text-sm text-text-muted">Kring! Kasir bunyi, cuan masuk.</p>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-primary">
+        <p className="font-body-md text-body-md text-ink-500">Kring! Kasir bunyi, cuan masuk.</p>
+        <p className="mt-1 font-label-md text-label-md uppercase tracking-wider text-ink-700">
           {namaWarung}
         </p>
       </header>
 
       <form
         onSubmit={submit}
-        className="w-full rounded-[20px] border border-neutral bg-surface p-6 shadow-xs"
+        className="w-full rounded-[20px] border border-ink-200 bg-surface p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
       >
-        {/* Pilih peran */}
-        <section className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-neutral bg-neutral p-1.5">
+        {/* Pilih peran — segmented control */}
+        <section
+          aria-label="Pilih Peran"
+          className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-ink-200 bg-ink-100 p-1.5"
+        >
           <button
             type="button"
             onClick={() => { setMode("kasir"); setError(""); }}
             aria-pressed={mode === "kasir"}
-            className={`h-12 rounded-lg text-sm font-bold transition ${
-              mode === "kasir" ? "bg-secondary text-white" : "text-text-muted hover:text-secondary"
+            className={`flex h-12 items-center justify-center gap-2 rounded-lg font-label-lg text-label-lg transition-all active:scale-[0.98] ${
+              mode === "kasir"
+                ? "bg-ink-950 text-surface"
+                : "bg-transparent text-ink-500 transition-colors hover:text-ink-950"
             }`}
           >
             👤 Kasir
@@ -102,8 +109,10 @@ export default function LoginClient({
             type="button"
             onClick={() => { setMode("owner"); setError(""); }}
             aria-pressed={mode === "owner"}
-            className={`h-12 rounded-lg text-sm font-bold transition ${
-              mode === "owner" ? "bg-secondary text-white" : "text-text-muted hover:text-secondary"
+            className={`flex h-12 items-center justify-center gap-2 rounded-lg font-label-lg text-label-lg transition-all active:scale-[0.98] ${
+              mode === "owner"
+                ? "bg-ink-950 text-surface"
+                : "bg-transparent text-ink-500 transition-colors hover:text-ink-950"
             }`}
           >
             🔑 Owner
@@ -112,40 +121,54 @@ export default function LoginClient({
 
         {mode === "kasir" ? (
           kasir.length === 0 ? (
-            <p className="mb-6 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning">
+            <p className="mb-6 rounded-xl border border-ink-200 bg-ink-100 px-3 py-2 font-body-md text-body-md text-ink-700">
               Belum ada kasir aktif di warung ini. Minta Owner menambah kasir dulu.
             </p>
           ) : (
             <>
-              <label className="mb-2 block text-sm font-semibold text-secondary" htmlFor="kasir">
-                Kasir bertugas
-              </label>
-              <select
-                id="kasir"
-                value={userId}
-                onChange={(e) => { setUserId(e.target.value); setPin(""); setError(""); }}
-                className="mb-5 h-12 w-full rounded-xl border border-neutral bg-surface px-3.5 text-sm outline-none focus:border-primary"
-              >
-                {kasir.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.name}
-                  </option>
-                ))}
-              </select>
+              <div className="mb-5">
+                <label
+                  className="mb-2 block font-label-md text-label-md text-ink-700"
+                  htmlFor="kasir"
+                >
+                  Kasir bertugas
+                </label>
+                <div className="relative">
+                  <select
+                    id="kasir"
+                    value={userId}
+                    onChange={(e) => { setUserId(e.target.value); setPin(""); setError(""); }}
+                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-ink-200 bg-surface px-3.5 pr-10 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
+                  >
+                    {kasir.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {k.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-ink-700">
+                    ▾
+                  </span>
+                </div>
+              </div>
 
               <div className="mb-6 text-center">
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <span className="text-sm font-semibold text-secondary">
-                    Masukkan PIN ({PIN_LEN} digit)
+                  <span className="font-label-md text-label-md text-ink-700">
+                    Masukkan PIN Kasir ({PIN_LEN} digit)
                   </span>
-                  <span className="text-xs text-text-muted">🔒 Terenkripsi</span>
+                  <span className="flex items-center gap-1 font-caption text-caption text-ink-500">
+                    🔒 Terenkripsi
+                  </span>
                 </div>
                 <div className="flex items-center justify-center gap-4 py-2" aria-hidden="true">
                   {Array.from({ length: PIN_LEN }).map((_, i) => (
                     <span
                       key={i}
-                      className={`h-4 w-4 rounded-full transition-all ${
-                        i < pin.length ? "bg-secondary ring-2 ring-secondary" : "border border-neutral bg-neutral"
+                      className={`h-4 w-4 rounded-full transition-all duration-150 ${
+                        i < pin.length
+                          ? "bg-ink-950 ring-2 ring-ink-950"
+                          : "border border-ink-300 bg-ink-100"
                       }`}
                     />
                   ))}
@@ -157,7 +180,7 @@ export default function LoginClient({
                   autoComplete="off"
                   aria-label={`PIN ${PIN_LEN} digit`}
                   autoFocus
-                  className="mx-auto mt-2 w-32 rounded-lg border border-neutral px-3 py-2 text-center text-lg font-bold tracking-[0.5em] outline-none focus:border-primary"
+                  className="mx-auto mt-2 w-32 rounded-lg border border-ink-200 px-3 py-2 text-center font-body-lg text-body-lg font-bold tracking-[0.5em] outline-none focus:border-ink-950"
                 />
               </div>
 
@@ -168,7 +191,7 @@ export default function LoginClient({
                     key={d}
                     type="button"
                     onClick={() => press(d)}
-                    className="h-[60px] rounded-xl border border-neutral bg-surface text-lg font-bold transition hover:bg-accent-bg active:scale-[0.98]"
+                    className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface font-numeral-lg text-numeral-lg text-ink-950 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
                   >
                     {d}
                   </button>
@@ -176,14 +199,14 @@ export default function LoginClient({
                 <button
                   type="button"
                   onClick={() => { setPin(""); setError(""); }}
-                  className="h-[60px] rounded-xl border border-neutral bg-surface text-sm font-bold text-text-muted transition hover:bg-accent-bg active:scale-[0.98]"
+                  className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface font-label-lg text-label-lg text-ink-700 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
                 >
                   C
                 </button>
                 <button
                   type="button"
                   onClick={() => press("0")}
-                  className="h-[60px] rounded-xl border border-neutral bg-surface text-lg font-bold transition hover:bg-accent-bg active:scale-[0.98]"
+                  className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface font-numeral-lg text-numeral-lg text-ink-950 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
                 >
                   0
                 </button>
@@ -191,7 +214,7 @@ export default function LoginClient({
                   type="button"
                   onClick={backspace}
                   aria-label="Hapus satu digit"
-                  className="h-[60px] rounded-xl border border-neutral bg-surface text-lg font-bold text-text-muted transition hover:bg-accent-bg active:scale-[0.98]"
+                  className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface text-[24px] text-ink-700 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
                 >
                   ⌫
                 </button>
@@ -200,7 +223,7 @@ export default function LoginClient({
           )
         ) : (
           <>
-            <label className="mb-1 block text-xs font-semibold text-text-muted" htmlFor="email">
+            <label className="mb-1 block font-label-md text-label-md text-ink-700" htmlFor="email">
               Email owner
             </label>
             <input
@@ -210,9 +233,9 @@ export default function LoginClient({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="owner@warung.demo"
               autoComplete="username"
-              className="mb-2 w-full rounded-lg border border-neutral px-3 py-2 text-sm outline-none focus:border-primary"
+              className="mb-3 h-12 w-full rounded-xl border border-ink-200 px-3.5 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
             />
-            <label className="mb-1 block text-xs font-semibold text-text-muted" htmlFor="password">
+            <label className="mb-1 block font-label-md text-label-md text-ink-700" htmlFor="password">
               Kata sandi
             </label>
             <input
@@ -222,16 +245,16 @@ export default function LoginClient({
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="mb-4 w-full rounded-lg border border-neutral px-3 py-2 text-sm outline-none focus:border-primary"
+              className="mb-4 h-12 w-full rounded-xl border border-ink-200 px-3.5 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
             />
-            <p className="mb-4 rounded-lg bg-neutral px-3 py-2 text-xs text-text-muted">
+            <p className="mb-4 rounded-xl border border-ink-200 bg-ink-100 px-3 py-2 font-caption text-caption text-ink-500">
               Owner bisa mengelola produk, laporan, dan pengaturan. Kasir hanya untuk jualan.
             </p>
           </>
         )}
 
         {error && (
-          <p className="mb-3 rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger">
+          <p className="mb-3 rounded-xl bg-danger-bg px-3 py-2 font-body-md font-medium text-danger">
             ⚠️ {error}
           </p>
         )}
@@ -239,13 +262,17 @@ export default function LoginClient({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="h-14 w-full rounded-xl bg-secondary font-bold text-white transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 font-headline-sm text-headline-sm text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
         >
-          {loading ? "Memproses…" : mode === "kasir" ? "MASUK SEBAGAI KASIR →" : "MASUK SEBAGAI OWNER →"}
+          {loading
+            ? "Memproses…"
+            : mode === "kasir"
+              ? "MASUK SEBAGAI KASIR →"
+              : "MASUK SEBAGAI OWNER →"}
         </button>
       </form>
 
-      <footer className="mt-5 text-center text-xs text-text-muted">
+      <footer className="mt-5 text-center font-caption text-caption text-ink-500">
         <p>Lupa PIN kasir? Hubungi Owner atau Supervisor outlet.</p>
       </footer>
     </main>

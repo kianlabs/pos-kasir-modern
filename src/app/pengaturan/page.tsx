@@ -34,42 +34,42 @@ export default function PengaturanPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="mb-4 text-xl font-bold">Pengaturan</h1>
-      <form onSubmit={simpan} className="rounded-xl border bg-white p-4 shadow-xs">
-        <h2 className="mb-3 font-bold">🧾 Pajak otomatis (PB1)</h2>
-        <label className="flex cursor-pointer items-center justify-between rounded-lg bg-zinc-50 px-3 py-2.5 text-sm font-semibold">
-          <span>Kenakan pajak di setiap struk</span>
+      <h1 className="mb-4 text-headline-md text-ink-950">Pengaturan</h1>
+      <form onSubmit={simpan} className="rounded-2xl border border-ink-200 bg-surface p-4">
+        <h2 className="mb-3 text-headline-sm text-ink-950">🧾 Pajak otomatis (PB1)</h2>
+        <label className="flex cursor-pointer items-center justify-between rounded-xl bg-ink-100 px-3 py-2.5 text-body-sm text-ink-950">
+          <span className="text-label-lg">Kenakan pajak di setiap struk</span>
           <button
             type="button"
             role="switch"
             aria-checked={enabled}
             onClick={() => setEnabled((v) => !v)}
-            className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-primary" : "bg-zinc-300"}`}
+            className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-ink-950" : "bg-ink-300"}`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow-sm transition-all ${
                 enabled ? "left-[22px]" : "left-0.5"
               }`}
             />
           </button>
         </label>
         <div className="mt-3 flex items-center gap-2">
-          <label className="text-sm font-semibold text-zinc-600">Tarif</label>
+          <label className="text-label-lg text-ink-700">Tarif</label>
           <input
             value={pct}
             onChange={(e) => setPct(e.target.value.replace(/[^\d.]/g, "").slice(0, 5))}
             inputMode="decimal"
             disabled={!enabled}
-            className="w-24 rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-40"
+            className="w-24 rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950 disabled:opacity-40"
           />
-          <span className="text-sm font-bold">%</span>
+          <span className="text-label-lg text-ink-950">%</span>
         </div>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-caption text-ink-500">
           Pajak dihitung otomatis dari (subtotal − diskon) dan tercatat per transaksi + struk.
         </p>
-        {error && <p className="mt-2 text-sm text-danger">⚠️ {error}</p>}
-        {saved && <p className="mt-2 text-sm text-green-700">{saved}</p>}
-        <button className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-primary-hover">
+        {error && <p className="mt-2 text-body-sm text-danger">⚠️ {error}</p>}
+        {saved && <p className="mt-2 text-body-sm text-success">{saved}</p>}
+        <button className="mt-3 w-full rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
           Simpan
         </button>
       </form>

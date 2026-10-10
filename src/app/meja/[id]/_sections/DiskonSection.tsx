@@ -27,28 +27,28 @@ export default function DiskonSection({
   discount,
 }: Props) {
   return (
-    <section className="rounded-xl border bg-white p-4 shadow-xs">
-      <h3 className="mb-2 font-bold">Diskon</h3>
+    <section className="rounded-2xl border border-ink-200 bg-surface p-4">
+      <h3 className="mb-2 text-headline-sm text-ink-950">Diskon</h3>
       <div className="flex gap-2">
         <input
           value={discountInput}
           onChange={(e) => setDiscountInput(e.target.value.replace(/\D/g, ""))}
           inputMode="numeric"
           placeholder="Diskon Rp (opsional)"
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-ink-200 bg-surface px-3 text-body-md text-ink-950 tabular-nums outline-none transition-colors placeholder:text-ink-500 focus:border-ink-950"
         />
         <button
           type="button"
           onClick={terapkanDiskon}
           disabled={loading}
-          className="rounded-lg border border-primary/30 bg-accent-bg px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+          className="h-12 rounded-xl border border-ink-200 bg-surface px-4 text-label-lg text-ink-950 transition-all hover:bg-ink-100 active:scale-[0.98] disabled:opacity-40"
         >
           Terapkan
         </button>
       </div>
       {discNum > 0 && (
-        <p className="mt-1.5 text-xs text-zinc-500">
-          Diskon aktif: {rupiah(discEffective)}
+        <p className="mt-1.5 text-caption text-ink-500">
+          Diskon aktif: <span className="tabular-nums">{rupiah(discEffective)}</span>
           {discLebih && <> (diniatkan {rupiah(discount)})</>}
         </p>
       )}

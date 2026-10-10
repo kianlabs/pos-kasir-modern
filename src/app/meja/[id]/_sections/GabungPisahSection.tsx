@@ -41,15 +41,15 @@ export default function GabungPisahSection({
   return (
     <section className="grid gap-4 sm:grid-cols-2">
       {otherBills.length > 0 && (
-        <div className="rounded-xl border bg-white p-4 shadow-xs">
-          <h3 className="mb-2 font-bold">Gabung Bill</h3>
-          <p className="mb-2 text-xs text-zinc-500">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-4">
+          <h3 className="mb-2 text-headline-sm text-ink-950">Gabung Bill</h3>
+          <p className="mb-2 text-caption text-ink-500">
             Pindahkan semua item dari meja lain ke bill ini.
           </p>
           <select
             value={gabungSource}
             onChange={(e) => setGabungSource(e.target.value)}
-            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+            className="h-12 w-full rounded-xl border border-ink-200 bg-surface px-3 text-body-md text-ink-950 outline-none transition-colors focus:border-ink-950"
           >
             <option value="">— Pilih bill sumber —</option>
             {otherBills.map((b) => (
@@ -62,7 +62,7 @@ export default function GabungPisahSection({
             type="button"
             onClick={gabung}
             disabled={loading || !gabungSource}
-            className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+            className="mt-2 h-12 w-full rounded-xl border border-ink-200 bg-surface text-label-lg text-ink-950 transition-all hover:bg-ink-100 active:scale-[0.98] disabled:opacity-40"
           >
             Gabung ke sini
           </button>
@@ -70,15 +70,15 @@ export default function GabungPisahSection({
       )}
 
       {emptyMejas.length > 0 && items.length > 0 && (
-        <div className="rounded-xl border bg-white p-4 shadow-xs">
-          <h3 className="mb-2 font-bold">Pisah Bill</h3>
-          <p className="mb-2 text-xs text-zinc-500">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-4">
+          <h3 className="mb-2 text-headline-sm text-ink-950">Pisah Bill</h3>
+          <p className="mb-2 text-caption text-ink-500">
             Pindahkan sebagian item ke meja kosong lain.
           </p>
           <select
             value={pisahTarget}
             onChange={(e) => setPisahTarget(e.target.value)}
-            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+            className="h-12 w-full rounded-xl border border-ink-200 bg-surface px-3 text-body-md text-ink-950 outline-none transition-colors focus:border-ink-950"
           >
             <option value="">— Pilih meja tujuan —</option>
             {emptyMejas.map((m) => (
@@ -91,17 +91,17 @@ export default function GabungPisahSection({
             {items.map((it) => {
               const pick = pisahPick[it.id];
               return (
-                <div key={it.id} className="flex items-center gap-2 text-sm">
+                <div key={it.id} className="flex items-center gap-2 text-body-sm">
                   {/* Label mencakup kotak + nama → area sentuh besar
                       (min 44px tinggi) agar tidak salah tekan di tablet. */}
                   <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-1">
                     <input
                       type="checkbox"
-                      className="h-5 w-5 shrink-0 accent-[var(--color-primary)]"
+                      className="h-5 w-5 shrink-0 accent-[var(--color-ink-950)]"
                       checked={!!pick?.on}
                       onChange={(e) => togglePick(it, e.target.checked)}
                     />
-                    <span className="truncate">{it.name}</span>
+                    <span className="truncate text-ink-950">{it.name}</span>
                   </label>
                   <input
                     aria-label={`Qty ${it.name}`}
@@ -113,9 +113,9 @@ export default function GabungPisahSection({
                       }))
                     }
                     inputMode="numeric"
-                    className="h-9 w-14 rounded-md border px-2 text-center text-sm font-bold outline-none focus:border-primary"
+                    className="h-12 w-14 rounded-xl border border-ink-200 bg-surface px-2 text-center text-body-md font-bold text-ink-950 tabular-nums outline-none focus:border-ink-950"
                   />
-                  <span className="w-10 text-right text-xs text-zinc-500">/ {it.qty}</span>
+                  <span className="w-10 text-right text-caption text-ink-500 tabular-nums">/ {it.qty}</span>
                 </div>
               );
             })}
@@ -124,7 +124,7 @@ export default function GabungPisahSection({
             type="button"
             onClick={pisah}
             disabled={loading || !pisahTarget}
-            className="mt-2 w-full rounded-lg border border-primary/30 bg-accent-bg py-2 text-sm font-bold text-primary hover:bg-primary/10 disabled:opacity-40"
+            className="mt-2 h-12 w-full rounded-xl border border-ink-200 bg-surface text-label-lg text-ink-950 transition-all hover:bg-ink-100 active:scale-[0.98] disabled:opacity-40"
           >
             Pisah ke meja tujuan
           </button>

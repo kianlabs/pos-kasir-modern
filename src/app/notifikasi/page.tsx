@@ -59,36 +59,36 @@ export default function NotifikasiPage() {
   }
 
   if (failed) return <p className="text-danger">Gagal memuat notifikasi. Refresh halaman.</p>;
-  if (!items) return <p className="text-zinc-500">Memuat notifikasi…</p>;
+  if (!items) return <p className="text-ink-500">Memuat notifikasi…</p>;
 
   return (
     <div>
       <div className="mb-4">
-        <h1 className="text-xl font-bold">Notifikasi</h1>
-        <p className="mt-0.5 text-sm text-zinc-500">
+        <h1 className="text-headline-md text-ink-950">Notifikasi</h1>
+        <p className="mt-0.5 text-body-sm text-ink-500">
           Laporan shift otomatis. Salin teks lalu kirim ke WhatsApp owner (semi-manual).
         </p>
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-xl border bg-white p-4 text-sm text-zinc-500 shadow-xs">
+        <p className="rounded-2xl border border-ink-200 bg-surface p-4 text-body-sm text-ink-500">
           Belum ada laporan. Laporan dibuat otomatis saat shift ditutup.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((n) => (
-            <div key={n.id} className="rounded-xl border bg-white p-4 shadow-xs">
+            <div key={n.id} className="rounded-2xl border border-ink-200 bg-surface p-4">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-accent-bg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary">
+                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption uppercase tracking-wide text-ink-700">
                   {n.jenis}
                 </span>
-                <b className="text-body-sm">{n.subject}</b>
+                <b className="text-body-sm text-ink-950">{n.subject}</b>
                 {!n.readAt && (
-                  <span className="rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-bold text-danger">
+                  <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-danger">
                     Baru
                   </span>
                 )}
-                <span className="ml-auto text-xs text-zinc-400">
+                <span className="ml-auto text-caption text-ink-500">
                   {new Date(n.createdAt).toLocaleString("id-ID", {
                     day: "numeric",
                     month: "short",
@@ -98,21 +98,21 @@ export default function NotifikasiPage() {
                 </span>
               </div>
 
-              <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-neutral p-3 text-body-sm">
+              <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl bg-ink-100 p-3 text-body-sm text-ink-700">
                 {n.body}
               </pre>
 
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() => salin(n)}
-                  className="rounded-lg bg-primary px-3.5 py-1.5 text-sm font-bold text-white hover:bg-primary-hover"
+                  className="rounded-xl bg-ink-950 px-3.5 py-1.5 text-label-lg text-surface hover:opacity-90"
                 >
                   {tersalin === n.id ? "✓ Tersalin" : "📋 Salin"}
                 </button>
                 {!n.readAt && (
                   <button
                     onClick={() => tandaiBaca(n)}
-                    className="rounded-lg border px-3.5 py-1.5 text-sm font-semibold text-zinc-600 hover:bg-zinc-50"
+                    className="rounded-xl border border-ink-200 px-3.5 py-1.5 text-body-sm text-ink-700 hover:bg-ink-100"
                   >
                     Tandai dibaca
                   </button>

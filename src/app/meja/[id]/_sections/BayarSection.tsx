@@ -47,32 +47,32 @@ export default function BayarSection({
   kurangStok,
 }: Props) {
   return (
-    <section className="rounded-xl border bg-white p-4 shadow-xs">
-      <h3 className="mb-2 font-bold">Bayar</h3>
-      <div className="mb-3 flex justify-between text-sm text-zinc-600">
+    <section className="rounded-2xl border border-ink-200 bg-surface p-4">
+      <h3 className="mb-2 text-headline-sm text-ink-950">Bayar</h3>
+      <div className="mb-3 flex justify-between text-body-sm text-ink-700">
         <span>Subtotal</span>
-        <span>{rupiah(subtotal)}</span>
+        <span className="tabular-nums">{rupiah(subtotal)}</span>
       </div>
       {discEffective > 0 && (
-        <div className="flex justify-between text-sm text-zinc-600">
+        <div className="flex justify-between text-body-sm text-ink-700">
           <span>Diskon</span>
-          <span>−{rupiah(discEffective)}</span>
+          <span className="tabular-nums">−{rupiah(discEffective)}</span>
         </div>
       )}
       {discLebih && (
-        <p className="mt-1 text-xs text-amber-700">
+        <p className="mt-1 text-caption text-danger">
           Diskon melebihi subtotal — sisa {rupiah(discount - subtotal)} tidak terpakai.
         </p>
       )}
       {tax > 0 && (
-        <div className="flex justify-between text-sm text-zinc-600">
+        <div className="flex justify-between text-body-sm text-ink-700">
           <span>Pajak</span>
-          <span>+{rupiah(tax)}</span>
+          <span className="tabular-nums">+{rupiah(tax)}</span>
         </div>
       )}
-      <div className="mt-1 flex justify-between text-lg font-extrabold">
+      <div className="mt-1 flex justify-between text-numeral-lg text-ink-950">
         <span>Total</span>
-        <span>{rupiah(total)}</span>
+        <span className="tabular-nums">{rupiah(total)}</span>
       </div>
 
       <PaymentMethods payment={payment} onChange={setPayment} />
@@ -88,10 +88,10 @@ export default function BayarSection({
             inputMode="numeric"
             placeholder="Nominal diterima…"
             aria-label="Nominal tunai diterima"
-            className="mt-2 w-full rounded-lg border bg-white px-3 py-2 text-right text-lg font-bold outline-none focus:border-primary"
+            className="mt-2 h-12 w-full rounded-xl border border-ink-200 bg-surface px-3 text-right text-numeral-lg text-ink-950 tabular-nums outline-none transition-colors focus:border-ink-950"
           />
           {cashNum > 0 && (
-            <p className="mt-1 text-right text-xs text-zinc-400">{rupiah(cashNum)}</p>
+            <p className="mt-1 text-right text-caption text-ink-500 tabular-nums">{rupiah(cashNum)}</p>
           )}
           <Kembalian cash={cash} kembalian={kembalian} />
         </>
@@ -101,13 +101,13 @@ export default function BayarSection({
         type="button"
         onClick={bayar}
         disabled={!canPay}
-        className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover disabled:opacity-40"
+        className="mt-3 min-h-16 w-full rounded-xl bg-ink-950 py-3 text-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
       >
         {loading ? "Memproses…" : `Bayar ${rupiah(total)}`}
       </button>
 
       {kurangStok.length > 0 && (
-        <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+        <p className="mt-2 rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-caption font-medium text-danger">
           ⚠️ Stok kurang untuk:{" "}
           {kurangStok.map((k) => `${k.name} (butuh ${k.butuh}, ada ${k.ada})`).join(", ")}. Kurangi
           qty atau kulakan dulu sebelum bayar.

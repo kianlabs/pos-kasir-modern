@@ -87,14 +87,14 @@ export default function ConnectionBanner() {
 
   if (!online) {
     return (
-      <div className="sticky top-0 z-30 border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-900 print:hidden">
+      <div className="sticky top-0 z-30 border-b border-warning bg-warning-bg px-4 py-2 text-center text-sm font-semibold text-warning print:hidden">
         ⚠️ Mode offline — {count} transaksi tersimpan lokal
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-30 border-b border-emerald-300 bg-emerald-100 px-4 py-2 text-center text-sm font-semibold text-emerald-900 print:hidden">
+    <div className="sticky top-0 z-30 border-b border-success bg-success-bg px-4 py-2 text-center text-sm font-semibold text-success print:hidden">
       🔄 Menyinkronkan… ({count})
     </div>
   );

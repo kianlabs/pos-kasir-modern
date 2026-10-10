@@ -49,7 +49,7 @@ export default function KiosToggle() {
       className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
         kios
           ? "border-primary bg-primary text-white hover:bg-primary-hover"
-          : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"
+          : "border-ink-300 bg-surface text-ink-700 hover:bg-ink-100"
       }`}
     >
       {kios ? "🖥️ Keluar kios" : "🖥️ Mode kios"}

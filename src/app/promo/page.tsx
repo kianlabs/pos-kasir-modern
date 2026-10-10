@@ -146,28 +146,29 @@ export default function PromoPage() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-bold">Promo</h1>
-        <span className="ml-auto rounded-lg bg-white px-3 py-1.5 text-sm font-semibold ring-1 ring-zinc-200">
-          {promos.filter((p) => p.aktif).length} aktif / {promos.length} total
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <h1 className="text-headline-md text-ink-950">Promo</h1>
+        <span className="ml-auto rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-label-md text-ink-700">
+          <b className="tabular-nums text-ink-950">{promos.filter((p) => p.aktif).length}</b> aktif /{" "}
+          <b className="tabular-nums text-ink-950">{promos.length}</b> total
         </span>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
-        <form onSubmit={submit} className="rounded-xl border bg-white p-4 shadow-xs">
-          <h2 className="mb-3 font-bold">{editingId ? "✏️ Edit promo" : "➕ Tambah promo"}</h2>
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">Nama</label>
+        <form onSubmit={submit} className="rounded-2xl border border-ink-200 bg-surface p-4">
+          <h2 className="mb-3 text-headline-sm text-ink-950">{editingId ? "✏️ Edit promo" : "➕ Tambah promo"}</h2>
+          <label className="mb-1 block text-caption text-ink-500">Nama</label>
           <input
             value={form.nama}
             onChange={(e) => setForm({ ...form, nama: e.target.value })}
             placeholder="mis. Happy Hour Sore"
-            className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+            className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
           />
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">Tipe</label>
+          <label className="mb-1 block text-caption text-ink-500">Tipe</label>
           <select
             value={form.tipe}
             onChange={(e) => setForm({ ...form, tipe: e.target.value as PromoTipe })}
-            className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+            className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
           >
             {PROMO_TIPE.map((t) => (
               <option key={t} value={t}>
@@ -177,66 +178,66 @@ export default function PromoPage() {
           </select>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-zinc-500">{nilaiLabel}</label>
+              <label className="mb-1 block text-caption text-ink-500">{nilaiLabel}</label>
               <input
                 value={form.tipe === "BELI_1_GRATIS_1" ? "" : form.nilai}
                 disabled={form.tipe === "BELI_1_GRATIS_1"}
                 onChange={(e) => setForm({ ...form, nilai: e.target.value.replace(/\D/g, "") })}
                 placeholder="10"
                 inputMode="numeric"
-                className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-zinc-100"
+                className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950 disabled:bg-ink-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-zinc-500">Min. subtotal (Rp)</label>
+              <label className="mb-1 block text-caption text-ink-500">Min. subtotal (Rp)</label>
               <input
                 value={form.minSubtotal}
                 onChange={(e) => setForm({ ...form, minSubtotal: e.target.value.replace(/\D/g, "") })}
                 placeholder="0"
                 inputMode="numeric"
-                className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950"
               />
             </div>
           </div>
           {form.tipe === "HAPPY_HOUR" && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-zinc-500">Jam mulai</label>
+                <label className="mb-1 block text-caption text-ink-500">Jam mulai</label>
                 <input
                   type="time"
                   value={form.jamMulai}
                   onChange={(e) => setForm({ ...form, jamMulai: e.target.value })}
-                  className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-zinc-500">Jam selesai</label>
+                <label className="mb-1 block text-caption text-ink-500">Jam selesai</label>
                 <input
                   type="time"
                   value={form.jamSelesai}
                   onChange={(e) => setForm({ ...form, jamSelesai: e.target.value })}
-                  className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
                 />
               </div>
             </div>
           )}
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">Kode voucher (opsional)</label>
+          <label className="mb-1 block text-caption text-ink-500">Kode voucher (opsional)</label>
           <input
             value={form.kode}
             onChange={(e) => setForm({ ...form, kode: e.target.value })}
             placeholder="mis. HEMAT10"
-            className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary"
+            className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
           />
-          {error && <p className="mb-2 text-sm text-danger">⚠️ {error}</p>}
+          {error && <p className="mb-2 text-body-sm text-danger">⚠️ {error}</p>}
           <div className="flex gap-2">
-            <button className="flex-1 rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-primary-hover">
+            <button className="flex-1 rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
               {editingId ? "Simpan" : "Tambah"}
             </button>
             {editingId && (
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="rounded-lg border px-4 py-2 text-sm font-bold hover:bg-zinc-50"
+                className="rounded-xl border border-ink-200 px-4 py-2 text-label-lg text-ink-950 hover:bg-ink-100"
               >
                 Batal
               </button>
@@ -244,11 +245,11 @@ export default function PromoPage() {
           </div>
         </form>
 
-        <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
+        <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[640px] text-body-sm">
               <thead>
-                <tr className="border-b bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-ink-200 bg-ink-100 text-left text-caption uppercase tracking-wide text-ink-500">
                   <th className="p-3">Promo</th>
                   <th className="p-3">Tipe</th>
                   <th className="p-3 text-right">Nilai</th>
@@ -261,33 +262,33 @@ export default function PromoPage() {
                 {promos.map((p) => (
                   <tr
                     key={p.id}
-                    className={`border-b last:border-0 hover:bg-zinc-50 ${editingId === p.id ? "bg-accent-bg" : ""}`}
+                    className={`border-b border-ink-200 last:border-0 hover:bg-ink-100 ${editingId === p.id ? "bg-ink-100" : ""}`}
                   >
                     <td className="p-3">
-                      <div className="font-semibold">{p.nama}</div>
+                      <div className="text-label-lg text-ink-950">{p.nama}</div>
                       {p.kode && (
-                        <span className="rounded-full bg-accent-bg px-2 py-0.5 text-xs font-semibold">
+                        <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
                           🎟️ {p.kode}
                         </span>
                       )}
                     </td>
                     <td className="p-3">
-                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-caption text-ink-700">
                         {TIPE_LABEL[p.tipe]}
                       </span>
                       {p.tipe === "HAPPY_HOUR" && p.jamMulai && p.jamSelesai && (
-                        <div className="mt-1 text-xs text-zinc-500">
+                        <div className="mt-1 text-caption tabular-nums text-ink-500">
                           {p.jamMulai}–{p.jamSelesai}
                         </div>
                       )}
                     </td>
-                    <td className="p-3 text-right font-bold">{ringkasNilai(p)}</td>
-                    <td className="p-3 text-right">{p.minSubtotal > 0 ? rupiah(p.minSubtotal) : "—"}</td>
+                    <td className="p-3 text-right text-label-lg tabular-nums text-ink-950">{ringkasNilai(p)}</td>
+                    <td className="p-3 text-right tabular-nums text-ink-700">{p.minSubtotal > 0 ? rupiah(p.minSubtotal) : "—"}</td>
                     <td className="p-3 text-center">
                       <button
                         onClick={() => toggleAktif(p)}
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${
-                          p.aktif ? "bg-green-100 text-green-700" : "bg-zinc-200 text-zinc-600"
+                        className={`rounded-full px-3 py-1 text-caption ${
+                          p.aktif ? "bg-ink-950 text-surface" : "bg-ink-100 text-ink-500"
                         }`}
                       >
                         {p.aktif ? "Aktif" : "Nonaktif"}
@@ -296,13 +297,13 @@ export default function PromoPage() {
                     <td className="p-3 text-right">
                       <button
                         onClick={() => startEdit(p)}
-                        className="mr-3 font-semibold text-primary hover:underline"
+                        className="mr-3 text-label-lg text-ink-950 hover:underline"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => hapus(p.id, p.nama)}
-                        className="font-semibold text-danger hover:underline"
+                        className="text-label-lg text-danger hover:underline"
                       >
                         Hapus
                       </button>
@@ -311,7 +312,7 @@ export default function PromoPage() {
                 ))}
                 {promos.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-zinc-500">
+                    <td colSpan={6} className="p-8 text-center text-ink-500">
                       Belum ada promo.
                     </td>
                   </tr>

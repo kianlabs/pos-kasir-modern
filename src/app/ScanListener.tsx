@@ -94,7 +94,7 @@ export default function ScanListener({ onScan }: ScanListenerProps) {
   return (
     <span
       aria-live="polite"
-      className="pointer-events-none select-none text-[11px] font-medium text-zinc-400"
+      className="pointer-events-none select-none text-[11px] font-medium text-ink-500"
     >
       {kodeTerakhir ? `🔍 terakhir: ${kodeTerakhir}` : "🔍 scanner siap"}
     </span>

@@ -94,83 +94,83 @@ export default function ProdukPage() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-bold">Produk</h1>
-        <div className="ml-auto flex gap-2 text-sm">
-          <span className="rounded-lg bg-white px-3 py-1.5 font-semibold ring-1 ring-zinc-200">
-            {products.length} produk
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <h1 className="text-headline-md text-ink-950">Produk</h1>
+        <div className="ml-auto flex flex-wrap gap-2 text-label-md">
+          <span className="rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700">
+            <b className="text-ink-950 tabular-nums">{products.length}</b> produk
           </span>
-          <span className="rounded-lg bg-white px-3 py-1.5 font-semibold ring-1 ring-zinc-200">
-            Nilai stok {rupiah(totalNilai)}
+          <span className="rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700">
+            Nilai stok <b className="text-ink-950 tabular-nums">{rupiah(totalNilai)}</b>
           </span>
-          <a href="/stok" className="rounded-lg bg-white px-3 py-1.5 font-semibold text-primary ring-1 ring-zinc-200 hover:ring-primary">
+          <a href="/stok" className="rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700 hover:bg-ink-100">
             📋 Riwayat stok
           </a>
         </div>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
-        <form onSubmit={submit} className="rounded-xl border bg-white p-4 shadow-xs">
-          <h2 className="mb-3 font-bold">{editingId ? "✏️ Edit produk" : "➕ Tambah produk"}</h2>
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">Nama</label>
+        <form onSubmit={submit} className="rounded-2xl border border-ink-200 bg-surface p-4">
+          <h2 className="mb-3 text-headline-sm text-ink-950">{editingId ? "✏️ Edit produk" : "➕ Tambah produk"}</h2>
+          <label className="mb-1 block text-caption text-ink-500">Nama</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="mis. Ayam Goreng" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
+            placeholder="mis. Ayam Goreng" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950" />
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-zinc-500">Harga (Rp)</label>
+              <label className="mb-1 block text-caption text-ink-500">Harga (Rp)</label>
               <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value.replace(/\D/g, "") })}
-                placeholder="10000" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
+                placeholder="10000" inputMode="numeric" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950" />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-zinc-500">Stok</label>
+              <label className="mb-1 block text-caption text-ink-500">Stok</label>
               <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value.replace(/\D/g, "") })}
-                placeholder="20" inputMode="numeric" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
+                placeholder="20" inputMode="numeric" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950" />
             </div>
           </div>
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">Kategori</label>
+          <label className="mb-1 block text-caption text-ink-500">Kategori</label>
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-            placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
-          <label className="mb-1 block text-xs font-semibold text-zinc-500">
+            placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950" />
+          <label className="mb-1 block text-caption text-ink-500">
             Ikon {form.icon && <span className="text-base">{form.icon}</span>}
           </label>
-          <div className="mb-2 flex flex-wrap gap-1 rounded-lg border bg-zinc-50 p-2">
+          <div className="mb-2 flex flex-wrap gap-1 rounded-xl border border-ink-200 bg-ink-100 p-2">
             {ICON_CHOICES.map((ic) => (
               <button
                 type="button"
                 key={ic}
                 onClick={() => setForm({ ...form, icon: form.icon === ic ? "" : ic })}
-                className={`rounded-md px-1.5 py-0.5 text-lg hover:bg-white ${
-                  form.icon === ic ? "bg-white ring-2 ring-primary" : ""
+                className={`rounded-md px-1.5 py-0.5 text-lg hover:bg-surface ${
+                  form.icon === ic ? "bg-surface ring-2 ring-ink-950" : ""
                 }`}
               >
                 {ic}
               </button>
             ))}
           </div>
-          {error && <p className="mb-2 text-sm text-danger">⚠️ {error}</p>}
+          {error && <p className="mb-2 text-body-sm text-danger">⚠️ {error}</p>}
           <div className="flex gap-2">
-            <button className="flex-1 rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-primary-hover">
+            <button className="flex-1 rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
               {editingId ? "Simpan" : "Tambah"}
             </button>
             {editingId && (
               <button type="button" onClick={cancelEdit}
-                className="rounded-lg border px-4 py-2 text-sm font-bold hover:bg-zinc-50">
+                className="rounded-xl border border-ink-200 px-4 py-2 text-label-lg text-ink-950 hover:bg-ink-100">
                 Batal
               </button>
             )}
           </div>
         </form>
 
-        <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
-          <div className="border-b p-3">
+        <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
+          <div className="border-b border-ink-200 p-3">
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="🔍 Cari produk…"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary sm:max-w-xs" />
+              className="w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950 sm:max-w-xs" />
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[640px] text-body-sm">
               <thead>
-                <tr className="border-b bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-ink-200 bg-ink-100 text-left text-caption uppercase tracking-wide text-ink-500">
                   <th className="p-3">Produk</th>
                   <th className="p-3">Kategori</th>
                   <th className="p-3 text-right">Harga</th>
@@ -180,40 +180,40 @@ export default function ProdukPage() {
               </thead>
               <tbody>
                 {filtered.map((p) => (
-                  <tr key={p.id} className={`border-b last:border-0 hover:bg-zinc-50 ${editingId === p.id ? "bg-accent-bg" : ""}`}>
+                  <tr key={p.id} className={`border-b border-ink-200 last:border-0 hover:bg-ink-100 ${editingId === p.id ? "bg-ink-100" : ""}`}>
                     <td className="p-3">
-                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent-bg text-lg">
+                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-lg">
                         {productIcon(p)}
                       </span>
-                      <span className="font-semibold">{p.name}</span>
+                      <span className="text-label-lg text-ink-950">{p.name}</span>
                     </td>
                     <td className="p-3">
-                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-caption text-ink-700">
                         {p.category}
                       </span>
                     </td>
-                    <td className="p-3 text-right font-bold">{rupiah(p.price)}</td>
+                    <td className="p-3 text-right text-label-lg tabular-nums text-ink-950">{rupiah(p.price)}</td>
                     <td className="p-3">
                       <span className="flex items-center justify-center gap-1">
                         <button onClick={() => adjustStock(p, -1)}
-                          className="h-6 w-6 rounded-sm bg-zinc-100 font-bold hover:bg-zinc-200">−</button>
-                        <span className={`w-10 text-center font-bold ${p.stock <= 5 ? "text-danger" : ""}`}>
+                          className="h-6 w-6 rounded-sm bg-ink-100 text-ink-950 hover:bg-ink-200">−</button>
+                        <span className={`w-10 text-center text-label-lg tabular-nums ${p.stock <= 5 ? "text-danger" : "text-ink-950"}`}>
                           {p.stock}
                         </span>
                         <button onClick={() => adjustStock(p, 1)}
-                          className="h-6 w-6 rounded-sm bg-zinc-100 font-bold hover:bg-zinc-200">+</button>
+                          className="h-6 w-6 rounded-sm bg-ink-100 text-ink-950 hover:bg-ink-200">+</button>
                       </span>
                     </td>
                     <td className="p-3 text-right">
                       <button onClick={() => startEdit(p)}
-                        className="mr-3 font-semibold text-primary hover:underline">Edit</button>
+                        className="mr-3 text-label-lg text-ink-950 hover:underline">Edit</button>
                       <button onClick={() => hapus(p.id, p.name)}
-                        className="font-semibold text-danger hover:underline">Hapus</button>
+                        className="text-label-lg text-danger hover:underline">Hapus</button>
                     </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={5} className="p-8 text-center text-zinc-500">Tidak ada produk.</td></tr>
+                  <tr><td colSpan={5} className="p-8 text-center text-ink-500">Tidak ada produk.</td></tr>
                 )}
               </tbody>
             </table>

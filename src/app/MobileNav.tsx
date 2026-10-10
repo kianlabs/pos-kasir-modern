@@ -55,14 +55,14 @@ export default function MobileNav({ role }: { role: Role }) {
           <div
             ref={panelRef}
             tabIndex={-1}
-            className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-4 pb-24 shadow-2xl outline-none"
+            className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-surface p-4 pb-24 shadow-2xl outline-none"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 id="mobile-nav-sheet-title" className="font-bold">Menu Lainnya</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-md px-2 py-1 text-sm font-semibold text-zinc-500"
+                className="rounded-md px-2 py-1 text-sm font-semibold text-ink-500 hover:text-ink-950"
               >
                 Tutup
               </button>
@@ -77,8 +77,8 @@ export default function MobileNav({ role }: { role: Role }) {
                     onClick={() => setOpen(false)}
                     className={`flex flex-col items-center gap-1.5 rounded-xl border p-4 text-xs font-semibold ${
                       active
-                        ? "border-primary bg-accent-bg text-primary"
-                        : "border-zinc-200 bg-white text-zinc-600"
+                        ? "border-ink-950 bg-ink-100 text-ink-950"
+                        : "border-ink-200 bg-surface text-ink-700"
                     }`}
                   >
                     <span className="text-2xl">{n.icon}</span>
@@ -92,7 +92,7 @@ export default function MobileNav({ role }: { role: Role }) {
       )}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur-sm md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface/95 backdrop-blur-sm md:hidden print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="grid grid-cols-5">
@@ -103,7 +103,7 @@ export default function MobileNav({ role }: { role: Role }) {
                 key={n.href}
                 href={n.href}
                 className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${
-                  active ? "text-primary" : "text-zinc-500"
+                  active ? "text-ink-950" : "text-ink-500"
                 }`}
               >
                 <span className={`text-xl ${active ? "" : "opacity-80"}`}>{n.icon}</span>
@@ -118,7 +118,7 @@ export default function MobileNav({ role }: { role: Role }) {
               aria-expanded={open}
               aria-controls="mobile-nav-sheet"
               className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${
-                overflowActive ? "text-primary" : "text-zinc-500"
+                overflowActive ? "text-ink-950" : "text-ink-500"
               }`}
             >
               <span className={`text-xl ${overflowActive ? "" : "opacity-80"}`}>☰</span>

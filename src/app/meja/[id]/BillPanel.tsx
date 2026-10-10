@@ -263,7 +263,7 @@ export default function BillPanel({
   }
 
   const err = error && (
-    <p role="alert" aria-live="assertive" className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+    <p role="alert" aria-live="assertive" className="rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-body-sm font-medium text-danger">
       ⚠️ {error}
     </p>
   );
@@ -277,12 +277,12 @@ export default function BillPanel({
           type="button"
           onClick={bukaBill}
           disabled={!hasShift || loading}
-          className="w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover disabled:opacity-40"
+          className="min-h-12 w-full rounded-xl bg-ink-950 py-3 text-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
         >
           {loading ? "Memproses…" : "Buka Bill Meja Ini"}
         </button>
         {!hasShift && (
-          <p className="text-center text-xs text-amber-700">
+          <p className="text-center text-caption text-danger">
             Buka shift dulu sebelum membuka bill.
           </p>
         )}

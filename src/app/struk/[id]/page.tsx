@@ -49,10 +49,16 @@ export default async function StrukPage(props: { params: Promise<{ id: string }>
         actions={
           <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
             <Link
-              href="/"
-              className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
+              href="/transaksi"
+              className="flex-1 rounded-xl bg-ink-950 py-3 text-center text-label-md font-label-md font-semibold text-surface transition-all hover:opacity-90 active:scale-[0.98]"
             >
-              Transaksi baru
+              Riwayat Transaksi
+            </Link>
+            <Link
+              href="/"
+              className="flex-1 rounded-xl border border-ink-200 bg-surface py-3 text-center text-label-md font-label-md font-semibold text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
+            >
+              Transaksi Baru
             </Link>
             <PrintButton />
           </div>

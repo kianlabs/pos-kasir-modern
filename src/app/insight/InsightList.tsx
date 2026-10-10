@@ -27,13 +27,13 @@ export type StatusKirim = "sibuk" | "terkirim" | "gagal";
 
 // Tipe Insight sinkron dengan backend (String + const union, lampiran §5).
 const TIPE: Record<string, { label: string; icon: string; cls: string }> = {
-  NARRATIVE: { label: "Ringkasan", icon: "📝", cls: "bg-accent-bg text-primary" },
-  ANOMALY: { label: "Anomali", icon: "⚠️", cls: "bg-danger-bg text-danger" },
-  CHAT_SUMMARY: { label: "Chat", icon: "💬", cls: "bg-success-bg text-tertiary" },
+  NARRATIVE: { label: "Ringkasan", icon: "📝", cls: "bg-ink-100 text-ink-700" },
+  ANOMALY: { label: "Anomali", icon: "⚠️", cls: "bg-ink-100 text-danger" },
+  CHAT_SUMMARY: { label: "Chat", icon: "💬", cls: "bg-ink-100 text-ink-700" },
 };
 
 function tipeMeta(type: string) {
-  return TIPE[type] ?? { label: type, icon: "✨", cls: "bg-accent-bg text-primary" };
+  return TIPE[type] ?? { label: type, icon: "✨", cls: "bg-ink-100 text-ink-700" };
 }
 
 function tanggalID(iso: string): string {
@@ -73,7 +73,7 @@ export default function InsightList({
 }) {
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border bg-white p-4 text-sm text-text-muted shadow-xs">
+      <p className="rounded-2xl border border-ink-200 bg-surface p-4 text-body-sm text-ink-500">
         Belum ada insight. Klik “Lihat ringkasan hari ini” untuk membuat ringkasan
         pertama, atau buka chat untuk bertanya.
       </p>
@@ -86,26 +86,26 @@ export default function InsightList({
         const meta = tipeMeta(n.type);
         const bukti = temuan(n.findings);
         return (
-          <div key={n.id} className="rounded-xl border bg-white p-4 shadow-xs">
+          <div key={n.id} className="rounded-2xl border border-ink-200 bg-surface p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${meta.cls}`}
+                className={`rounded-full px-2 py-0.5 text-caption uppercase tracking-wide ${meta.cls}`}
               >
                 {meta.icon} {meta.label}
               </span>
-              <b className="text-body-sm">{n.title}</b>
+              <b className="text-body-sm text-ink-950">{n.title}</b>
               {!n.readAt && (
-                <span className="rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-bold text-danger">
+                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-danger">
                   Baru
                 </span>
               )}
-              <span className="ml-auto text-xs text-zinc-400">{tanggalID(n.createdAt)}</span>
+              <span className="ml-auto text-caption text-ink-500">{tanggalID(n.createdAt)}</span>
             </div>
 
-            <p className="mt-3 whitespace-pre-wrap text-body-sm">{n.body}</p>
+            <p className="mt-3 whitespace-pre-wrap text-body-sm text-ink-700">{n.body}</p>
 
             {bukti.length > 0 && (
-              <ul className="mt-2 list-disc rounded-lg bg-neutral p-3 pl-7 text-xs text-text-muted">
+              <ul className="mt-2 list-disc rounded-xl bg-ink-100 p-3 pl-7 text-caption text-ink-700">
                 {bukti.map((b, i) => (
                   <li key={i}>{b}</li>
                 ))}
@@ -117,7 +117,7 @@ export default function InsightList({
                 <button
                   type="button"
                   onClick={() => onRead(n.id)}
-                  className="rounded-lg border px-3.5 py-1.5 text-sm font-semibold text-zinc-600 hover:bg-zinc-50"
+                  className="rounded-xl border border-ink-200 px-3.5 py-1.5 text-body-sm text-ink-700 hover:bg-ink-100"
                 >
                   Tandai dibaca
                 </button>
@@ -126,24 +126,24 @@ export default function InsightList({
                 type="button"
                 onClick={() => onKirim(n.id)}
                 disabled={statusKirim[n.id] === "sibuk"}
-                className="rounded-lg border px-3.5 py-1.5 text-sm font-semibold text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-ink-200 px-3.5 py-1.5 text-body-sm text-ink-700 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {statusKirim[n.id] === "sibuk" ? "Mengantre…" : "📤 Kirim ke WA"}
               </button>
               {statusKirim[n.id] === "terkirim" && (
-                <span role="status" className="text-sm font-semibold text-tertiary">
+                <span role="status" className="text-body-sm text-success">
                   ✓ Terkirim ke antrean WA
                 </span>
               )}
               {statusKirim[n.id] === "gagal" && (
-                <span role="status" className="text-sm font-semibold text-danger">
+                <span role="status" className="text-body-sm text-danger">
                   Gagal mengantre. Coba lagi.
                 </span>
               )}
               {n.source && (
                 <Link
                   href={n.source}
-                  className="text-sm font-semibold text-primary hover:underline"
+                  className="text-body-sm text-label-lg text-ink-950 hover:underline"
                 >
                   Lihat sumber angka →
                 </Link>

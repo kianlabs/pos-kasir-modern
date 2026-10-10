@@ -19,18 +19,20 @@ export default async function MasukGenerikPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-[520px]">
+    <main className="mx-auto flex w-full max-w-[520px] flex-col items-center">
       <header className="mb-6 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-3xl">🧾</span>
-          <h1 className="text-3xl font-extrabold tracking-tight">KRING!</h1>
+        <div className="mb-1.5 inline-flex items-center justify-center gap-2">
+          <span className="text-[32px] leading-none">🧾</span>
+          <h1 className="font-display-hero text-display-hero leading-none tracking-tight text-ink-950">
+            KRING!
+          </h1>
         </div>
-        <p className="text-sm text-text-muted">Pilih warung untuk masuk.</p>
+        <p className="font-body-md text-body-md text-ink-500">Pilih warung untuk masuk.</p>
       </header>
 
-      <div className="rounded-[20px] border border-neutral bg-surface p-6 shadow-xs">
+      <div className="w-full rounded-[20px] border border-ink-200 bg-surface p-6 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
         {warungs.length === 0 ? (
-          <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning">
+          <p className="rounded-xl border border-ink-200 bg-ink-100 px-3 py-2 font-body-md text-body-md text-ink-700">
             Belum ada warung terdaftar. Jalankan <code>npx tsx prisma/seed.ts</code> dulu.
           </p>
         ) : (
@@ -39,10 +41,10 @@ export default async function MasukGenerikPage() {
               <li key={w.slug}>
                 <Link
                   href={`/masuk/${w.slug}`}
-                  className="flex items-center justify-between rounded-xl border border-neutral px-4 py-3 text-sm font-semibold transition hover:border-primary hover:bg-accent-bg"
+                  className="flex h-12 items-center justify-between rounded-xl border border-ink-200 bg-surface px-4 font-label-lg text-label-lg text-ink-950 transition-colors hover:bg-ink-100"
                 >
                   {w.nama}
-                  <span className="text-text-muted">→</span>
+                  <span className="text-ink-500">→</span>
                 </Link>
               </li>
             ))}
@@ -50,7 +52,7 @@ export default async function MasukGenerikPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-text-muted">
+      <p className="mt-4 text-center font-caption text-caption text-ink-500">
         Tablet kasir sebaiknya dibuka langsung via <code>/masuk/&lt;slug-warung&gt;</code>.
       </p>
     </main>
