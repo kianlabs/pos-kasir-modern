@@ -33,6 +33,16 @@ body {
   border-radius: 999px;
 }
 
+/* Mode kios fullscreen (PRD §7a): sembunyikan semua chrome navigasi sehingga
+   tablet kasir hanya menampilkan halaman kasir. Kelas `kios-mode` dipasang di
+   <body> oleh KiosToggle.tsx. Sidebar/topbar mobile = <aside>/<header> langsung
+   anak body; bottom-nav = <nav> di dalam MobileNav. */
+body.kios-mode > div > aside,
+body.kios-mode > div > div > header,
+body.kios-mode > nav {
+  display: none;
+}
+
 /* Cetak struk: hanya area struk yang keluar di kertas */
 @media print {
   body {

@@ -8,6 +8,8 @@ import ReceiptView from "@/shared/ReceiptView";
 import { productIcon } from "@/shared/category-icon";
 import { hitungUang } from "@/shared/hitung-uang";
 import { PaymentMethods, QuickCash, Kembalian } from "./_components/PaymentControls";
+import ScanListener from "./ScanListener";
+import KiosToggle from "./KiosToggle";
 import { getCache, putCache } from "@/client/offline-db";
 import { enqueueCheckout } from "@/client/offline-sync";
 import type { OutboxPayload } from "@/client/offline-types";
@@ -143,6 +145,21 @@ export default function KasirPage() {
       else next[id] = qty;
       return next;
     });
+  }
+
+  // Mode barcode scanner (PRD §7a). Skema Product tidak punya kolom barcode,
+  // jadi kode dicocokkan: (1) exact id, lalu (2) exact nama (abaikan besar/kecil
+  // huruf). Tidak ketemu → abaikan (tanpa error) agar tidak mengganggu alur jual.
+  function onScan(code: string) {
+    const kode = code.trim();
+    const target =
+      products.find((p) => p.id === kode) ??
+      products.find((p) => p.name.toLowerCase() === kode.toLowerCase());
+    if (target) {
+      add(target.id);
+    } else {
+      setError(`Barcode tidak dikenali: ${kode}`);
+    }
   }
 
   // Simpan transaksi ke antrean IndexedDB lalu TAMPILKAN struk inline (tanpa navigasi).
@@ -292,11 +309,15 @@ export default function KasirPage() {
       <section>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <h1 className="text-xl font-bold">Kasir</h1>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <ScanListener onScan={onScan} />
+            <KiosToggle />
+          </div>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 Cari produk…"
-            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary sm:ml-auto sm:max-w-xs"
+            className="w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-primary sm:max-w-xs"
           />
         </div>
 
