@@ -7,8 +7,8 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { rupiah } from "@/shared/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { shortId } from "@/shared/category-icon";
+import ReceiptView from "@/shared/ReceiptView";
 import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, getOutbox } from "@/client/offline-db";
 import type { OutboxEntry } from "@/client/offline-types";
@@ -132,82 +132,42 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
 
   return (
     <div>
-      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-xs">
-        <h1 className="text-center text-lg font-bold">🧾 Struk</h1>
-        <p className="text-center text-xs text-zinc-500">
-          {new Date(receipt.createdAt).toLocaleString("id-ID")} • #{shortId(receipt.id)}
-        </p>
-        <div className="mt-2 flex justify-center">
+      <ReceiptView
+        nama="Struk"
+        id={receipt.id}
+        createdAtLabel={new Date(receipt.createdAt).toLocaleString("id-ID")}
+        lines={receipt.lines}
+        subtotal={receipt.subtotal}
+        discount={receipt.discount}
+        tax={receipt.tax}
+        total={receipt.total}
+        payment={receipt.payment}
+        cash={receipt.cash}
+        change={receipt.change}
+        badge={
           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
             ⏳ Belum tersinkron
           </span>
-        </div>
-        <div className="my-3 border-t-2 border-dashed" />
-        {receipt.lines.map((l) => (
-          <div key={l.key} className="mb-1.5">
-            <div className="font-bold">{l.name}</div>
-            <div className="flex justify-between text-zinc-700">
-              <span>
-                {l.qty} × {rupiah(l.price)}
-              </span>
-              <span>{rupiah(l.price * l.qty)}</span>
-            </div>
+        }
+        footerNote="Struk ini tersimpan lokal & akan tersinkron otomatis."
+        actions={
+          <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
+            <Link
+              href="/"
+              className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
+            >
+              Transaksi baru
+            </Link>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex-1 rounded-lg border bg-white py-2.5 text-center text-sm font-bold hover:bg-zinc-50"
+            >
+              Cetak
+            </button>
           </div>
-        ))}
-        <div className="my-3 border-t-2 border-dashed" />
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{rupiah(receipt.subtotal)}</span>
-        </div>
-        {receipt.discount > 0 && (
-          <div className="flex justify-between">
-            <span>Diskon</span>
-            <span>−{rupiah(receipt.discount)}</span>
-          </div>
-        )}
-        {receipt.tax > 0 && (
-          <div className="flex justify-between">
-            <span>Pajak</span>
-            <span>+{rupiah(receipt.tax)}</span>
-          </div>
-        )}
-        <div className="flex justify-between text-base font-bold">
-          <span>TOTAL</span>
-          <span>{rupiah(receipt.total)}</span>
-        </div>
-        <div className="mt-1 flex justify-between">
-          <span>{PAYMENT_LABEL[receipt.payment] ?? receipt.payment}</span>
-          <span>{rupiah(receipt.cash)}</span>
-        </div>
-        {receipt.payment === "CASH" && (
-          <div className="flex justify-between">
-            <span>Kembali</span>
-            <span>{rupiah(receipt.change)}</span>
-          </div>
-        )}
-        <div className="my-3 border-t-2 border-dashed" />
-        <p className="text-center text-xs text-zinc-500">
-          Terima kasih & sampai jumpa 🙏
-          <br />
-          Struk ini tersimpan lokal & akan tersinkron otomatis.
-        </p>
-      </div>
-
-      <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
-        <Link
-          href="/"
-          className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
-        >
-          Transaksi baru
-        </Link>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="flex-1 rounded-lg border bg-white py-2.5 text-center text-sm font-bold hover:bg-zinc-50"
-        >
-          Cetak
-        </button>
-      </div>
+        }
+      />
     </div>
   );
 }

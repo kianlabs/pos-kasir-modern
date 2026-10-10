@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/server/db";
-import { rupiah } from "@/shared/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
 import { currentWarungId } from "@/server/tenant";
+import ReceiptView from "@/shared/ReceiptView";
 import PrintButton from "./PrintButton";
 
 export const dynamic = "force-dynamic";
@@ -28,73 +27,37 @@ export default async function StrukPage(props: { params: Promise<{ id: string }>
 
   return (
     <div>
-      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-xs">
-        <h1 className="text-center text-lg font-bold">🧾 {receiptName}</h1>
-        <p className="text-center text-xs text-zinc-500">
-          {alamat}
-          <br />
-          {trx.createdAt.toLocaleString("id-ID")} • #{shortId(trx.id)}
-        </p>
-        <div className="my-3 border-t-2 border-dashed" />
-        {trx.items.map((i) => (
-          <div key={i.id} className="mb-1.5">
-            <div className="font-bold">{i.name || i.product.name}</div>
-            <div className="flex justify-between text-zinc-700">
-              <span>
-                {i.qty} × {rupiah(i.price)}
-              </span>
-              <span>{rupiah(i.price * i.qty)}</span>
-            </div>
+      <ReceiptView
+        nama={receiptName}
+        alamat={alamat}
+        id={trx.id}
+        createdAtLabel={trx.createdAt.toLocaleString("id-ID")}
+        lines={trx.items.map((i) => ({
+          key: i.id,
+          name: i.name || i.product.name,
+          qty: i.qty,
+          price: i.price,
+        }))}
+        subtotal={trx.subtotal}
+        discount={trx.discount}
+        tax={trx.tax}
+        total={trx.total}
+        payment={trx.payment}
+        cash={trx.cash}
+        change={trx.change}
+        footerNote="Barang yang dibeli tidak dapat ditukar"
+        actions={
+          <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
+            <Link
+              href="/"
+              className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
+            >
+              Transaksi baru
+            </Link>
+            <PrintButton />
           </div>
-        ))}
-        <div className="my-3 border-t-2 border-dashed" />
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{rupiah(trx.subtotal)}</span>
-        </div>
-        {trx.discount > 0 && (
-          <div className="flex justify-between">
-            <span>Diskon</span>
-            <span>−{rupiah(trx.discount)}</span>
-          </div>
-        )}
-        {trx.tax > 0 && (
-          <div className="flex justify-between">
-            <span>Pajak</span>
-            <span>+{rupiah(trx.tax)}</span>
-          </div>
-        )}
-        <div className="flex justify-between text-base font-bold">
-          <span>TOTAL</span>
-          <span>{rupiah(trx.total)}</span>
-        </div>
-        <div className="mt-1 flex justify-between">
-          <span>{PAYMENT_LABEL[trx.payment] ?? trx.payment}</span>
-          <span>{rupiah(trx.cash)}</span>
-        </div>
-        {trx.payment === "CASH" && (
-          <div className="flex justify-between">
-            <span>Kembali</span>
-            <span>{rupiah(trx.change)}</span>
-          </div>
-        )}
-        <div className="my-3 border-t-2 border-dashed" />
-        <p className="text-center text-xs text-zinc-500">
-          Terima kasih & sampai jumpa 🙏
-          <br />
-          Barang yang dibeli tidak dapat ditukar
-        </p>
-      </div>
-
-      <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
-        <Link
-          href="/"
-          className="flex-1 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-white hover:bg-primary-hover"
-        >
-          Transaksi baru
-        </Link>
-        <PrintButton />
-      </div>
+        }
+      />
     </div>
   );
 }

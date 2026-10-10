@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { rupiah } from "@/shared/rupiah";
+import ReceiptView from "@/shared/ReceiptView";
 import { productIcon } from "@/shared/category-icon";
 import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, putCache } from "@/client/offline-db";
@@ -250,72 +251,35 @@ export default function KasirPage() {
       {offlineReceipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border bg-white p-6 font-mono text-sm shadow-xl">
-            <h2 className="text-center text-lg font-bold">🧾 Struk</h2>
-            <p className="text-center text-xs text-zinc-500">
-              {new Date(offlineReceipt.createdAt).toLocaleString("id-ID")} • #
-              {offlineReceipt.id.slice(0, 8).toUpperCase()}
-            </p>
-            <div className="mt-2 flex justify-center">
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-                ⏳ Belum tersinkron
-              </span>
-            </div>
-            <div className="my-3 border-t-2 border-dashed" />
-            {offlineReceipt.lines.map((l) => (
-              <div key={l.key} className="mb-1.5">
-                <div className="font-bold">{l.name}</div>
-                <div className="flex justify-between text-zinc-700">
-                  <span>
-                    {l.qty} × {rupiah(l.price)}
-                  </span>
-                  <span>{rupiah(l.price * l.qty)}</span>
-                </div>
-              </div>
-            ))}
-            <div className="my-3 border-t-2 border-dashed" />
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{rupiah(offlineReceipt.subtotal)}</span>
-            </div>
-            {offlineReceipt.discount > 0 && (
-              <div className="flex justify-between">
-                <span>Diskon</span>
-                <span>−{rupiah(offlineReceipt.discount)}</span>
-              </div>
-            )}
-            {offlineReceipt.tax > 0 && (
-              <div className="flex justify-between">
-                <span>Pajak</span>
-                <span>+{rupiah(offlineReceipt.tax)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-base font-bold">
-              <span>TOTAL</span>
-              <span>{rupiah(offlineReceipt.total)}</span>
-            </div>
-            <div className="mt-1 flex justify-between">
-              <span>{offlineReceipt.payment === "CASH" ? "Tunai" : "QRIS"}</span>
-              <span>{rupiah(offlineReceipt.cash)}</span>
-            </div>
-            {offlineReceipt.payment === "CASH" && (
-              <div className="flex justify-between">
-                <span>Kembali</span>
-                <span>{rupiah(offlineReceipt.change)}</span>
-              </div>
-            )}
-            <div className="my-3 border-t-2 border-dashed" />
-            <p className="text-center text-xs text-zinc-500">
-              Terima kasih & sampai jumpa 🙏
-              <br />
-              Struk ini tersimpan lokal & akan tersinkron otomatis.
-            </p>
-            <button
-              type="button"
-              onClick={() => setOfflineReceipt(null)}
-              className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover"
-            >
-              Selesai / Transaksi baru
-            </button>
+            <ReceiptView
+              nama="Struk"
+              id={offlineReceipt.id}
+              createdAtLabel={new Date(offlineReceipt.createdAt).toLocaleString("id-ID")}
+              lines={offlineReceipt.lines}
+              subtotal={offlineReceipt.subtotal}
+              discount={offlineReceipt.discount}
+              tax={offlineReceipt.tax}
+              total={offlineReceipt.total}
+              payment={offlineReceipt.payment}
+              cash={offlineReceipt.cash}
+              change={offlineReceipt.change}
+              badge={
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+                  ⏳ Belum tersinkron
+                </span>
+              }
+              footerNote="Struk ini tersimpan lokal & akan tersinkron otomatis."
+              className=""
+              actions={
+                <button
+                  type="button"
+                  onClick={() => setOfflineReceipt(null)}
+                  className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover"
+                >
+                  Selesai / Transaksi baru
+                </button>
+              }
+            />
           </div>
         </div>
       )}
