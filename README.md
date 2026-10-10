@@ -91,6 +91,7 @@ Setelah `db:seed`, gunakan akun berikut:
 
 - **`SESSION_SECRET` wajib diisi di produksi** (minimal 16 karakter) — tanpa ini sesi tidak aman.
 - **Rate-limit PIN masih in-memory** (5× gagal → blokir 5 menit). Pindahkan ke DB/Redis saat deploy multi-instance, karena state in-memory tidak terbagi antar proses.
+- **RLS (defense-in-depth isolasi tenant)** — migrasi `20261020000000_rls_policies` mengaktifkan Row Level Security untuk role PostgREST Supabase (`anon` ditolak total; `authenticated` ter-scope per `warungId` dari klaim JWT). **Bukan pengganti** filter `warungId` di aplikasi: koneksi app memakai role owner yang **bypass RLS** (tanpa `FORCE ROW LEVEL SECURITY`). Lihat [docs/RLS.md](docs/RLS.md).
 
 ## Deploy (Vercel + Supabase)
 
