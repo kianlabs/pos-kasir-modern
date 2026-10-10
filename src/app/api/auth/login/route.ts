@@ -7,6 +7,8 @@ import { catat } from "@/server/audit";
 import { issueSession } from "@/server/session";
 import { SESSION_COOKIE } from "@/shared/session-types";
 import { checkLoginRate, recordLoginFailure, recordLoginSuccess } from "@/server/rate-limit";
+import { handleApiError } from "@/server/api-error";
+import { str } from "@/server/validate";
 
 export const dynamic = "force-dynamic";
 
@@ -18,16 +20,21 @@ export async function POST(req: Request) {
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
 
-  const slug = String(body.slug ?? "").trim();
+  const slug = str(body.slug, 100);
   const mode = body.mode === "owner" ? "owner" : body.mode === "kasir" ? "kasir" : null;
   if (!slug || !mode) {
     return NextResponse.json({ error: "Warung / peran tidak valid." }, { status: 400 });
   }
 
-  const warung = await prisma.warung.findUnique({
-    where: { slug },
-    select: { id: true, slug: true, status: true },
-  });
+  let warung: { id: string; slug: string; status: string } | null = null;
+  try {
+    warung = await prisma.warung.findUnique({
+      where: { slug },
+      select: { id: true, slug: true, status: true },
+    });
+  } catch (e) {
+    return handleApiError(e, "Gagal memproses login.");
+  }
   if (!warung) {
     return NextResponse.json({ error: "Warung tidak ditemukan." }, { status: 404 });
   }
@@ -37,8 +44,8 @@ export async function POST(req: Request) {
 
   try {
     if (mode === "owner") {
-      const email = String(body.email ?? "").trim().toLowerCase();
-      const password = String(body.password ?? "");
+      const email = str(body.email, 200).toLowerCase();
+      const password = str(body.password, 200);
       if (!email || !password) {
         return NextResponse.json({ error: "Email dan kata sandi wajib diisi." }, { status: 400 });
       }
@@ -78,8 +85,8 @@ export async function POST(req: Request) {
     }
 
     // mode kasir: pilih nama dulu, lalu PIN (lampiran §2 aturan #7)
-    const userId = String(body.userId ?? "");
-    const pin = String(body.pin ?? "");
+    const userId = str(body.userId);
+    const pin = str(body.pin, 20);
     if (!userId || !pin) {
       return NextResponse.json({ error: "Kasir dan PIN wajib diisi." }, { status: 400 });
     }
