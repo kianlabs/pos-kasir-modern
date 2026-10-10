@@ -38,6 +38,11 @@ export function proxy(req: NextRequest) {
     // Daftar kasir per warung untuk tablet login: publik menurut desain
     // (lampiran skema §2 aturan #7). Handler hanya mengembalikan {id, name}.
     pathname.startsWith("/api/auth/kasir") ||
+    // Resolver warung untuk halaman login tunggal `/masuk` (tanpa daftar warung
+    // publik): memetakan email owner ATAU slug kasir → {slug,nama}. Wajib publik
+    // karena dipanggil SEBELUM sesi ada. Handler tak pernah membocorkan daftar
+    // warung lintas-tenant; rate-limit per-IP menahan enumerasi.
+    pathname.startsWith("/api/auth/warung") ||
     pathname.startsWith("/_next") ||
     // Aset PWA WAJIB publik tanpa sesi: browser/PWA installer mengambilnya
     // sebelum login (manifest, service worker, ikon). Bila di-gate, install
