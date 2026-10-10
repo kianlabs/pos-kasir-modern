@@ -7,14 +7,15 @@ import { requireBillDraft, hitungUlangBill, BillError } from "@/server/meja";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // POST /api/bills/[id]/bayar { cash, payment } → transisi DRAFT → LUNAS atomik.
 //
 // Satu-satunya jalur yang menyentuh stok (plan §7 keputusan 3): validasi stok →
 // decrement → tulis StockMove → set cash/change/payment/total → status LUNAS,
 // SEMUA dalam satu $transaction. Uang integer rupiah (aturan #3).
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: Request, props: Params) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 

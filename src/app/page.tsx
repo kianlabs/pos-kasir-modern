@@ -312,7 +312,7 @@ export default function KasirPage() {
             <button
               type="button"
               onClick={() => setOfflineReceipt(null)}
-              className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover"
+              className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover"
             >
               Selesai / Transaksi baru
             </button>
@@ -364,7 +364,7 @@ export default function KasirPage() {
                 key={p.id}
                 onClick={() => add(p.id)}
                 disabled={p.stock <= 0}
-                className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
+                className="rounded-xl border bg-white p-3 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 <div className="flex items-start justify-between">
                   <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-bg text-2xl">
@@ -389,7 +389,7 @@ export default function KasirPage() {
       </section>
 
       {/* Kanan: keranjang */}
-      <aside className="rounded-xl border bg-white shadow-sm xl:sticky xl:top-6">
+      <aside className="rounded-xl border bg-white shadow-xs xl:sticky xl:top-6">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h2 className="font-bold">
             Pesanan <span className="text-sm font-normal text-zinc-500">({itemCount} item)</span>
@@ -525,7 +525,7 @@ export default function KasirPage() {
           <button
             onClick={bayar}
             disabled={!canPay}
-            className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow hover:bg-primary-hover disabled:opacity-40"
+            className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-white shadow-sm hover:bg-primary-hover disabled:opacity-40"
           >
             {loading ? "Memproses…" : `Bayar ${rupiah(total)}`}
           </button>

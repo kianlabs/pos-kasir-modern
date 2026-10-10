@@ -1,7 +1,7 @@
 # Konvensi Penamaan: Client vs Server
 
 Panduan pemisahan kode **client** (browser) dan **server** (Node/edge) untuk
-project `pos-kasir-modern` (Next.js 14 App Router + Prisma).
+project `pos-kasir-modern` (Next.js 16 App Router + Prisma).
 
 Tujuan: mencegah bug kelas "modul server bocor ke bundle client" (mis.
 `node:crypto`, Prisma, `process.env` ter-import di komponen browser), dan

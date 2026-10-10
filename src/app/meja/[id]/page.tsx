@@ -9,13 +9,14 @@ export const dynamic = "force-dynamic";
 
 // Detail bill DRAFT satu meja (PRD §6.2). Server component: baca bill + item,
 // tampilkan daftar & total; aksi (tambah/bayar/batal/gabung/pisah) di BillPanel.
-export default async function MejaDetailPage({ params }: { params: { id: string } }) {
+export default async function MejaDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const meja = await prisma.meja.findFirst({ where: { id: params.id, warungId } });
 
   if (!meja) {
     return (
-      <div className="mx-auto max-w-md rounded-xl border bg-white p-8 text-center shadow-sm">
+      <div className="mx-auto max-w-md rounded-xl border bg-white p-8 text-center shadow-xs">
         Meja tidak ditemukan.
         <br />
         <Link href="/meja" className="font-bold text-primary hover:underline">
@@ -72,7 +73,7 @@ export default async function MejaDetailPage({ params }: { params: { id: string 
       </div>
 
       {!bill && (
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border bg-white p-6 shadow-xs">
           {!shift && (
             <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800">
               ⚠️ Belum ada shift terbuka — buka shift dulu sebelum membuka bill.{" "}
@@ -105,7 +106,7 @@ export default async function MejaDetailPage({ params }: { params: { id: string 
         // aksi (tambah/bayar/gabung/pisah). Di mobile tetap 1 kolom bertumpuk.
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="lg:sticky lg:top-4 lg:self-start">
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
               <div className="flex items-center justify-between border-b px-4 py-3">
                 <h2 className="font-bold">
                   Bill <span className="text-sm font-normal text-zinc-500">({itemCount} item)</span>

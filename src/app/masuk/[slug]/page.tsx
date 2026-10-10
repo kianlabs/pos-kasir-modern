@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 // /masuk/<slug> — satu-satunya halaman publik (lampiran skema §1 koreksi #7).
 // Tablet dibuka via URL ini → daftar nama kasir warung itu → PIN.
-export default async function MasukPage({ params }: { params: { slug: string } }) {
+export default async function MasukPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const session = await getSession();
   if (session) redirect("/");
 

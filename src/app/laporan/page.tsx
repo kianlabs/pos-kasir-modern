@@ -18,7 +18,7 @@ type Stats = {
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border bg-white p-4 shadow-sm">
+    <div className="rounded-xl border bg-white p-4 shadow-xs">
       <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</div>
       <div className="mt-1 text-2xl font-extrabold">{value}</div>
       {sub && <div className="mt-0.5 text-xs text-zinc-500">{sub}</div>}
@@ -95,7 +95,7 @@ export default function LaporanPage() {
 
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
         {/* Grafik 7 hari */}
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-white p-4 shadow-xs">
           <h2 className="mb-3 font-bold">📈 Omzet 7 hari terakhir</h2>
           <div className="flex h-40 items-stretch gap-2">
             {stats.weekly.map((d) => (
@@ -117,7 +117,7 @@ export default function LaporanPage() {
         </div>
 
         {/* Terlaris */}
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-white p-4 shadow-xs">
           <h2 className="mb-3 font-bold">🏆 Produk terlaris</h2>
           {stats.top.length === 0 ? (
             <p className="text-sm text-zinc-500">Belum ada penjualan.</p>
@@ -141,7 +141,7 @@ export default function LaporanPage() {
       </div>
 
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-white p-4 shadow-xs">
           <h2 className="mb-2 font-bold">⚠️ Stok menipis (≤ 5)</h2>
           {stats.lowStock.length === 0 ? (
             <p className="text-sm text-zinc-500">Semua stok aman. ✅</p>
@@ -158,7 +158,7 @@ export default function LaporanPage() {
           </Link>
         </div>
 
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-white p-4 shadow-xs">
           <h2 className="mb-2 font-bold">🧾 Transaksi terakhir</h2>
           {stats.recent.map((t) => (
             <Link key={t.id} href={`/struk/${t.id}`}

@@ -110,7 +110,7 @@ export default function ProdukPage() {
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
-        <form onSubmit={submit} className="rounded-xl border bg-white p-4 shadow-sm">
+        <form onSubmit={submit} className="rounded-xl border bg-white p-4 shadow-xs">
           <h2 className="mb-3 font-bold">{editingId ? "✏️ Edit produk" : "➕ Tambah produk"}</h2>
           <label className="mb-1 block text-xs font-semibold text-zinc-500">Nama</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -161,7 +161,7 @@ export default function ProdukPage() {
           </div>
         </form>
 
-        <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
           <div className="border-b p-3">
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="🔍 Cari produk…"
@@ -196,12 +196,12 @@ export default function ProdukPage() {
                     <td className="p-3">
                       <span className="flex items-center justify-center gap-1">
                         <button onClick={() => adjustStock(p, -1)}
-                          className="h-6 w-6 rounded bg-zinc-100 font-bold hover:bg-zinc-200">−</button>
+                          className="h-6 w-6 rounded-sm bg-zinc-100 font-bold hover:bg-zinc-200">−</button>
                         <span className={`w-10 text-center font-bold ${p.stock <= 5 ? "text-danger" : ""}`}>
                           {p.stock}
                         </span>
                         <button onClick={() => adjustStock(p, 1)}
-                          className="h-6 w-6 rounded bg-zinc-100 font-bold hover:bg-zinc-200">+</button>
+                          className="h-6 w-6 rounded-sm bg-zinc-100 font-bold hover:bg-zinc-200">+</button>
                       </span>
                     </td>
                     <td className="p-3 text-right">

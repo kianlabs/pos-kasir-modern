@@ -7,7 +7,7 @@ import { requireBillDraft, hitungUlangBill, BillError } from "@/server/meja";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // PATCH /api/bills/[id] { items?: [{ productId, qty }], discount? }
 //
@@ -19,7 +19,8 @@ type Params = { params: { id: string } };
 // discount/tax/total dihitung ulang server-side (hitungUlangBill) DI DALAM
 // $transaction yang sama — angka client tidak dipercaya. DRAFT TIDAK
 // menyentuh stok/StockMove (plan §7 keputusan 3).
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, props: Params) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   // Re-query DB: pastikan user masih aktif & di warung yang sama. Tanpa ini,
   // cookie kasir yang sudah dinonaktifkan bisa tetap memutasi bill (fix A2).
@@ -181,7 +182,8 @@ export async function PATCH(req: Request, { params }: Params) {
 //
 // Stok TIDAK perlu dikembalikan: DRAFT belum pernah mengurangi stok
 // (plan §7 keputusan 3), jadi batal cukup menghapus baris. Audit MEJA_BATAL.
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, props: Params) {
+  const params = await props.params;
   const warungId = await currentWarungId();
   const kasirId = await currentKasirId(warungId);
 

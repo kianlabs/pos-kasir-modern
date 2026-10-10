@@ -75,7 +75,7 @@ export default function ShiftPage() {
       <h1 className="mb-4 text-xl font-bold">Shift Kasir</h1>
 
       {active ? (
-        <div className="mb-5 rounded-xl border border-warning-bg bg-white p-4 shadow-sm">
+        <div className="mb-5 rounded-xl border border-warning-bg bg-white p-4 shadow-xs">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
               ● SHIFT BUKA
@@ -114,7 +114,7 @@ export default function ShiftPage() {
           )}
         </div>
       ) : (
-        <form onSubmit={buka} className="mb-5 flex flex-col gap-2 rounded-xl border bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+        <form onSubmit={buka} className="mb-5 flex flex-col gap-2 rounded-xl border bg-white p-4 shadow-xs sm:flex-row sm:items-center">
           <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-500">
             ○ TIDAK ADA SHIFT BUKA
           </span>
@@ -133,7 +133,7 @@ export default function ShiftPage() {
 
       {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">⚠️ {error}</p>}
 
-      <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>

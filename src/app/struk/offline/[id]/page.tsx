@@ -5,7 +5,7 @@
 //
 // SSR-safe: render awal menampilkan "memuat"; IndexedDB hanya dibaca di useEffect.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { rupiah } from "@/shared/rupiah";
 import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
@@ -31,7 +31,8 @@ type Receipt = {
   change: number;
 };
 
-export default function StrukOfflinePage({ params }: { params: { id: string } }) {
+export default function StrukOfflinePage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
@@ -114,7 +115,7 @@ export default function StrukOfflinePage({ params }: { params: { id: string } })
 
   if (notFound || !receipt) {
     return (
-      <div className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center shadow-sm">
+      <div className="mx-auto max-w-sm rounded-xl border bg-white p-8 text-center shadow-xs">
         <p className="text-sm font-semibold text-zinc-700">Struk tidak ditemukan.</p>
         <p className="mt-1 text-xs text-zinc-500">
           Transaksi ini mungkin sudah tersinkron ke server.
@@ -131,7 +132,7 @@ export default function StrukOfflinePage({ params }: { params: { id: string } })
 
   return (
     <div>
-      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-sm">
+      <div className="print-area mx-auto max-w-sm rounded-xl border bg-white p-6 font-mono text-sm shadow-xs">
         <h1 className="text-center text-lg font-bold">🧾 Struk</h1>
         <p className="text-center text-xs text-zinc-500">
           {new Date(receipt.createdAt).toLocaleString("id-ID")} • #{shortId(receipt.id)}

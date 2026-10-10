@@ -92,7 +92,7 @@ export default function MobileNav({ role }: { role: Role }) {
       )}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur-sm md:hidden print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="grid grid-cols-5">

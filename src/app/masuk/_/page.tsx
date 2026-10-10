@@ -28,7 +28,7 @@ export default async function MasukGenerikPage() {
         <p className="text-sm text-text-muted">Pilih warung untuk masuk.</p>
       </header>
 
-      <div className="rounded-[20px] border border-neutral bg-surface p-6 shadow-sm">
+      <div className="rounded-[20px] border border-neutral bg-surface p-6 shadow-xs">
         {warungs.length === 0 ? (
           <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning">
             Belum ada warung terdaftar. Jalankan <code>npx tsx prisma/seed.ts</code> dulu.

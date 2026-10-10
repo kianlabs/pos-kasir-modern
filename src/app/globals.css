@@ -1,6 +1,22 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+/* Jembatan v4→v3: muat theme kustom dari tailwind.config.ts. v4 tidak
+   auto-detect config JS, jadi harus eksplisit lewat @config. Path relatif
+   dari src/app/globals.css ke root repo. */
+@config "../../tailwind.config.ts";
+
+/* Kompatibilitas v4: warna default border/divide berubah dari gray-200
+   (v3) ke currentColor (v4). Project banyak memakai `border` polos dan
+   mengharapkan tampilan abu-abu tipis seperti sebelumnya → pertahankan.
+   (Bentuk resmi dari panduan upgrade Tailwind v4.) */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 body {
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",

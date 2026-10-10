@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 
       await recordLoginSuccess(ownerKey);
       await catat({ warungId: warung.id, userId: owner.id, action: "LOGIN_OK", meta: { mode } });
-      return finish(owner);
+      return await finish(owner);
     }
 
     // mode kasir: pilih nama dulu, lalu PIN (lampiran §2 aturan #7)
@@ -130,16 +130,16 @@ export async function POST(req: Request) {
 
     await recordLoginSuccess(userId);
     await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_OK", meta: { mode } });
-    return finish(kasir);
+    return await finish(kasir);
   } catch (e) {
     console.error("[auth/login]", e);
     return NextResponse.json({ error: "Gagal memproses login." }, { status: 500 });
   }
 }
 
-function finish(user: { id: string; warungId: string; role: string; name: string }) {
+async function finish(user: { id: string; warungId: string; role: string; name: string }) {
   const { token, maxAge } = issueSession(user);
-  cookies().set(SESSION_COOKIE, token, {
+  (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

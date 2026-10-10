@@ -84,7 +84,7 @@ export default function LoginClient({
 
       <form
         onSubmit={submit}
-        className="w-full rounded-[20px] border border-neutral bg-surface p-6 shadow-sm"
+        className="w-full rounded-[20px] border border-neutral bg-surface p-6 shadow-xs"
       >
         {/* Pilih peran */}
         <section className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-neutral bg-neutral p-1.5">
