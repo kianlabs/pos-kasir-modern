@@ -169,6 +169,28 @@ async function prosesSatu(
       return { id, status: "ok", serverId: result.id };
     }
 
+    // M4 — total client diterima → diskon/pajak tersimpan menyimpang dari formula
+    // normal. Audit agar owner melihat "diskon hantu" (bukan transparan tanpa jejak).
+    if (result.moneyRecomputed) {
+      await catat({
+        warungId,
+        userId: kasirId,
+        action: "SYNC_MONEY_RECOMPUTED",
+        meta: { transactionId: result.id, ...result.moneyDetail },
+      });
+    }
+
+    // M2 — transaksi offline diatribusikan ke shift yang meragukan (tak ada shift
+    // BUKA, atau createdAt di luar jendela shift terpilih). Audit untuk review owner.
+    if (result.shiftOrphan) {
+      await catat({
+        warungId,
+        userId: kasirId,
+        action: "SYNC_ORPHAN_SHIFT",
+        meta: { transactionId: result.id, ...result.shiftDetail },
+      });
+    }
+
     if (result.konflikStok) {
       // Transaksi diterima tapi stok kurang → tandai konflik untuk review owner.
       await catat({

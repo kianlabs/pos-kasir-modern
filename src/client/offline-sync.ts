@@ -76,6 +76,31 @@ export type ProsesCheckoutInput = {
 
 export type KonflikStok = { productId: string; name: string; butuh: number; sisa: number };
 
+/**
+ * Detail "uang direkalkulasi" (M4) — dikirim ke audit SYNC_MONEY_RECOMPUTED.
+ * Angka saja: membandingkan diskon/pajak TERSIMPAN (hasil menyerap total client)
+ * dengan yang akan dihasilkan formula NORMAL (server menghitung sendiri).
+ */
+export type MoneyRecomputedDetail = {
+  subtotal: number;
+  discountStored: number;
+  discountEntered: number;
+  taxStored: number;
+  totalClient: number;
+  totalComputedNormal: number;
+};
+
+/**
+ * Detail "shift meragukan" (M2) — dikirim ke audit SYNC_ORPHAN_SHIFT.
+ * shiftId dapat `null` (tak ada shift BUKA), atau `createdAt` transaksi jatuh
+ * di LUAR jendela [openedAt, closedAt ?? now] shift yang dipilih.
+ */
+export type ShiftOrphanDetail = {
+  shiftId: string | null;
+  createdAt: Date | null;
+  shiftOpenedAt: Date | null;
+};
+
 export type ProsesCheckoutResult = {
   id: string;
   /** true = transaksi id ini sudah ada → tidak menyentuh stok (idempotent hit). */
@@ -84,6 +109,20 @@ export type ProsesCheckoutResult = {
   konflikStok: boolean;
   /** Detail produk yang stoknya kurang (untuk audit SYNC_CONFLICT). */
   konfliks: KonflikStok[];
+  /**
+   * true = diskon/pajak TERSIMPAN berbeda dari formula normal karena total dari
+   * client diterima (jalur sync). Route memancarkan audit SYNC_MONEY_RECOMPUTED.
+   * Selalu false di jalur online (tak ada totalDariClient di sana).
+   */
+  moneyRecomputed: boolean;
+  moneyDetail?: MoneyRecomputedDetail;
+  /**
+   * true = transaksi offline diatribusikan ke shift yang meragukan: shiftId
+   * `null`, ATAU `createdAt` (bila ada) di luar jendela shift terpilih.
+   * Route memancarkan audit SYNC_ORPHAN_SHIFT. false di jalur online normal.
+   */
+  shiftOrphan: boolean;
+  shiftDetail?: ShiftOrphanDetail;
 };
 
 /**
@@ -120,7 +159,14 @@ export async function prosesCheckout(
       if (existing.warungId !== warungId) {
         throw new Error("Transaksi tidak ditemukan.");
       }
-      return { id: existing.id, sudahAda: true, konflikStok: false, konfliks: [] };
+      return {
+        id: existing.id,
+        sudahAda: true,
+        konflikStok: false,
+        konfliks: [],
+        moneyRecomputed: false,
+        shiftOrphan: false,
+      };
     }
   }
 
@@ -185,6 +231,12 @@ export async function prosesCheckout(
   const tax0 = input.taxCfg.enabled
     ? Math.round(((subtotal - Math.min(discountIn, subtotal)) * input.taxCfg.pct) / 100)
     : 0;
+  // Hasil FORMULA NORMAL (server menghitung sendiri, tanpa total client). Dipakai
+  // untuk (a) jalur online, dan (b) deteksi M4: apakah diskon/pajak tersimpan
+  // jalur offline menyimpang dari yang seharusnya.
+  const discNormal = Math.min(discountIn, subtotal);
+  const taxNormal = tax0;
+  const totalNormal = subtotal - discNormal + taxNormal;
   if (
     input.allowStokMinus &&
     typeof input.totalDariClient === "number" &&
@@ -199,10 +251,13 @@ export async function prosesCheckout(
     // Pajak tersimpan = sisa penyeimbang → `subtotal - discount + tax === total` SELALU.
     tax = total - (subtotal - disc);
   } else {
-    disc = Math.min(discountIn, subtotal);
-    tax = tax0;
-    total = subtotal - disc + tax;
+    disc = discNormal;
+    tax = taxNormal;
+    total = totalNormal;
   }
+  // M4: jalur offline (totalDariClient diterima) menghasilkan diskon/pajak yang
+  // BUKAN yang akan dicetak formula normal → tandai agar route mengauditnya.
+  const moneyRecomputed = disc !== discNormal || tax !== taxNormal;
 
   // Jaring pengaman terakhir: nilai tersimpan tak boleh melampaui int32/negatif.
   if (total < 0 || disc < 0 || total > BATAS_UANG) {
@@ -223,6 +278,23 @@ export async function prosesCheckout(
     where: { warungId, status: "BUKA" },
     orderBy: { openedAt: "desc" },
   });
+
+  // M2: atribusi shift transaksi offline. Meragukan bila (a) tak ada shift BUKA
+  // (shiftId jadi null), atau (b) transaksi dibuat di luar jendela shift terpilih
+  // [openedAt, closedAt ?? now]. Route memakai flag ini untuk audit SYNC_ORPHAN_SHIFT.
+  // Jalur online tak mengisi `createdAt` → hanya syarat (a)/(b) dengan createdAt null.
+  const shiftOpenedAt = shift?.openedAt ?? null;
+  const shiftWindowEnd = shift ? (shift.closedAt ?? new Date()) : null;
+  const createdAtOutOfWindow = !!(
+    input.createdAt &&
+    shift &&
+    shiftOpenedAt &&
+    (input.createdAt < shiftOpenedAt || input.createdAt > shiftWindowEnd!)
+  );
+  const shiftOrphan = !shift || createdAtOutOfWindow;
+  const shiftDetail: ShiftOrphanDetail | undefined = shiftOrphan
+    ? { shiftId: shift?.id ?? null, createdAt: input.createdAt, shiftOpenedAt }
+    : undefined;
 
   // (6) Simpan transaksi. `id` client dipakai bila ada (idempotent saat retry).
   const created = await tx.transaction.create({
@@ -278,7 +350,27 @@ export async function prosesCheckout(
     });
   }
 
-  return { id: created.id, sudahAda: false, konflikStok: konfliks.length > 0, konfliks };
+  const moneyDetail: MoneyRecomputedDetail | undefined = moneyRecomputed
+    ? {
+        subtotal,
+        discountStored: disc,
+        discountEntered: discountIn,
+        taxStored: tax,
+        totalClient: total,
+        totalComputedNormal: totalNormal,
+      }
+    : undefined;
+
+  return {
+    id: created.id,
+    sudahAda: false,
+    konflikStok: konfliks.length > 0,
+    konfliks,
+    moneyRecomputed,
+    moneyDetail,
+    shiftOrphan,
+    shiftDetail,
+  };
 }
 
 /** True bila error Prisma adalah pelanggaran unique (P2002) — mis. race id. */

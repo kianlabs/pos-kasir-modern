@@ -26,4 +26,6 @@ export type AuditAction =
   | "MEJA_PISAH"
   // Sinkronisasi offline (Tahap 4)
   | "SYNC_BATCH" // batch transaksi offline diterima server
-  | "SYNC_CONFLICT"; // transaksi offline diterima tapi stok kurang saat sync
+  | "SYNC_CONFLICT" // transaksi offline diterima tapi stok kurang saat sync
+  | "SYNC_MONEY_RECOMPUTED" // total client diterima → diskon/pajak tersimpan beda dari formula normal
+  | "SYNC_ORPHAN_SHIFT"; // transaksi offline tanpa shift / di luar jendela shift yang dipilih
