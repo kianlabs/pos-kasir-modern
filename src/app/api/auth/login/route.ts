@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       // Key rate-limit: id owner bila ada, else email yang dikirim — agar
       // percobaan dengan email tak dikenal pun terhitung (batasi enumerasi/tebak).
       const ownerKey = owner ? owner.id : `owner-email:${email}`;
-      const rl = checkLoginRate(ownerKey);
+      const rl = await checkLoginRate(ownerKey);
       if (rl.blocked) {
         return NextResponse.json(
           { error: `Terlalu banyak percobaan. Coba lagi dalam ${rl.retryAfterSeconds} detik.` },
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
       const ok = owner && owner.password ? await bcrypt.compare(password, owner.password) : false;
       if (!owner || !ok) {
-        const after = recordLoginFailure(ownerKey);
+        const after = await recordLoginFailure(ownerKey);
         await catat({ warungId: warung.id, userId: owner?.id ?? null, action: "LOGIN_FAIL", meta: { mode } });
         if (after.blocked) {
           return NextResponse.json(
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Email atau kata sandi salah." }, { status: 401 });
       }
 
-      recordLoginSuccess(ownerKey);
+      await recordLoginSuccess(ownerKey);
       await catat({ warungId: warung.id, userId: owner.id, action: "LOGIN_OK", meta: { mode } });
       return finish(owner);
     }
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     // dicek SEBELUM lookup. Tanpa ini, penyerang yang mengirim userId acak tak
     // pernah tercatat (bash userId valid tak pernah kena blok). Kegagalan apa pun
     // — termasuk "kasir tidak ditemukan" — dihitung.
-    const rl = checkLoginRate(userId);
+    const rl = await checkLoginRate(userId);
     if (rl.blocked) {
       return NextResponse.json(
         { error: `PIN diblokir sementara. Coba lagi dalam ${rl.retryAfterSeconds} detik.` },
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       where: { id: userId, warungId: warung.id, role: "KASIR", aktif: true },
     });
     if (!kasir) {
-      const after = recordLoginFailure(userId);
+      const after = await recordLoginFailure(userId);
       await catat({ warungId: warung.id, userId: null, action: "LOGIN_FAIL", meta: { mode, alasan: "kasir_tidak_ditemukan" } });
       if (after.blocked) {
         return NextResponse.json(
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
 
     const ok = kasir.pin ? await bcrypt.compare(pin, kasir.pin) : false;
     if (!ok) {
-      const after = recordLoginFailure(userId);
+      const after = await recordLoginFailure(userId);
       await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_FAIL", meta: { mode } });
       if (after.blocked) {
         return NextResponse.json(
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
       );
     }
 
-    recordLoginSuccess(userId);
+    await recordLoginSuccess(userId);
     await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_OK", meta: { mode } });
     return finish(kasir);
   } catch (e) {

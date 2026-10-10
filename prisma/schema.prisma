@@ -236,6 +236,19 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// Rate-limit login (lampiran skema §2 aturan #9). Persisten di DB — bukan
+// in-memory — agar tetap berlaku saat deploy multi-instance/serverless (Vercel):
+// state in-memory per proses tidak terbagi antar-instance sehingga brute-force
+// PIN bisa lolos. Key = userId (kasir) atau "owner-email:<email>" (owner), unik.
+model LoginAttempt {
+  key          String    @id // userId ATAU "owner-email:<email>"
+  failures     Int       @default(0)
+  blockedUntil DateTime? // null = tidak terkunci; > now = terkunci
+  updatedAt    DateTime  @updatedAt
+
+  @@map("login_attempts")
+}
+
 // dari lampiran AI (PRD-lampiran-ai.md §5) — model kosong sampai AI aktif
 model Insight {
   id        String   @id @default(uuid())
