@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Placeholder NON-SECRET: hanya agar `prisma generate` / `next build` tidak
+    # gagal karena env kosong. Nilai ini palsu dan tidak dipakai untuk koneksi
+    # ke DB mana pun — JANGAN ganti dengan kredensial asli.
+    env:
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+      DIRECT_URL: "postgresql://user:pass@localhost:5432/db"
+      SESSION_SECRET: "ci-dummy-secret-not-real-000"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` menjalankan postinstall = `prisma generate`; step eksplisit di
+      # bawah hanya penegas agar kegagalan generate terlihat jelas di log.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      # Catatan: suite test (`npm test`) SENGAJA TIDAK dijalankan di CI karena
+      # bersifat integrasi DB dan WAJIB butuh `TEST_DATABASE_URL` + Postgres
+      # hidup (host berbeda dari DB utama; lihat tests/env-guard.ts). Tanpa DB
+      # uji tersebut suite langsung gagal. Jalankan manual secara lokal.

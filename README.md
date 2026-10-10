@@ -70,6 +70,15 @@ Cara paling aman: buat **project Supabase terpisah untuk test** dan pakai connec
 
 `tests/global-setup.ts` menjalankan `prisma migrate status` ke URL test sebelum suite berjalan (migrasi sendiri dijalankan manual dengan `npm run db:deploy`).
 
+### CI (GitHub Actions)
+
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) berjalan pada setiap **push** dan **pull_request**: satu job `ubuntu-latest` (Node 20) yang menjalankan **typecheck → lint → build** (dengan env placeholder non-secret agar `prisma generate` / `next build` tidak gagal).
+
+- **Typecheck:** `npm run typecheck` (`tsc --noEmit`).
+- **Lint:** `npm run lint`.
+- **Build:** `npm run build`.
+- **Test TIDAK dijalankan di CI** — suite bersifat integrasi DB dan butuh `TEST_DATABASE_URL` + Postgres hidup (host berbeda dari DB utama). Jalankan `npm test` secara manual dengan `TEST_DATABASE_URL` yang valid (lihat [Menjalankan test](#menjalankan-test)).
+
 ## Akun demo
 
 Setelah `db:seed`, gunakan akun berikut:
