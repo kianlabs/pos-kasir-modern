@@ -87,7 +87,7 @@ Setelah `db:seed`, gunakan akun berikut:
 
 - **Owner** — email `owner@warung-berkah-jaya.demo`, password `password123`
 - **Kasir** — PIN `123456`
-- **Akses halaman masuk:** `/masuk/warung-berkah-jaya` (per-warung) atau `/masuk/_` (fallback tanpa slug)
+- **Akses halaman masuk:** `/masuk/warung-berkah-jaya` (per-warung) atau `/masuk` (fallback tanpa slug)
 
 ## Keamanan
 

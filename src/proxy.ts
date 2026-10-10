@@ -57,7 +57,7 @@ export function proxy(req: NextRequest) {
   if (!token) {
     if (isApi) return NextResponse.json({ error: "Belum login." }, { status: 401 });
     const url = req.nextUrl.clone();
-    url.pathname = "/masuk/_";
+    url.pathname = "/masuk";
     url.search = `?next=${encodeURIComponent(pathname + search)}`;
     return NextResponse.redirect(url);
   }

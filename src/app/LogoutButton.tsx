@@ -12,7 +12,7 @@ export default function LogoutButton() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      router.replace("/masuk/_");
+      router.replace("/masuk");
       router.refresh();
     }
   }

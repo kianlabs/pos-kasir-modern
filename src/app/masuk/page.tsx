@@ -5,7 +5,7 @@ import { getSession } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
 
-// /masuk/_ — halaman masuk generik ketika tablet diakses tanpa slug.
+// /masuk — halaman masuk generik ketika tablet diakses tanpa slug.
 // Menampilkan daftar warung (nama saja, bukan rahasia) agar kasir bisa memilih
 // warungnya lalu diarahkan ke /masuk/<slug>. Tidak ada kredensial di sini.
 export default async function MasukGenerikPage() {
