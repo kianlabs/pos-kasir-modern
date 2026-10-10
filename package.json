@@ -38,5 +38,10 @@
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "micromatch": "^4.0.8",
+    "braces": "^3.0.3"
   }
 }
