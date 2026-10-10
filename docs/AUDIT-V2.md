@@ -55,24 +55,31 @@ setiap klaim di tabel di atas dijalankan ulang manual.
 
 ## Utang teknis yang MASIH ada (belum diperbaiki)
 
-### 🔴 Fase B — Kerentanan dependency (belum, butuh sesi khusus)
-`npm audit`: **16 vulnerabilities (1 critical, 13 high, 2 moderate)**.
-- **Next 14.2.35** punya banyak CVE incl. **RCE (Windows-hosted)**, **RCE Image
-  Optimization AVIF**, SSRF rewrites/Server Actions, cache confusion, disclosure
-  server function. 14.2.35 = patch 14 terakhir; **tak ada fix di 14.x**.
-- Perbaikan = upgrade **next → 16** (breaking) + **tailwindcss → 4** (breaking,
-  karena `postcss-selector-parser`).
-- Analisis dampak nyata: fitur rentan yang **tidak dipakai** (tak ada `next/image`,
-  tak ada Server Actions, tak ada rewrites) menurunkan sebagian risiko, **tetapi
-  CVE cache-confusion & disclosure app-router tetap relevan**. Rekomendasi:
-  upgrade di **sesi/PR terpisah** dengan test ketat.
+### ✅ Fase B — Upgrade dependency (SELESAI, branch `chore/upgrade-next16-tailwind4`)
+**Next 14.2.35 → 16.4.0** + **Tailwind 3.4 → 4.3.3** + **ESLint 8 → 9**.
+- CVE: `npm audit` **16 (1 critical, 13 high, 2 moderate) → 5 high** — semua
+  CVE **critical & RCE hilang**.
+- 5 high tersisa = **rantai dev-only** `braces` (via `eslint-config-next` →
+  `fast-glob` → `micromatch` → `braces`). `braces@3.0.3` = versi terbaru yang
+  ada, advisory range `<=3.0.3` → **belum ada rilis patch**; "fix" npm satu-satunya
+  = *downgrade* `eslint-config-next` (yang justru mengembalikan CVE Next). Jadi:
+  **tidak dapat diperbaiki sekarang, tidak muncul di runtime produksi** (hanya
+  saat lint/build). `deepmerge-ts` (via prisma CLI, dev) sudah di-override → 8.
+- Migrasi Next 16 yang dilakukan: API request **async-only** (`cookies()`/
+  `params` di-await di 7 route + 3 file), `middleware.ts` → `proxy.ts`,
+  `next lint` → ESLint CLI flat config (`eslint.config.mjs`).
+- Migrasi Tailwind 4: `@import "tailwindcss"` + `@config` bridge (theme lama
+  utuh), `@tailwindcss/postcss`, rename scale v4 (`shadow`→`shadow-sm`,
+  `shadow-sm`→`shadow-xs`, `rounded`→`rounded-sm`), kompat border-color.
+- Gate: tsc ✓ · lint ✓ (0 error) · build ✓ · **122/122 test** ✓.
+- Catatan: PRD/README masih menyebut "Next.js 14" — perlu update (lihat backlog).
 
 ### 🟡 Utang lain (backlog)
 | # | Utang | Catatan |
 |---|---|---|
 | L1 | Rate-limit in-memory | ✅ **RESOLVED** (B1) |
 | L3 | `prosesCheckout` ada di `client/` tapi dipakai route server | Batas modul rapuh; **belum** dipindah. `docs/NAMING.md` masih relevan |
-| L4 | 5 CVE Next | naik jadi **16 CVE**; lihat Fase B |
+| L4 | CVE Next | ✅ **RESOLVED** — Next 16.4.0; sisa 5 high dev-only (`braces`, tak ada patch) |
 | m6 | Omzet top-produk pakai harga live (bukan snapshot) | Belum; perlu keputusan produk |
 | — | Nol test frontend/komponen | UI tak teruji otomatis (QA manual saja) |
 | — | Escape hatch `ALLOW_TEST_ON_SHARED_DB=1` | Operator-only; aman default |
