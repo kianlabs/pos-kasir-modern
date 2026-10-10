@@ -22,6 +22,7 @@ const TEST_SLUG_PREFIXES = [
   "warung-alpha-test",
   "warung-beta-test",
   "warung-sementara-",
+  "warung-notif-",
 ];
 
 export default async function globalSetup() {

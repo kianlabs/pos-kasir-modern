@@ -14,6 +14,7 @@ export const NAV: NavItem[] = [
   { href: "/stok", label: "Stok", icon: "📋", roles: ["OWNER", "KASIR"] },
   { href: "/produk", label: "Produk", icon: "📦", roles: ["OWNER"] },
   { href: "/laporan", label: "Laporan", icon: "📊", roles: ["OWNER"] },
+  { href: "/notifikasi", label: "Notifikasi", icon: "📨", roles: ["OWNER"] },
   { href: "/pengaturan", label: "Pengaturan", icon: "⚙️", roles: ["OWNER"] },
 ];
 

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { transaksi } from "@/server/db";
+import { transaksi, prisma } from "@/server/db";
 import { readJson } from "@/server/http";
 import { catat } from "@/server/audit";
 import { currentWarungId, currentKasirId } from "@/server/tenant";
+import { buatLaporanShift } from "@/server/notif";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
       action: "SHIFT_CLOSE",
       meta: { kasFisik, selisih: kasFisik - result.expected },
     });
+
+    // Fase 2 §7a: enqueue laporan shift ke outbox notifikasi (fondasi
+    // provider-agnostic). Disengaja SETELAH shift tersimpan & audit tercatat,
+    // dan dibungkus try/catch: gagal enqueue TIDAK boleh menggagalkan tutup
+    // shift (menutup shift harus selalu sukses).
+    await enqueueLaporanShift(warungId, params.id);
+
     return NextResponse.json({
       ...result.closed,
       expected: result.expected,
@@ -89,6 +97,16 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     }
     const message = e instanceof Error ? e.message : "Gagal tutup shift.";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+// Gagal enqueue TIDAK boleh menggagalkan tutup shift — cukup dilog (prinsip
+// sama dengan audit.ts). Dipanggil hanya dari jalur "shift berhasil ditutup".
+async function enqueueLaporanShift(warungId: string, shiftId: string): Promise<void> {
+  try {
+    await buatLaporanShift(prisma, { warungId, shiftId });
+  } catch (e) {
+    console.error("[notif] gagal enqueue laporan shift", shiftId, e);
   }
 }
 

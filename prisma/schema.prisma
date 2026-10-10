@@ -34,6 +34,7 @@ model Warung {
   mejas           Meja[]
   insights        Insight[]   // dari lampiran AI (PRD-lampiran-ai.md §5)
   auditLogs       AuditLog[]
+  notifikasi      Notifikasi[] // outbox notifikasi (Fase 2 §7a)
 
   @@unique([slug])
   @@map("warungs")
@@ -247,6 +248,31 @@ model LoginAttempt {
   updatedAt    DateTime  @updatedAt
 
   @@map("login_attempts")
+}
+
+// Outbox notifikasi (Fase 2 §7a). Provider-agnostic: baris disimpan dulu,
+// pengiriman (WhatsApp/Fonnte/Cloud API) = adapter terpisah yang menyusul.
+// "semi-manual" = owner menyalin `body` dari UI; "auto" menyusul via adapter.
+model Notifikasi {
+  id        String   @id @default(uuid())
+  warungId  String
+  warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
+
+  jenis     String   // "LAPORAN_SHIFT" (masa depan: "STRUK", "ANOMALI", ...)
+  channel   String   @default("WA") // WA | (masa depan: SMS, ...)
+  tujuan    String?  // nomor tujuan (owner); null = belum ditentukan / semi-manual
+  subject   String   // judul ringkas
+  body      String   // teks pesan siap-kirim (plain)
+  status    String   @default("PENDING") // PENDING | TERKIRIM | GAGAL | DIBACA
+  refId     String?  // id sumber (mis. shiftId)
+  meta      String?  // JSON ringkas: angka pendukung (omzet, trx, selisih) — untuk audit/verifikasi
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([warungId, createdAt])
+  @@index([warungId, jenis, status])
+  @@map("notifikasi")
 }
 
 // dari lampiran AI (PRD-lampiran-ai.md §5) — model kosong sampai AI aktif
