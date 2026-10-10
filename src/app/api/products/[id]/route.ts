@@ -50,9 +50,18 @@ export async function PATCH(req: Request, { params }: Params) {
     });
     if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
 
-    const product = await prisma.product.update({
-      where: { id: params.id },
+    // Tulis ter-scope tenant (aturan #1) + assert tepat 1 baris: updateMany
+    // TIDAK melempar P2025 pada 0 baris, jadi count diperiksa eksplisit → 404.
+    const res = await prisma.product.updateMany({
+      where: { id: params.id, warungId },
       data,
+    });
+    if (res.count !== 1) {
+      return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+    }
+    // Ambil ulang baris yang baru di-update untuk payload & selisih stok.
+    const product = await prisma.product.findFirstOrThrow({
+      where: { id: params.id, warungId },
     });
     // Catat selisih stok sebagai KOREKSI (kulakan manual lewat +/- juga masuk sini)
     if (data.stock !== undefined && data.stock !== before.stock) {
@@ -119,7 +128,13 @@ export async function DELETE(_req: Request, { params }: Params) {
     });
     if (!before) return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
 
-    await prisma.product.delete({ where: { id: params.id } });
+    // Tulis ter-scope tenant (aturan #1) + assert tepat 1 baris → 404 bila 0.
+    const del = await prisma.product.deleteMany({
+      where: { id: params.id, warungId },
+    });
+    if (del.count !== 1) {
+      return NextResponse.json({ error: "Produk tidak ditemukan." }, { status: 404 });
+    }
     await catat({
       warungId,
       userId: kasirId,

@@ -92,10 +92,11 @@ export async function PATCH(req: Request, { params }: Params) {
       if (!bill) throw new BillError("Bill tidak ditemukan.", 404);
 
       if (discount !== undefined) {
-        await tx.transaction.update({
-          where: { id: bill.id },
+        const res = await tx.transaction.updateMany({
+          where: { id: bill.id, warungId },
           data: { discount },
         });
+        if (res.count !== 1) throw new BillError("Bill tidak ditemukan.", 404);
       }
 
       for (const [productId, delta] of items) {
@@ -108,16 +109,20 @@ export async function PATCH(req: Request, { params }: Params) {
 
         if (nextQty <= 0) {
           if (existing) {
-            await tx.transactionItem.delete({ where: { id: existing.id } });
+            const del = await tx.transactionItem.deleteMany({
+              where: { id: existing.id, warungId },
+            });
+            if (del.count !== 1) throw new BillError("Item tidak ditemukan.", 404);
           }
           continue;
         }
 
         if (existing) {
-          await tx.transactionItem.update({
-            where: { id: existing.id },
+          const upd = await tx.transactionItem.updateMany({
+            where: { id: existing.id, warungId },
             data: { qty: nextQty },
           });
+          if (upd.count !== 1) throw new BillError("Item tidak ditemukan.", 404);
         } else {
           const product = await tx.product.findFirst({
             where: { id: productId, warungId },
@@ -142,8 +147,8 @@ export async function PATCH(req: Request, { params }: Params) {
       // yang sama agar atomik. PENTING: pakai `tx` — hitungUlangBill(`prisma`)
       // di dalam $transaction membaca snapshot pra-mutasi (total stale).
       const totals = await hitungUlangBill(bill.id, warungId, tx);
-      const fresh = await tx.transaction.update({
-        where: { id: bill.id },
+      const res = await tx.transaction.updateMany({
+        where: { id: bill.id, warungId },
         data: {
           subtotal: totals.subtotal,
           // Fix A13: simpan diskon yang diniatkan kasir (rawDiscount), bukan yang
@@ -152,6 +157,10 @@ export async function PATCH(req: Request, { params }: Params) {
           tax: totals.tax,
           total: totals.total,
         },
+      });
+      if (res.count !== 1) throw new BillError("Bill tidak ditemukan.", 404);
+      const fresh = await tx.transaction.findFirstOrThrow({
+        where: { id: bill.id, warungId },
         include: { items: true },
       });
 
@@ -187,7 +196,8 @@ export async function DELETE(_req: Request, { params }: Params) {
       if (!current) throw new BillError("Bill tidak ditemukan.", 404);
       // Hapus item dulu (eksplisit), lalu bill — tidak bergantung pada cascade FK.
       await tx.transactionItem.deleteMany({ where: { transactionId: current.id, warungId } });
-      await tx.transaction.delete({ where: { id: current.id } });
+      const del = await tx.transaction.deleteMany({ where: { id: current.id, warungId } });
+      if (del.count !== 1) throw new BillError("Bill tidak ditemukan.", 404);
     });
 
     await catat({
