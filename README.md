@@ -1,6 +1,6 @@
 # 🧾 KasirKu — POS Kasir Modern
 
-Aplikasi kasir warung makan single-codebase: **Next.js 14 + TypeScript + Tailwind + Prisma + PostgreSQL (Supabase)**.
+Aplikasi kasir warung makan single-codebase: **Next.js 16 + TypeScript + Tailwind 4 + Prisma + PostgreSQL (Supabase)**.
 
 ## Fitur
 

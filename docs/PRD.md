@@ -167,7 +167,7 @@ Fitur, berurutan prioritas:
 
 ```
 Tablet/HP Kasir (PWA)
-  ├── Next.js 14 App Router + TypeScript + Tailwind
+  ├── Next.js 16 App Router + TypeScript + Tailwind
   ├── IndexedDB (antrean offline) + status koneksi
   └── API Routes (Next.js)
         ├── Prisma ORM
