@@ -181,7 +181,38 @@ export async function seedWarung(nama: string) {
   return result;
 }
 
+// Guard keselamatan: menolak seed ke DB NON-lokal (mis. produksi Supabase).
+// Seed membuat warung demo + kredensial lemah (password123 / PIN 123456) — tak
+// boleh bocor ke DB nyata. Override sengaja dengan `ALLOW_SEED_NON_LOCAL=1`.
+function tolakJikaNonLokal(): void {
+  const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+  if (!url) return;
+
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return;
+  }
+
+  const lokal = host === "localhost" || host === "127.0.0.1" || host === "::1";
+  if (lokal || process.env.ALLOW_SEED_NON_LOCAL === "1") return;
+
+  console.error(
+    [
+      `[SEED] DITOLAK: target DB bukan lokal (host: "${host}").`,
+      "Seed membuat warung demo + kredensial lemah (password123 / PIN 123456)",
+      "yang TIDAK boleh masuk ke database produksi/non-lokal.",
+      "Bila memang disengaja (mis. staging), jalankan ulang dengan:",
+      "  ALLOW_SEED_NON_LOCAL=1 npm run db:seed",
+    ].join("\n"),
+  );
+  process.exit(1);
+}
+
 async function main() {
+  tolakJikaNonLokal();
+
   const args = process.argv.slice(2);
   let warungsCount = 1;
 

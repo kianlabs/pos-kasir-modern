@@ -36,7 +36,7 @@ export async function deriveStatusMeja(warungId: string): Promise<MejaDenganStat
   const [mejas, openBills] = await Promise.all([
     prisma.meja.findMany({
       where: { warungId },
-      // `nomor` disimpan sebagai String; orderBy asc SQLite mengurutkan
+      // `nomor` disimpan sebagai String; orderBy asc mengurutkan
       // leksikografis → "10" muncul sebelum "2" (1, 10, 2, 3, …). Urutkan
       // numerik di sini agar peta meja tampil 1, 2, 3, … 10.
       select: { id: true, nomor: true },
@@ -119,11 +119,11 @@ export async function requireBillDraft(id: string, warungId: string) {
 // langsung menulis discount=0 → diskon kasir hilang tanpa jejak, dan diskon
 // yang lebih besar dari subtotal terpotong permanen.
 //
-// PENTING (dibuktikan lewat probe): pada Prisma+SQLite, client ROOT `prisma`
-// TIDAK melihat tulisan yang belum di-commit dari dalam `$transaction` — ia
-// membaca snapshot pra-mutasi (qty via tx=3, via root=0). Karena itu panggil
-// helper ini DENGAN `tx` bila dipakai di dalam $transaction; dengan `prisma`
-// (default) hanya aman di luar transaksi.
+// PENTING (dulu dibuktikan lewat probe saat masih di SQLite): pada klien
+// Prisma, client ROOT `prisma` TIDAK melihat tulisan yang belum di-commit dari
+// dalam `$transaction` — ia membaca snapshot pra-mutasi (qty via tx=3, via
+// root=0). Karena itu panggil helper ini DENGAN `tx` bila dipakai di dalam
+// $transaction; dengan `prisma` (default) hanya aman di luar transaksi.
 export async function hitungUlangBill(
   billId: string,
   warungId: string,

@@ -143,10 +143,10 @@ export type ProsesCheckoutResult = {
  *   + decrement stok, semua dalam `tx` yang sama.
  *
  * Catatan race: cek-lalu-create di dalam `$transaction` mengandalkan serialisasi
- * transaksi interaktif Prisma/SQLite (pola sama dengan buka-shift & buka-bill).
+ * transaksi interaktif Prisma (pola sama dengan buka-shift & buka-bill).
  * Bila dua request id sama benar-benar balapan, satu kalah unique (P2002);
  * pemanggil menangkapnya via `isUniqueConstraintError` dan mengembalikan yang
- * ada (tetap idempotent). Saat migrasi ke Postgres: `id` sudah PK → aman.
+ * ada (tetap idempotent). `id` sudah PK di Postgres → aman.
  */
 export async function prosesCheckout(
   tx: Prisma.TransactionClient,

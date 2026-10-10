@@ -256,7 +256,8 @@ model Insight {
   warung    Warung   @relation(fields: [warungId], references: [id], onDelete: Cascade)
 
   type      String   // NARRATIVE | ANOMALY | CHAT_SUMMARY  (String + const union —
-                     // jangan enum: dev masih SQLite, Prisma SQLite tidak support enum)
+                     // dulu dihindari enum karena dev masih SQLite; dipertahankan
+                     // agar tak perlu migrasi enum Postgres yang belum perlu)
   title     String
   body      String   // narasi hasil AI (atau template fallback)
   findings  String?  // JSON ringan: temuan rule §4 (bukti angka, untuk verifikasi)
