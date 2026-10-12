@@ -130,14 +130,14 @@ Setelah `db:seed`, gunakan akun berikut:
    - `SESSION_SECRET` = string acak ≥16 karakter
    - `AI_ENABLED` = `true` (untuk mengaktifkan fitur Insight AI)
    - `AI_PROVIDER` = `9router`
-   - `AI_BASE_URL` = `https://llm.kianlabs.my.id/v1` (Cloudflare tunnel ke 9router; `127.0.0.1` TIDAK bisa diakses dari server Vercel)
+   - `AI_BASE_URL` = `https://llm-api.kianlabs.my.id/v1` (Cloudflare tunnel ke 9router desktop; `127.0.0.1` TIDAK bisa diakses dari server Vercel)
    - `AI_MODEL` = nama model (mis. `agentic-hemat`)
    - `AI_API_KEY` = key gateway 9router
 3. **Migrasi** dijalankan ke DB: `npx prisma migrate deploy` (memakai `DIRECT_URL`).
 4. **Seed warung fiktif:** `npm run db:seed` (idempoten).
 5. Verifikasi: URL staging live, landing + signup jalan, login owner + kasir, jualan penuh (checkout → struk → laporan), chat Insight AI menjawab, PWA installable (HTTPS), isolasi tenant benar.
 
-> **Catatan AI di produksi:** `AI_BASE_URL` harus menunjuk ke endpoint yang **publik-reachable** (Cloudflare tunnel `llm.kianlabs.my.id`). Jangan pakai IP Tailscale/LAN — Vercel tak bisa menjangkau. Untuk pilot, Tier 1 (9router pribadi) hanya untuk demo; pelanggan berbayar sebaiknya pakai `AI_PROVIDER=managed`.
+> **Catatan AI di produksi:** `AI_BASE_URL` harus menunjuk ke endpoint yang **publik-reachable** dan **TANPA Cloudflare Access** — Vercel (serverless) tidak bisa menyelesaikan halaman login Access. Pakai `llm-api.kianlabs.my.id` (hostname khusus server-to-server, auth via Bearer key), **bukan** `llm.kianlabs.my.id` yang diproteksi Access. Jangan pakai IP Tailscale/LAN — Vercel tak bisa menjangkau. Untuk pilot, Tier 1 (9router pribadi) hanya untuk demo; pelanggan berbayar sebaiknya pakai `AI_PROVIDER=managed`.
 
 > **Login demo staging:** owner `owner@warung-berkah-jaya.demo` / `password123`; kasir PIN `123456`; halaman masuk `/masuk`.
 

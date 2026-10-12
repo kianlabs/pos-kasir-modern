@@ -112,7 +112,7 @@ hijau" — **sudah terpenuhi** (Fase A tuntas). Fase 2 siap dimulai.
 2. **Fase B (upgrade Next 16 + Tailwind 4)?** breaking; kerjakan di sesi/PR sendiri?
 3. **Fase C (Fase 2):** butuh pilihan provider:
    - WhatsApp: Fonnte / WA Cloud API resmi / semi-manual (template + 1 klik)?
-   - AI: Tier-1 9router (`llm.kianlabs.my.id`) sudah tertulis di lampiran — pakai itu?
+   - AI: Tier-1 9router (`llm-api.kianlabs.my.id`, TANPA Cloudflare Access) sudah tertulis di lampiran — pakai itu? (Catatan: `llm.kianlabs.my.id` diproteksi Access → tak bisa dari Vercel.)
 
 ---
 

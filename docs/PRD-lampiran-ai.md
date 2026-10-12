@@ -54,7 +54,7 @@ Cron harian ──► anomalyJob(warungId)            │
 
 | Tier | Config | Kapan pakai |
 |---|---|---|
-| **Tier 1 — gateway pribadi (pilot)** | `AI_PROVIDER=9router` → `AI_BASE_URL=https://llm.kianlabs.my.id/v1` (Cloudflare tunnel) atau `http://100.108.127.6:20128/v1` (dev lokal via Tailscale/LAN), `AI_API_KEY` wajib | Fase 2 pilot ≤ 5 warung: biaya token Rp0 (akun sendiri), beat target §8 |
+| **Tier 1 — gateway pribadi (pilot)** | `AI_PROVIDER=9router` → `AI_BASE_URL=https://llm-api.kianlabs.my.id/v1` (Cloudflare tunnel TANPA Access, utk serverless/Vercel) atau `http://100.108.127.6:20128/v1` (dev lokal via Tailscale/LAN), `AI_API_KEY` wajib. Catatan: `llm.kianlabs.my.id` diproteksi Cloudflare Access → TIDAK bisa dipakai Vercel (serverless tak bisa login Access). | Fase 2 pilot ≤ 5 warung: biaya token Rp0 (akun sendiri), beat target §8 |
 | **Tier 2 — provider managed** | `AI_PROVIDER=managed` → Gemini Flash / DeepSeek / kelas Haiku (pricing per token) | Go-public / pelanggan berbayar — jangan menumpang akun pribadi (ToS & keberlangsungan) |
 
 Aturan:
