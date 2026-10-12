@@ -1,673 +1,349 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { rupiah } from "@/shared/rupiah";
-import ReceiptView from "@/shared/ReceiptView";
-import { productIcon } from "@/shared/category-icon";
-import { hitungUang } from "@/shared/hitung-uang";
-import { PaymentMethods, QuickCash, Kembalian } from "./_components/PaymentControls";
-import ScanListener from "./ScanListener";
-import KiosToggle from "./KiosToggle";
-import { getCache, putCache } from "@/client/offline-db";
-import { enqueueCheckout } from "@/client/offline-sync";
-import type { OutboxPayload } from "@/client/offline-types";
-import { OUTBOX_CHANGED_EVENT } from "./ConnectionBanner";
+import { redirect } from "next/navigation";
+import {
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Check,
+  Clock,
+  Cloud,
+  Coins,
+  LayoutGrid,
+  Package,
+  ReceiptText,
+  ShieldCheck,
+  Sparkles,
+  Tablet,
+  TrendingUp,
+  UtensilsCrossed,
+  WifiOff,
+  Wallet,
+} from "lucide-react";
+import { getSession } from "@/server/tenant";
 
-type TaxInfo = { enabled: boolean; pct: number };
+export const dynamic = "force-dynamic";
 
-type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
-type Cart = Record<string, number>;
-
-// Struk offline yang ditampilkan inline (tanpa navigasi) agar kasir tidak pindah
-// halaman — route /struk/* dinamis TIDAK ter-cache SW, jadi push offline = chrome-error.
-type OfflineReceipt = {
-  id: string;
-  createdAt: number;
-  lines: { key: string; name: string; qty: number; price: number }[];
-  subtotal: number;
-  discount: number;
-  tax: number;
-  total: number;
-  cash: number;
-  payment: "CASH" | "QRIS";
-  change: number;
+export const metadata = {
+  title: "KRING! — Kasir Warung Modern",
+  description:
+    "Aplikasi kasir untuk warung makan: transaksi cepat, kelola meja, stok, laporan omzet, dan pantau penjualan dari HP. Coba gratis 30 hari.",
 };
 
-// Badge stok kartu produk pada palet Warm Monochrome (netral + sinyal halus).
-function stockBadgeStyle(stock: number): string {
-  if (stock <= 0) return "bg-ink-950 text-surface border-ink-950";
-  return "bg-ink-100 text-ink-700 border-ink-200";
-}
+// Landing page publik (root "/"). Tampil sebelum login → memasarkan produk
+// (kesan SaaS). Bila sudah login, langsung diarahkan ke /kasir (pintu kerja).
+// Tanpa dependensi data — murni marketing, aman di-cache/di-serve publik.
 
-export default function KasirPage() {
-  const router = useRouter();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<Cart>({});
-  const [cash, setCash] = useState("");
-  const [payment, setPayment] = useState<"CASH" | "QRIS">("CASH");
-  const [discount, setDiscount] = useState("");
-  const [taxInfo, setTaxInfo] = useState({ enabled: true, pct: 10 });
-  const [hasShift, setHasShift] = useState<boolean | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Semua");
-  const [offlineReceipt, setOfflineReceipt] = useState<OfflineReceipt | null>(null);
+const FITUR = [
+  {
+    icon: ReceiptText,
+    judul: "Transaksi cepat",
+    isi: "Pilih menu, hitung kembalian otomatis, cetak struk. Keyboard-friendly & siap barcode scanner.",
+  },
+  {
+    icon: UtensilsCrossed,
+    judul: "Kelola meja",
+    isi: "Peta meja kosong/terisi, buka bill, pindah meja, gabung pesanan — cocok warung makan & kafe.",
+  },
+  {
+    icon: Package,
+    judul: "Stok & produk",
+    isi: "Atur menu, harga, dan stok. Notifikasi stok menipis biar tak kehabisan saat ramai.",
+  },
+  {
+    icon: BarChart3,
+    judul: "Laporan & insight",
+    isi: "Omzet harian, produk terlaris, jam sibuk, sampai ringkasan otomatis — tanpa hitung manual.",
+  },
+  {
+    icon: TrendingUp,
+    judul: "Dashboard live",
+    isi: "Pantau penjualan real-time dari HP di rumah. Tahu kondisi warung tanpa harus ke lokasi.",
+  },
+  {
+    icon: WifiOff,
+    judul: "Tetap jalan saat offline",
+    isi: "Internet putus? Kasir tetap bisa jualan. Data tersinkron otomatis begitu online lagi.",
+  },
+];
 
-  async function load() {
-    try {
-      const res = await fetch("/api/products");
-      if (!res.ok) throw new Error();
-      const data: Product[] = await res.json();
-      setProducts(data);
-      // Simpan salinan lokal agar kasir tetap bisa jualan saat offline.
-      putCache("products", data).catch(() => {});
-    } catch {
-      // Offline / server tak terjangkau → pakai salinan lokal bila ada.
-      const cached = await getCache<Product[]>("products").catch(() => undefined);
-      if (cached && cached.length > 0) {
-        setProducts(cached);
-        setError("");
-      } else {
-        setError("Gagal memuat produk. Cek koneksi lalu refresh halaman.");
-      }
-    }
-  }
-  useEffect(() => {
-    load();
-    fetch("/api/shifts/active")
-      .then((r) => r.json())
-      .then((s) => setHasShift(!!s))
-      .catch(() => setHasShift(null));
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((s) => {
-        const info: TaxInfo = { enabled: !!s.taxEnabled, pct: Number(s.taxPct) || 0 };
-        setTaxInfo(info);
-        putCache("settings", info).catch(() => {});
-      })
-      .catch(async () => {
-        const cached = await getCache<TaxInfo>("settings").catch(() => undefined);
-        if (cached) setTaxInfo(cached);
-      });
-  }, []);
+const LANGKAH = [
+  { n: "1", judul: "Daftar warung", isi: "Isi nama warung & email. Kurang dari 1 menit." },
+  { n: "2", judul: "Atur menu", isi: "Tambah produk, harga, stok. Atau mulai dari menu contoh." },
+  { n: "3", judul: "Mulai jualan", isi: "Buka shift, layani pelanggan, pantau omzet dari mana saja." },
+];
 
-  const categories = useMemo(
-    () => ["Semua", ...Array.from(new Set(products.map((p) => p.category)))],
-    [products]
-  );
-
-  const filtered = products.filter(
-    (p) =>
-      (category === "Semua" || p.category === category) &&
-      p.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const lines = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, qty]) => ({ product: products.find((p) => p.id === id)!, qty }))
-        .filter((l) => l.product && l.qty > 0),
-    [cart, products]
-  );
-  const subtotal = lines.reduce((n, l) => n + l.product.price * l.qty, 0);
-  const itemCount = lines.reduce((n, l) => n + l.qty, 0);
-  // Rumus uang kanonik (shared/hitung-uang) — satu sumber kebenaran (m5).
-  const uang = hitungUang({
-    subtotal,
-    discount: Number(discount) || 0,
-    taxEnabled: taxInfo.enabled,
-    taxPct: taxInfo.pct,
-  });
-  const discNum = uang.discount;
-  const taxNum = uang.tax;
-  const total = uang.total;
-  const cashNum = Number(cash) || 0;
-  const kembalian = cashNum - total;
-  const canPay =
-    lines.length > 0 && !loading && (payment === "QRIS" || cashNum >= total);
-
-  function add(id: string) {
-    const p = products.find((x) => x.id === id);
-    // <= 0 (bukan == 0): stok bisa MINUS setelah sync offline (PRD §12);
-    // Math.min dengan stok negatif akan membuat qty negatif & keranjang rusak.
-    if (!p || p.stock <= 0) return;
-    setCart((c) => ({ ...c, [id]: Math.min((c[id] ?? 0) + 1, p.stock) }));
-    setError("");
-  }
-  function dec(id: string) {
-    setCart((c) => {
-      const qty = (c[id] ?? 0) - 1;
-      const next = { ...c };
-      if (qty <= 0) delete next[id];
-      else next[id] = qty;
-      return next;
-    });
-  }
-
-  // Mode barcode scanner (PRD §7a). Skema Product tidak punya kolom barcode,
-  // jadi kode dicocokkan: (1) exact id, lalu (2) exact nama (abaikan besar/kecil
-  // huruf). Tidak ketemu → abaikan (tanpa error) agar tidak mengganggu alur jual.
-  function onScan(code: string) {
-    const kode = code.trim();
-    const target =
-      products.find((p) => p.id === kode) ??
-      products.find((p) => p.name.toLowerCase() === kode.toLowerCase());
-    if (target) {
-      add(target.id);
-    } else {
-      setError(`Barcode tidak dikenali: ${kode}`);
-    }
-  }
-
-  // Simpan transaksi ke antrean IndexedDB lalu TAMPILKAN struk inline (tanpa navigasi).
-  // PRD §12: offline TIDAK memblokir penjualan — stok boleh minus sementara,
-  // server memvalidasi ulang saat sync.
-  // Struk dirender dari data di memori (bukan baca IndexedDB / route dinamis) agar
-  // tetap aman saat offline & tidak bergantung pada cache service worker.
-  async function simpanOffline() {
-    const id = crypto.randomUUID();
-    const createdAt = Date.now();
-    const receipt: OfflineReceipt = {
-      id,
-      createdAt,
-      lines: lines.map((l) => ({
-        key: l.product.id,
-        name: l.product.name,
-        qty: l.qty,
-        price: l.product.price,
-      })),
-      subtotal,
-      discount: discNum,
-      tax: taxNum,
-      total,
-      cash: payment === "CASH" ? cashNum : total,
-      payment,
-      change: payment === "CASH" ? Math.max(0, kembalian) : 0,
-    };
-    const payload: OutboxPayload = {
-      items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
-      cash: receipt.cash,
-      payment,
-      discount: discNum,
-      // Total otoritatif yang dihitung client (harga cache) — uang sudah diterima
-      // saat offline; server memakainya agar sync tak ditolak karena selisih. PRD §12.
-      total,
-    };
-    await enqueueCheckout(payload, { id });
-    window.dispatchEvent(new Event(OUTBOX_CHANGED_EVENT));
-    setCart({});
-    setCash("");
-    setDiscount("");
-    setOfflineReceipt(receipt);
-  }
-
-  async function bayar() {
-    setError("");
-    if (lines.length === 0) return setError("Keranjang masih kosong.");
-    if (payment === "CASH" && cashNum < total)
-      return setError(`Uang kurang ${rupiah(total - cashNum)}.`);
-    setLoading(true);
-
-    // Offline terdeteksi → langsung ke antrean lokal (jangan blokir).
-    const online = !(typeof navigator !== "undefined" && !navigator.onLine);
-    // M3: saat ONLINE tanpa shift BUKA, JANGAN jual — kas tak akan masuk rekap
-    // shift mana pun & tak bisa direkonsiliasi. Blokir SEBELUM simpan/sync.
-    // Jalur OFFLINE (online === false) TIDAK terpengaruh: tetap ke antrean lokal.
-    if (online && hasShift === false) {
-      setLoading(false);
-      return setError("Belum buka shift. Buka shift dulu di menu Shift sebelum menerima pembayaran.");
-    }
-    if (!online) {
-      try {
-        await simpanOffline();
-      } catch {
-        setError("Gagal menyimpan transaksi offline.");
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: lines.map((l) => ({ productId: l.product.id, qty: l.qty })),
-          cash: payment === "CASH" ? cashNum : total,
-          payment,
-          discount: discNum,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error ?? "Gagal checkout.");
-        load(); // stok mungkin berubah
-        return;
-      }
-      router.push(`/struk/${data.id}`);
-    } catch {
-      // Fetch reject = jaringan mati walau navigator.onLine masih true.
-      // Jangan tampilkan error blokir — simpan ke antrean offline.
-      try {
-        await simpanOffline();
-      } catch {
-        setError("Tidak bisa hubungi server. Coba lagi.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+export default async function LandingPage() {
+  const session = await getSession();
+  if (session) redirect("/kasir");
 
   return (
-    <div className="flex flex-col">
-      {offlineReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40 backdrop-blur-[2px] p-4">
-          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-ink-200 bg-surface p-6 font-mono text-sm shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            <ReceiptView
-              nama="Struk"
-              id={offlineReceipt.id}
-              createdAtLabel={new Date(offlineReceipt.createdAt).toLocaleString("id-ID")}
-              lines={offlineReceipt.lines}
-              subtotal={offlineReceipt.subtotal}
-              discount={offlineReceipt.discount}
-              tax={offlineReceipt.tax}
-              total={offlineReceipt.total}
-              payment={offlineReceipt.payment}
-              cash={offlineReceipt.cash}
-              change={offlineReceipt.change}
-              badge={
-                <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-[11px] font-bold text-ink-700 border border-ink-200">
-                  Belum tersinkron
-                </span>
-              }
-              footerNote="Struk ini tersimpan lokal & akan tersinkron otomatis."
-              className=""
-              actions={
-                <button
-                  type="button"
-                  onClick={() => setOfflineReceipt(null)}
-                  className="mt-4 w-full h-14 rounded-xl bg-ink-950 py-3 font-label-lg text-label-lg text-surface shadow-sm hover:bg-black active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[20px]" aria-hidden>
-                    arrow_forward
-                  </span>
-                  Transaksi Baru
-                </button>
-              }
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Header ringkas + kontrol alat (scanner & kios) + pencarian cepat */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-headline-md font-headline-md font-bold tracking-tight text-ink-950">
-            Kasir
-          </h1>
-          <span className="hidden items-center gap-1.5 rounded-full border border-ink-200 bg-ink-100 px-2.5 py-1 text-caption font-caption text-ink-700 sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-ink-950" />
-            {itemCount} item
-          </span>
-        </div>
-        <div className="flex items-center gap-2 sm:ml-auto">
-          <ScanListener onScan={onScan} />
-          <KiosToggle />
-        </div>
-      </div>
-
-      {hasShift === false && (
-        <Link
-          href="/shift"
-          className="mb-4 flex items-center gap-2 rounded-xl border border-ink-200 bg-ink-100 px-4 py-3 text-label-md font-label-md text-ink-700 hover:bg-ink-200 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px] text-danger" aria-hidden>
-            warning
-          </span>
-          Belum buka shift — pembayaran ONLINE diblokir sampai shift dibuka. Sale offline tetap bisa
-          disimpan. Buka shift dulu →
-        </Link>
-      )}
-
-      <div className="grid items-start gap-5 xl:grid-cols-[1fr_minmax(360px,410px)]">
-        {/* ================= ZONE 2: KATALOG ================= */}
-        <section className="min-w-0">
-          {/* Search bar 48px touch-first */}
-          <div className="relative mb-3 w-full">
-            <span
-              className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-500 material-symbols-outlined text-[20px]"
-              aria-hidden
-            >
-              search
+    <div className="min-h-screen bg-canvas">
+      {/* ── Nav atas ── */}
+      <header className="sticky top-0 z-30 border-b border-ink-200 bg-canvas/85 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-950 text-surface">
+              <Bell className="h-[18px] w-[18px]" />
             </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari menu atau kode barcode…"
-              className="h-12 w-full rounded-xl border border-ink-200 bg-surface pl-11 pr-4 text-body-md font-body-md text-ink-950 placeholder-ink-500 outline-none focus:border-ink-950 transition-colors"
-            />
+            <span className="font-display-hero text-headline-sm font-bold tracking-tight text-ink-950">
+              KRING!
+            </span>
           </div>
+          <nav className="flex items-center gap-2">
+            <Link
+              href="/masuk"
+              className="rounded-xl px-4 py-2.5 text-label-lg font-label-lg text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950"
+            >
+              Masuk
+            </Link>
+            <Link
+              href="/daftar"
+              className="rounded-xl bg-ink-950 px-4 py-2.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
+            >
+              Coba Gratis
+            </Link>
+          </nav>
+        </div>
+      </header>
 
-          {/* Chip kategori horizontal (touch target 48px) */}
-          <div className="nice-scroll mb-4 flex items-center gap-2.5 overflow-x-auto pb-1">
-            {categories.map((c) => {
-              const active = category === c;
-              const count =
-                c === "Semua"
-                  ? products.length
-                  : products.filter((p) => p.category === c).length;
-              return (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={`h-12 shrink-0 whitespace-nowrap rounded-xl px-4 text-label-md font-label-md flex items-center gap-2 transition-colors ${
-                    active
-                      ? "bg-ink-950 border border-ink-950 text-surface shadow-sm"
-                      : "border border-ink-200 bg-surface text-ink-500 hover:bg-ink-100 hover:text-ink-950"
-                  }`}
-                >
-                  <span>{c}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-caption font-caption border ${
-                      active
-                        ? "bg-surface/15 text-surface border-surface/20"
-                        : "bg-ink-100 text-ink-500 border-ink-200"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Grid produk (2/3/4 kolom) */}
-          {filtered.length === 0 ? (
-            <p className="rounded-2xl border border-ink-200 bg-surface p-8 text-center text-body-md text-ink-500">
-              Produk tidak ditemukan.
+      {/* ── Hero ── */}
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 md:pt-20">
+        <div className="grid items-center gap-12 md:grid-cols-2">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-surface px-3 py-1.5 text-caption font-caption uppercase tracking-wider text-ink-700">
+              <Sparkles className="h-3.5 w-3.5" /> Kasir untuk warung & kafe
+            </span>
+            <h1 className="mt-5 font-display-hero text-display-hero leading-[1.05] tracking-tight text-ink-950">
+              Kasir bunyi,
+              <br />
+              cuan masuk.
+            </h1>
+            <p className="mt-5 max-w-lg font-body-lg text-body-lg leading-relaxed text-ink-700">
+              KRING! bantu warung kamu jualan lebih rapi: transaksi cepat, stok
+              terjaga, laporan omzet otomatis. Pantau penjualan dari HP, kapan pun.
             </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-              {filtered.map((p) => {
-                const soldOut = p.stock <= 0;
-                const inCart = cart[p.id] ?? 0;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => add(p.id)}
-                    disabled={soldOut}
-                    className={`group relative flex flex-col justify-between rounded-2xl border p-4 text-left transition-all ${
-                      soldOut
-                        ? "cursor-not-allowed border-ink-200 bg-ink-100 opacity-60"
-                        : "border-ink-200 bg-surface hover:border-ink-950 active:scale-[0.98]"
-                    }`}
-                  >
-                    <div className="w-full">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <span
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                            soldOut ? "bg-ink-200 text-ink-500" : "bg-ink-100 text-ink-700"
-                          }`}
-                        >
-                          {productIcon(p)}
-                        </span>
-                        <span
-                          className={`rounded border px-2 py-0.5 text-caption font-caption tabular-nums ${stockBadgeStyle(
-                            p.stock
-                          )}`}
-                        >
-                          {soldOut ? "Habis" : `Stok: ${p.stock}`}
-                        </span>
-                      </div>
-                      <h3
-                        className={`line-clamp-2 text-body-md font-body-md font-semibold leading-snug ${
-                          soldOut ? "text-ink-700" : "text-ink-950"
-                        }`}
-                      >
-                        {p.name}
-                      </h3>
-                      <p className="mt-0.5 text-caption font-caption text-ink-500">{p.category}</p>
-                    </div>
-                    <div className="mt-4 flex w-full items-center justify-between border-t border-ink-200 pt-3">
-                      <span
-                        className={`text-numeral-md font-numeral-md tabular-nums ${
-                          soldOut ? "text-ink-500" : "text-ink-950"
-                        }`}
-                      >
-                        {rupiah(p.price)}
-                      </span>
-                      {soldOut ? (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-200 text-ink-500">
-                          <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                            block
-                          </span>
-                        </span>
-                      ) : inCart > 0 ? (
-                        <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-ink-950 px-1.5 text-label-md font-label-md tabular-nums text-surface">
-                          {inCart}
-                        </span>
-                      ) : (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-700 transition-colors group-hover:bg-ink-950 group-hover:text-surface">
-                          <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                            add
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* ================= ZONE 3: STICKY ORDER TICKET PANEL ================= */}
-        <aside className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-xs xl:sticky xl:top-6">
-          {/* Header panel */}
-          <div className="flex items-center justify-between border-b border-ink-200 p-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-headline-sm font-headline-sm text-ink-950">Pesanan</h2>
-                <span className="rounded border border-ink-200 bg-ink-100 px-2 py-0.5 text-caption font-caption text-ink-700">
-                  Dine In
-                </span>
-              </div>
-              <p className="mt-0.5 text-caption font-caption tabular-nums text-ink-500">
-                {itemCount} item • Kasir
-              </p>
-            </div>
-            {lines.length > 0 && (
-              <button
-                onClick={() => setCart({})}
-                title="Kosongkan keranjang"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-ink-200 text-ink-500 transition-colors hover:bg-ink-100 hover:text-danger"
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                href="/daftar"
+                className="inline-flex h-14 items-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
               >
-                <span className="material-symbols-outlined text-[20px]" aria-hidden>
-                  delete
-                </span>
-              </button>
-            )}
-          </div>
-
-          {/* Daftar line item (scrollable, stepper 48px) */}
-          <div className="nice-scroll max-h-[38vh] divide-y divide-ink-200 overflow-y-auto px-4 xl:max-h-72">
-            {lines.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-center text-body-md text-ink-500">
-                <span className="material-symbols-outlined text-[32px] text-ink-300" aria-hidden>
-                  shopping_bag
-                </span>
-                Klik produk untuk menambah
-                <br />
-                ke pesanan
-              </div>
-            ) : (
-              lines.map((l) => (
-                <div key={l.product.id} className="py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <span className="text-body-md font-body-md font-semibold text-ink-950">
-                        {l.product.name}
-                      </span>
-                      <div className="mt-1 text-caption font-caption tabular-nums text-ink-500">
-                        @ {rupiah(l.product.price)}
-                      </div>
-                    </div>
-                    <span className="text-right text-numeral-md font-numeral-md tabular-nums text-ink-950">
-                      {rupiah(l.product.price * l.qty)}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex items-center justify-end">
-                    <div className="flex items-center rounded-xl border border-ink-200 bg-surface">
-                      <button
-                        onClick={() => dec(l.product.id)}
-                        aria-label="Kurangi jumlah"
-                        className="flex h-10 w-12 items-center justify-center rounded-l-xl text-ink-950 transition-colors hover:bg-ink-100 active:bg-ink-200"
-                      >
-                        <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                          remove
-                        </span>
-                      </button>
-                      <span className="w-9 text-center text-numeral-md font-numeral-md tabular-nums text-ink-950">
-                        {l.qty}
-                      </span>
-                      <button
-                        onClick={() => add(l.product.id)}
-                        aria-label="Tambah jumlah"
-                        className="flex h-10 w-12 items-center justify-center rounded-r-xl text-ink-950 transition-colors hover:bg-ink-100 active:bg-ink-200"
-                      >
-                        <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                          add
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Ringkasan & aksi pembayaran */}
-          <div className="space-y-1.5 border-t border-ink-200 px-4 pb-3 pt-3">
-            <div className="flex items-center justify-between text-body-md font-body-md text-ink-700">
-              <span>Subtotal</span>
-              <span className="tabular-nums font-medium text-ink-950">{rupiah(subtotal)}</span>
+                Mulai Gratis 30 Hari <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/masuk"
+                className="inline-flex h-14 items-center gap-2 rounded-xl border border-ink-200 bg-surface px-6 py-3.5 text-label-lg font-label-lg text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
+              >
+                Sudah punya akun
+              </Link>
             </div>
+            <p className="mt-4 flex items-center gap-1.5 font-caption text-caption text-ink-500">
+              <Check className="h-3.5 w-3.5 text-success" /> Tanpa kartu kredit · Setup 1 menit · Batalkan kapan saja
+            </p>
+          </div>
 
-            {/* Diskon (input digit mentah — perilaku tidak berubah) */}
-            <div className="pt-1">
-              <input
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value.replace(/\D/g, ""))}
-                inputMode="numeric"
-                placeholder="Diskon Rp (opsional)"
-                className="h-10 w-full rounded-lg border border-ink-200 bg-surface px-2.5 text-body-sm text-ink-950 placeholder-ink-500 outline-none focus:border-ink-950 transition-colors tabular-nums"
+          {/* Mockup produk */}
+          <div className="relative">
+            <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
+              <div className="flex items-center gap-1.5 border-b border-ink-200 bg-ink-100 px-4 py-2.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                <span className="ml-2 font-caption text-caption text-ink-500">KRING! · Kasir</span>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/preview-kasir.png"
+                alt="Tampilan halaman kasir KRING!"
+                className="w-full"
+                width={1440}
+                height={900}
               />
             </div>
-            {(discNum > 0 || taxNum > 0) && (
-              <div className="pt-1 text-body-md font-body-md text-ink-700">
-                {discNum > 0 && (
-                  <div className="flex justify-between">
-                    <span>Diskon</span>
-                    <span className="tabular-nums font-medium text-ink-950">
-                      −{rupiah(discNum)}
-                    </span>
-                  </div>
-                )}
-                {taxNum > 0 && (
-                  <div className="flex justify-between">
-                    <span>Pajak ({taxInfo.pct}%)</span>
-                    <span className="tabular-nums font-medium text-ink-950">
-                      +{rupiah(taxNum)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mt-2 flex items-baseline justify-between border-t border-ink-200 pt-2">
-              <div className="flex flex-col">
-                <span className="text-caption font-caption uppercase tracking-wider text-ink-500">
-                  Total Belanja
-                </span>
-                <span className="text-caption font-caption tabular-nums text-ink-500">
-                  {lines.length} Jenis • {itemCount} Porsi
-                </span>
-              </div>
-              <span className="text-numeral-hero font-numeral-hero tabular-nums tracking-tight text-ink-950">
-                {rupiah(total)}
+            <div className="absolute -bottom-5 -left-5 hidden items-center gap-2 rounded-xl border border-ink-200 bg-surface px-3.5 py-2.5 shadow-lg sm:flex">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success-bg text-success">
+                <Coins className="h-4 w-4" />
+              </span>
+              <span className="flex flex-col">
+                <span className="font-caption text-caption text-ink-500">Omzet hari ini</span>
+                <span className="font-numeral-md text-numeral-md tabular-nums text-ink-950">Rp1.248.000</span>
               </span>
             </div>
-
-            {/* Metode bayar + kontrol tunai */}
-            <div className="pt-2">
-              <PaymentMethods payment={payment} onChange={setPayment} />
-
-              {payment === "CASH" ? (
-                <>
-                  <QuickCash total={total} onPick={setCash} />
-                  <input
-                    value={cash ? Number(cash).toLocaleString("id-ID") : ""}
-                    onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
-                    inputMode="numeric"
-                    aria-label="Nominal tunai diterima"
-                    placeholder="Nominal diterima…"
-                    className="mt-3 h-16 w-full rounded-xl border-2 border-ink-950 bg-surface px-4 text-right text-display-hero-mobile font-display-hero-mobile tabular-nums tracking-tight text-ink-950 outline-none focus:ring-2 focus:ring-ink-950/20"
-                  />
-                  <Kembalian cash={cash} kembalian={kembalian} />
-                </>
-              ) : (
-                <div className="mt-3 flex flex-col items-center gap-2 rounded-xl border border-ink-200 bg-ink-950 p-4 text-center">
-                  <span className="material-symbols-outlined text-[28px] text-surface" aria-hidden>
-                    qr_code_2
-                  </span>
-                  <p className="text-caption font-caption text-ink-300">
-                    Tunjukkan QR toko ke pembeli,
-                    <br />
-                    tekan Bayar setelah lunas.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <p className="mt-2 flex items-start gap-2 rounded-lg border border-ink-200 bg-danger-bg px-3 py-2 text-body-sm font-medium text-danger">
-                <span className="material-symbols-outlined text-[18px]" aria-hidden>
-                  error
-                </span>
-                {error}
-              </p>
-            )}
-
-            {/* CTA BAYAR 64px */}
-            <button
-              onClick={bayar}
-              disabled={!canPay}
-              className="mt-3 flex h-16 w-full items-center justify-between rounded-xl bg-ink-950 px-6 text-surface shadow-md transition-all hover:bg-black active:scale-[0.98] disabled:opacity-40"
-            >
-              <span className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface/10">
-                  <span className="material-symbols-outlined text-[24px]" aria-hidden>
-                    payments
-                  </span>
-                </span>
-                <span className="text-headline-sm font-headline-sm font-bold tracking-wide">
-                  {loading ? "PROSES…" : "BAYAR"}
-                </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-numeral-lg font-numeral-lg tabular-nums">{rupiah(total)}</span>
-                <span className="material-symbols-outlined text-[22px]" aria-hidden>
-                  arrow_forward
-                </span>
-              </span>
-            </button>
           </div>
-        </aside>
-      </div>
+        </div>
+      </section>
+
+      {/* ── Fitur ── */}
+      <section className="border-t border-ink-200 bg-surface">
+        <div className="mx-auto max-w-6xl px-5 py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
+              Semua yang warung butuh
+            </h2>
+            <p className="mt-3 font-body-md text-body-md text-ink-700">
+              Dibuat khusus untuk warung makan Indonesia — sederhana, cepat, dan
+              tetap jalan walau internet mati.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FITUR.map((f) => (
+              <div
+                key={f.judul}
+                className="rounded-2xl border border-ink-200 bg-canvas p-5 transition-shadow hover:shadow-sm"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-950 text-surface">
+                  <f.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 font-headline-sm text-headline-sm text-ink-950">{f.judul}</h3>
+                <p className="mt-1.5 font-body-md text-body-md leading-relaxed text-ink-700">{f.isi}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Tampilan produk (galeri) ── */}
+      <section className="border-t border-ink-200 bg-canvas">
+        <div className="mx-auto max-w-6xl px-5 py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
+              Sekilas tampilannya
+            </h2>
+            <p className="mt-3 font-body-md text-body-md text-ink-700">
+              Bersih, cepat dibaca, dan ramah layar sentuh — kasir bisa langsung kerja.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/preview-dashboard.png" alt="Dashboard live penjualan" className="w-full" />
+              <figcaption className="flex items-center gap-2 border-t border-ink-200 px-4 py-3 font-label-md text-label-md text-ink-700">
+                <TrendingUp className="h-4 w-4" /> Dashboard live — pantau omzet dari HP
+              </figcaption>
+            </figure>
+            <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/preview-laporan.png" alt="Laporan penjualan" className="w-full" />
+              <figcaption className="flex items-center gap-2 border-t border-ink-200 px-4 py-3 font-label-md text-label-md text-ink-700">
+                <BarChart3 className="h-4 w-4" /> Laporan — omzet, produk terlaris, jam sibuk
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Cara mulai ── */}
+      <section className="border-t border-ink-200 bg-surface">
+        <div className="mx-auto max-w-6xl px-5 py-16">
+          <h2 className="text-center font-headline-lg text-headline-lg tracking-tight text-ink-950">
+            Mulai dalam 3 langkah
+          </h2>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {LANGKAH.map((l) => (
+              <div key={l.n} className="text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ink-950 font-numeral-lg text-numeral-lg text-surface">
+                  {l.n}
+                </span>
+                <h3 className="mt-4 font-headline-sm text-headline-sm text-ink-950">{l.judul}</h3>
+                <p className="mt-1.5 font-body-md text-body-md text-ink-700">{l.isi}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Harga ── */}
+      <section className="border-t border-ink-200 bg-canvas">
+        <div className="mx-auto max-w-3xl px-5 py-16">
+          <div className="text-center">
+            <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
+              Harga jujur, tanpa kejutan
+            </h2>
+            <p className="mt-3 font-body-md text-body-md text-ink-700">
+              Semua fitur sudah termasuk. Tanpa biaya tersembunyi.
+            </p>
+          </div>
+          <div className="mt-10 overflow-hidden rounded-3xl border-2 border-ink-950 bg-surface">
+            <div className="flex flex-col items-center gap-1 border-b border-ink-200 bg-ink-950 px-6 py-4 text-center">
+              <span className="font-label-lg text-label-lg uppercase tracking-wider text-ink-300">
+                Paket Warung
+              </span>
+            </div>
+            <div className="p-8 text-center">
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="font-display-hero text-display-hero tracking-tight text-ink-950">
+                  Rp99rb
+                </span>
+                <span className="font-body-md text-body-md text-ink-500">/warung/bulan</span>
+              </div>
+              <p className="mt-3 font-body-md text-body-md text-ink-700">
+                Gratis <b>30 hari</b> pertama. Setelah itu lanjut seharga segelas kopi per hari.
+              </p>
+              <ul className="mx-auto mt-7 grid max-w-md gap-3 text-left">
+                {[
+                  { icon: ReceiptText, t: "Transaksi & struk tanpa batas" },
+                  { icon: LayoutGrid, t: "Kelola meja & pesanan" },
+                  { icon: Package, t: "Produk, harga & stok" },
+                  { icon: BarChart3, t: "Laporan omzet & produk terlaris" },
+                  { icon: TrendingUp, t: "Dashboard live dari HP" },
+                  { icon: WifiOff, t: "Mode offline (tetap jualan tanpa internet)" },
+                  { icon: ShieldCheck, t: "Multi-kasir dengan PIN" },
+                ].map((b) => (
+                  <li key={b.t} className="flex items-center gap-3 font-body-md text-body-md text-ink-950">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-bg text-success">
+                      <Check className="h-3.5 w-3.5" />
+                    </span>
+                    {b.t}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/daftar"
+                className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
+              >
+                Mulai Gratis Sekarang <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA akhir ── */}
+      <section className="border-t border-ink-200 bg-ink-950">
+        <div className="mx-auto max-w-3xl px-5 py-16 text-center">
+          <Tablet className="mx-auto h-10 w-10 text-ink-300" />
+          <h2 className="mt-5 font-headline-lg text-headline-lg tracking-tight text-surface">
+            Siap bikin warung kamu lebih rapi?
+          </h2>
+          <p className="mt-3 font-body-md text-body-md text-ink-300">
+            Daftar hari ini, mulai jualan dalam 1 menit. Gratis 30 hari.
+          </p>
+          <Link
+            href="/daftar"
+            className="mt-7 inline-flex h-14 items-center gap-2 rounded-xl bg-surface px-7 py-3.5 text-label-lg font-label-lg text-ink-950 transition-all hover:opacity-90 active:scale-[0.98]"
+          >
+            Daftar Warung <ArrowRight className="h-5 w-5" />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-ink-200 bg-canvas">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-950 text-surface">
+              <Bell className="h-4 w-4" />
+            </span>
+            <span className="font-label-lg font-label-lg font-bold text-ink-950">KRING!</span>
+          </div>
+          <div className="flex items-center gap-5 font-caption text-caption text-ink-500">
+            <Link href="/masuk" className="hover:text-ink-950">Masuk</Link>
+            <Link href="/daftar" className="hover:text-ink-950">Daftar</Link>
+            <span className="flex items-center gap-1.5">
+              <Cloud className="h-3.5 w-3.5" /> © 2026 KRING!
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

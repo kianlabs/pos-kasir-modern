@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowRight, ArrowUpRight, CreditCard, Download, LineChart, ReceiptText, Trophy, TriangleAlert, CheckCircle2 } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 
 type Stats = {
@@ -74,7 +75,7 @@ export default function LaporanPage() {
         <div className="ml-auto flex flex-wrap items-center gap-2 text-body-sm">
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
             className="rounded-xl border border-ink-200 bg-surface px-2.5 py-1.5 text-ink-950 outline-none focus:border-ink-950" />
-          <span className="text-ink-300">→</span>
+          <ArrowRight className="h-4 w-4 text-ink-300" />
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
             className="rounded-xl border border-ink-200 bg-surface px-2.5 py-1.5 text-ink-950 outline-none focus:border-ink-950" />
           <button onClick={() => from && to && loadStats(from, to)}
@@ -83,8 +84,8 @@ export default function LaporanPage() {
           </button>
           {from && to && (
             <a href={`/api/export?from=${from}&to=${to}`}
-              className="rounded-xl bg-ink-950 px-3.5 py-1.5 text-label-lg text-surface hover:opacity-90">
-              ⬇ CSV
+              className="inline-flex items-center gap-1.5 rounded-xl bg-ink-950 px-3.5 py-1.5 text-label-lg text-surface hover:opacity-90">
+              <Download className="h-4 w-4" /> CSV
             </a>
           )}
         </div>
@@ -116,7 +117,9 @@ export default function LaporanPage() {
 
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-3 text-headline-sm text-ink-950">📈 Omzet 7 hari terakhir</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+            <LineChart className="h-4 w-4" /> Omzet 7 hari terakhir
+          </h2>
           <div className="flex h-40 items-stretch gap-2">
             {stats.weekly.map((d) => (
               <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
@@ -137,7 +140,9 @@ export default function LaporanPage() {
         </div>
 
         <div className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-3 text-headline-sm text-ink-950">🏆 Produk terlaris</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+            <Trophy className="h-4 w-4" /> Produk terlaris
+          </h2>
           {stats.top.length === 0 ? (
             <p className="text-body-sm text-ink-500">Belum ada penjualan.</p>
           ) : (
@@ -161,9 +166,13 @@ export default function LaporanPage() {
 
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-2 text-headline-sm text-ink-950">⚠️ Stok menipis (≤ 5)</h2>
+          <h2 className="mb-2 flex items-center gap-2 text-headline-sm text-ink-950">
+            <TriangleAlert className="h-4 w-4" /> Stok menipis (≤ 5)
+          </h2>
           {stats.lowStock.length === 0 ? (
-            <p className="text-body-sm text-ink-500">Semua stok aman. ✅</p>
+            <p className="flex items-center gap-1.5 text-body-sm text-ink-500">
+              Semua stok aman. <CheckCircle2 className="h-4 w-4 text-success" />
+            </p>
           ) : (
             stats.lowStock.map((p) => (
               <div key={p.id} className="flex justify-between border-b border-ink-200 py-1.5 text-body-sm last:border-0">
@@ -172,13 +181,15 @@ export default function LaporanPage() {
               </div>
             ))
           )}
-          <Link href="/produk" className="mt-2 inline-block text-body-sm text-label-lg text-ink-950 hover:underline">
-            Kelola stok di Produk →
+          <Link href="/produk" className="mt-2 inline-flex items-center gap-1 text-body-sm text-label-lg text-ink-950 hover:underline">
+            Kelola stok di Produk <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
         <div className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-2 text-headline-sm text-ink-950">💳 Metode pembayaran</h2>
+          <h2 className="mb-2 flex items-center gap-2 text-headline-sm text-ink-950">
+            <CreditCard className="h-4 w-4" /> Metode pembayaran
+          </h2>
           {bayar.length === 0 ? (
             <p className="text-body-sm text-ink-500">Belum ada transaksi.</p>
           ) : (
@@ -193,7 +204,9 @@ export default function LaporanPage() {
       </div>
 
       <div className="mt-4 rounded-2xl border border-ink-200 bg-surface p-4">
-        <h2 className="mb-2 text-headline-sm text-ink-950">🧾 Transaksi terakhir</h2>
+        <h2 className="mb-2 flex items-center gap-2 text-headline-sm text-ink-950">
+          <ReceiptText className="h-4 w-4" /> Transaksi terakhir
+        </h2>
         {stats.recent.map((t) => (
           <Link key={t.id} href={`/struk/${t.id}`}
             className="flex justify-between border-b border-ink-200 py-2 text-body-sm last:border-0 hover:bg-ink-100">
@@ -206,8 +219,8 @@ export default function LaporanPage() {
             <b className="tabular-nums text-ink-950">{rupiah(t.total)}</b>
           </Link>
         ))}
-        <Link href="/transaksi" className="mt-2 inline-block text-label-lg text-ink-950 hover:underline">
-          Semua transaksi →
+        <Link href="/transaksi" className="mt-2 inline-flex items-center gap-1 text-label-lg text-ink-950 hover:underline">
+          Semua transaksi <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Check, Copy } from "lucide-react";
 
 // Halaman outbox notifikasi (Fase 2 §7a) — SEMI-MANUAL.
 //
@@ -105,9 +106,9 @@ export default function NotifikasiPage() {
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() => salin(n)}
-                  className="rounded-xl bg-ink-950 px-3.5 py-1.5 text-label-lg text-surface hover:opacity-90"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-ink-950 px-3.5 py-1.5 text-label-lg text-surface hover:opacity-90"
                 >
-                  {tersalin === n.id ? "✓ Tersalin" : "📋 Salin"}
+                  {tersalin === n.id ? (<><Check className="h-4 w-4" /> Tersalin</>) : (<><Copy className="h-4 w-4" /> Salin</>)}
                 </button>
                 {!n.readAt && (
                   <button

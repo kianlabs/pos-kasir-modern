@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
 import type { Role } from "@/types";
 import { bottomOverflow, bottomPrimary, isNavActive } from "@/shared/nav";
 
@@ -70,6 +71,7 @@ export default function MobileNav({ role }: { role: Role }) {
             <div className="grid grid-cols-3 gap-3">
               {overflow.map((n) => {
                 const active = isNavActive(n.href, path);
+                const Icon = n.icon;
                 return (
                   <Link
                     key={n.href}
@@ -81,7 +83,7 @@ export default function MobileNav({ role }: { role: Role }) {
                         : "border-ink-200 bg-surface text-ink-700"
                     }`}
                   >
-                    <span className="text-2xl">{n.icon}</span>
+                    <Icon className="h-5 w-5" strokeWidth={2} />
                     {n.label}
                   </Link>
                 );
@@ -98,6 +100,7 @@ export default function MobileNav({ role }: { role: Role }) {
         <div className="grid grid-cols-5">
           {primary.map((n) => {
             const active = isNavActive(n.href, path);
+            const Icon = n.icon;
             return (
               <Link
                 key={n.href}
@@ -106,7 +109,7 @@ export default function MobileNav({ role }: { role: Role }) {
                   active ? "text-ink-950" : "text-ink-500"
                 }`}
               >
-                <span className={`text-xl ${active ? "" : "opacity-80"}`}>{n.icon}</span>
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
                 {n.label}
               </Link>
             );
@@ -121,7 +124,7 @@ export default function MobileNav({ role }: { role: Role }) {
                 overflowActive ? "text-ink-950" : "text-ink-500"
               }`}
             >
-              <span className={`text-xl ${overflowActive ? "" : "opacity-80"}`}>☰</span>
+              <Menu className="h-5 w-5" strokeWidth={overflowActive ? 2.4 : 2} />
               Lainnya
             </button>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { rupiah } from "@/shared/rupiah";
-import { categoryIcon, productIcon } from "@/shared/category-icon";
+import { categoryIcon, productIcon } from "@/shared/icons";
 
 // Section "Tambah Item" bill meja: pencarian + filter kategori + grid produk +
 // stepper qty & tombol tambah. Diekstrak dari BillPanel (murni struktural —
@@ -52,7 +52,7 @@ export default function AddItemSection({
       <input
         value={cari}
         onChange={(e) => setCari(e.target.value)}
-        placeholder="🔍 Cari menu…"
+        placeholder="Cari menu…"
         className="mb-2 h-12 w-full rounded-xl border border-ink-200 bg-surface px-3 text-body-md text-ink-950 outline-none transition-colors placeholder:text-ink-500 focus:border-ink-950"
       />
       <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -67,20 +67,23 @@ export default function AddItemSection({
         >
           Semua
         </button>
-        {categories.map((c) => (
+        {categories.map((c) => {
+          const CIcon = categoryIcon(c);
+          return (
           <button
             type="button"
             key={c}
             onClick={() => setKategori(c)}
-            className={`h-12 shrink-0 rounded-xl border px-3 text-label-md transition-all active:scale-[0.98] ${
+            className={`inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-label-md transition-all active:scale-[0.98] ${
               kategori === c
                 ? "border-ink-950 bg-ink-950 text-surface"
                 : "border-ink-200 bg-surface text-ink-500 hover:border-ink-300 hover:text-ink-950"
             }`}
           >
-            {categoryIcon(c)} {c}
+            <CIcon className="h-4 w-4" /> {c}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Grid tombol produk — satu ketuk pilih, langsung tambah oleh tombol besar. */}
@@ -107,14 +110,19 @@ export default function AddItemSection({
                       : "border-ink-200 bg-surface hover:border-ink-300"
                   }`}
                 >
-                  <span className="relative text-xl">
-                    {productIcon(p)}
-                    {qtyAda > 0 && (
-                      <span className="absolute -right-1 -top-1 rounded-full bg-ink-950 px-1.5 text-[10px] font-bold leading-4 text-surface">
-                        ×{qtyAda}
+                  {(() => {
+                    const PIcon = productIcon(p);
+                    return (
+                      <span className="relative">
+                        <PIcon className="h-6 w-6 text-ink-950" />
+                        {qtyAda > 0 && (
+                          <span className="absolute -right-1.5 -top-1.5 rounded-full bg-ink-950 px-1.5 text-[10px] font-bold leading-4 text-surface">
+                            ×{qtyAda}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
+                    );
+                  })()}
                   <span className="mt-1 line-clamp-2 min-h-8 font-semibold leading-tight text-ink-950">
                     {p.name}
                   </span>
@@ -135,8 +143,12 @@ export default function AddItemSection({
       <div className="mt-3 flex items-center gap-2">
         <div className="min-w-0 flex-1 text-body-sm">
           {produkTerpilih ? (
-            <span className="block truncate font-semibold text-ink-950">
-              {productIcon(produkTerpilih)} {produkTerpilih.name}
+            <span className="flex items-center gap-1.5 truncate font-semibold text-ink-950">
+              {(() => {
+                const PIcon = productIcon(produkTerpilih);
+                return <PIcon className="h-4 w-4 shrink-0" />;
+              })()}
+              {produkTerpilih.name}
             </span>
           ) : (
             <span className="text-ink-500">Pilih menu di atas</span>

@@ -32,9 +32,17 @@ export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   if (
+    // Root = landing page SaaS publik (belum login). Setelah login, root
+    // redirect ke /kasir (lihat app/page.tsx). Publik karena tanpa sesi pun
+    // harus bisa melihat halaman jualan.
+    pathname === "/" ||
+    // Halaman pendaftaran warung baru (self-serve signup) — publik.
+    pathname.startsWith("/daftar") ||
     pathname.startsWith("/masuk") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/logout") ||
+    // Pendaftaran warung baru (self-serve) — publik, rate-limited di handler.
+    pathname.startsWith("/api/auth/daftar") ||
     // Daftar kasir per warung untuk tablet login: publik menurut desain
     // (lampiran skema §2 aturan #7). Handler hanya mengembalikan {id, name}.
     pathname.startsWith("/api/auth/kasir") ||
@@ -44,6 +52,10 @@ export function proxy(req: NextRequest) {
     // warung lintas-tenant; rate-limit per-IP menahan enumerasi.
     pathname.startsWith("/api/auth/warung") ||
     pathname.startsWith("/_next") ||
+    // Aset statis publik (gambar landing, dsb.) — tanpa sesi. File di public/
+    // dilayani langsung; tanpa pengecualian ini mereka kena gate sesi → 307 →
+    // gambar landing "rusak". Aman: hanya aset non-rahasia.
+    /\.(png|jpg|jpeg|webp|svg|gif|ico|txt|webmanifest)$/i.test(pathname) ||
     // Aset PWA WAJIB publik tanpa sesi: browser/PWA installer mengambilnya
     // sebelum login (manifest, service worker, ikon). Bila di-gate, install
     // PWA gagal & /sw.js ter-redirect → offline mati (Tahap 4).
@@ -74,7 +86,7 @@ export function proxy(req: NextRequest) {
     }
     if (!isApi && OWNER_ONLY_PAGES.some((p) => pathname.startsWith(p))) {
       const url = req.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = "/kasir";
       url.search = "?denied=1";
       return NextResponse.redirect(url);
     }

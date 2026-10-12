@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+
 // Aksi destruktif "Batalkan Bill". Diekstrak dari BillPanel (murni struktural —
 // handler tetap di BillPanel, dioper lewat props).
 
@@ -17,9 +19,9 @@ export default function BatalSection({ loading, batal }: Props) {
         type="button"
         onClick={batal}
         disabled={loading}
-        className="h-12 rounded-xl border border-danger bg-surface px-4 text-label-lg text-danger transition-colors hover:bg-danger hover:text-surface active:scale-[0.98] disabled:opacity-40"
+        className="inline-flex h-12 items-center gap-2 rounded-xl border border-danger bg-surface px-4 text-label-lg text-danger transition-colors hover:bg-danger hover:text-surface active:scale-[0.98] disabled:opacity-40"
       >
-        🗑️ Batalkan Bill
+        <Trash2 className="h-4 w-4" /> Batalkan Bill
       </button>
     </div>
   );

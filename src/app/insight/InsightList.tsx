@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check, FileText, MessageSquare, Send, Sparkles, TriangleAlert, ArrowRight, type LucideIcon } from "lucide-react";
 
 // Daftar Insight owner (lampiran AI §5, §6) — kartu per temuan/narasi.
 //
@@ -26,14 +27,14 @@ export type Insight = {
 export type StatusKirim = "sibuk" | "terkirim" | "gagal";
 
 // Tipe Insight sinkron dengan backend (String + const union, lampiran §5).
-const TIPE: Record<string, { label: string; icon: string; cls: string }> = {
-  NARRATIVE: { label: "Ringkasan", icon: "📝", cls: "bg-ink-100 text-ink-700" },
-  ANOMALY: { label: "Anomali", icon: "⚠️", cls: "bg-ink-100 text-danger" },
-  CHAT_SUMMARY: { label: "Chat", icon: "💬", cls: "bg-ink-100 text-ink-700" },
+const TIPE: Record<string, { label: string; Icon: LucideIcon; cls: string }> = {
+  NARRATIVE: { label: "Ringkasan", Icon: FileText, cls: "bg-ink-100 text-ink-700" },
+  ANOMALY: { label: "Anomali", Icon: TriangleAlert, cls: "bg-ink-100 text-danger" },
+  CHAT_SUMMARY: { label: "Chat", Icon: MessageSquare, cls: "bg-ink-100 text-ink-700" },
 };
 
 function tipeMeta(type: string) {
-  return TIPE[type] ?? { label: type, icon: "✨", cls: "bg-ink-100 text-ink-700" };
+  return TIPE[type] ?? { label: type, Icon: Sparkles, cls: "bg-ink-100 text-ink-700" };
 }
 
 function tanggalID(iso: string): string {
@@ -85,13 +86,14 @@ export default function InsightList({
       {items.map((n) => {
         const meta = tipeMeta(n.type);
         const bukti = temuan(n.findings);
+        const MetaIcon = meta.Icon;
         return (
           <div key={n.id} className="rounded-2xl border border-ink-200 bg-surface p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`rounded-full px-2 py-0.5 text-caption uppercase tracking-wide ${meta.cls}`}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption uppercase tracking-wide ${meta.cls}`}
               >
-                {meta.icon} {meta.label}
+                <MetaIcon className="h-3.5 w-3.5" /> {meta.label}
               </span>
               <b className="text-body-sm text-ink-950">{n.title}</b>
               {!n.readAt && (
@@ -126,13 +128,14 @@ export default function InsightList({
                 type="button"
                 onClick={() => onKirim(n.id)}
                 disabled={statusKirim[n.id] === "sibuk"}
-                className="rounded-xl border border-ink-200 px-3.5 py-1.5 text-body-sm text-ink-700 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 px-3.5 py-1.5 text-body-sm text-ink-700 hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {statusKirim[n.id] === "sibuk" ? "Mengantre…" : "📤 Kirim ke WA"}
+                <Send className="h-3.5 w-3.5" />
+                {statusKirim[n.id] === "sibuk" ? "Mengantre…" : "Kirim ke WA"}
               </button>
               {statusKirim[n.id] === "terkirim" && (
-                <span role="status" className="text-body-sm text-success">
-                  ✓ Terkirim ke antrean WA
+                <span role="status" className="inline-flex items-center gap-1 text-body-sm text-success">
+                  <Check className="h-3.5 w-3.5" /> Terkirim ke antrean WA
                 </span>
               )}
               {statusKirim[n.id] === "gagal" && (
@@ -143,9 +146,9 @@ export default function InsightList({
               {n.source && (
                 <Link
                   href={n.source}
-                  className="text-body-sm text-label-lg text-ink-950 hover:underline"
+                  className="inline-flex items-center gap-1 text-body-sm text-label-lg text-ink-950 hover:underline"
                 >
-                  Lihat sumber angka →
+                  Lihat sumber angka <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               )}
             </div>

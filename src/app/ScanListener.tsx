@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ScanLine } from "lucide-react";
 
 // Mode barcode scanner (PRD §7a: "input keyboard wedge").
 //
@@ -94,9 +95,10 @@ export default function ScanListener({ onScan }: ScanListenerProps) {
   return (
     <span
       aria-live="polite"
-      className="pointer-events-none select-none text-[11px] font-medium text-ink-500"
+      className="pointer-events-none inline-flex select-none items-center gap-1 text-[11px] font-medium text-ink-500"
     >
-      {kodeTerakhir ? `🔍 terakhir: ${kodeTerakhir}` : "🔍 scanner siap"}
+      <ScanLine className="h-3.5 w-3.5" />
+      {kodeTerakhir ? `terakhir: ${kodeTerakhir}` : "scanner siap"}
     </span>
   );
 }

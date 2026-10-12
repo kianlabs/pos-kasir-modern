@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Banknote, Calculator, Check, LockKeyhole, Smartphone, TrendingDown, TrendingUp, TriangleAlert, Unlock, Wallet } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
-import { shortId } from "@/shared/category-icon";
+import { shortId } from "@/shared/icons";
 
 type Shift = {
   id: string;
@@ -117,8 +118,8 @@ export default function ShiftPage() {
       {!active ? (
         <section className="rounded-2xl border border-ink-200 bg-surface p-space-lg">
           <div className="flex items-center gap-space-sm border-b border-ink-200 pb-space-sm mb-space-md">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-950 text-[20px]">
-              🔓
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-950">
+              <Unlock className="h-5 w-5" />
             </span>
             <div>
               <span className="text-caption font-caption tracking-wider text-ink-500">
@@ -165,8 +166,8 @@ export default function ShiftPage() {
       )}
 
       {error && (
-        <p className="rounded-xl border border-danger-bg bg-danger-bg px-4 py-3 text-body-md font-medium text-danger">
-          ⚠️ {error}
+        <p className="flex items-center gap-2 rounded-xl border border-danger-bg bg-danger-bg px-4 py-3 text-body-md font-medium text-danger">
+          <TriangleAlert className="h-4 w-4 shrink-0" /> {error}
         </p>
       )}
 
@@ -210,8 +211,8 @@ export default function ShiftPage() {
               <div className="space-y-space-sm">
                 <div className="flex items-center justify-between rounded-xl border border-ink-200 bg-surface p-3">
                   <div className="flex items-center gap-space-sm">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-950 text-[16px]">
-                      💵
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-700">
+                      <Wallet className="h-4 w-4" />
                     </span>
                     <div>
                       <p className="font-label-md text-label-md text-ink-950">
@@ -229,8 +230,8 @@ export default function ShiftPage() {
 
                 <div className="flex items-center justify-between rounded-xl border border-ink-200 bg-surface p-3">
                   <div className="flex items-center gap-space-sm">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-950 text-[16px]">
-                      💰
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-700">
+                      <Banknote className="h-4 w-4" />
                     </span>
                     <div>
                       <p className="font-label-md text-label-md text-ink-950">
@@ -246,8 +247,8 @@ export default function ShiftPage() {
 
                 <div className="flex items-center justify-between rounded-xl border border-ink-200 bg-surface p-3">
                   <div className="flex items-center gap-space-sm">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-950 text-[16px]">
-                      📱
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink-200 bg-ink-100 text-ink-700">
+                      <Smartphone className="h-4 w-4" />
                     </span>
                     <div>
                       <p className="font-label-md text-label-md text-ink-950">
@@ -300,7 +301,7 @@ export default function ShiftPage() {
                 onClick={() => setShowBreakdown((v) => !v)}
                 className="flex items-center gap-1.5 rounded-lg border border-ink-200 px-3 py-1.5 font-label-md text-label-md text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950"
               >
-                🧮 {showBreakdown ? "Sembunyikan Rincian" : "Rincian Pecahan Uang"}
+                <Calculator className="h-4 w-4" /> {showBreakdown ? "Sembunyikan Rincian" : "Rincian Pecahan Uang"}
               </button>
             </div>
 
@@ -392,7 +393,7 @@ export default function ShiftPage() {
                     selisih === 0 ? "bg-ink-950" : selisih > 0 ? "bg-ink-700" : "bg-danger"
                   }`}
                 >
-                  {selisih === 0 ? "✓" : selisih > 0 ? "▲" : "!"}
+                  {selisih === 0 ? <Check className="h-5 w-5" /> : selisih > 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
                 </span>
                 <div>
                   <p className="font-caption text-caption text-ink-500">Status Rekonsiliasi Kas</p>
@@ -444,7 +445,7 @@ export default function ShiftPage() {
                     onClick={() => tutup(active.id)}
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 font-label-lg text-label-lg font-bold text-surface transition-all hover:opacity-90 active:scale-[0.98] sm:flex-1"
                   >
-                    🔒 KONFIRMASI &amp; TUTUP SHIFT
+                    <LockKeyhole className="h-4 w-4" /> KONFIRMASI &amp; TUTUP SHIFT
                   </button>
                   <button
                     type="button"
@@ -460,7 +461,7 @@ export default function ShiftPage() {
                   onClick={() => setClosingId(active.id)}
                   className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 font-label-lg text-label-lg font-bold text-surface transition-all hover:opacity-90 active:scale-[0.98] sm:flex-1"
                 >
-                  🔒 KONFIRMASI &amp; TUTUP SHIFT
+                  <LockKeyhole className="h-4 w-4" /> KONFIRMASI &amp; TUTUP SHIFT
                 </button>
               )}
             </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, TriangleAlert } from "lucide-react";
 import { prisma } from "@/server/db";
 import { deriveStatusMeja } from "@/server/meja";
 import { rupiah } from "@/shared/rupiah";
@@ -19,8 +20,8 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
       <div className="mx-auto max-w-md rounded-2xl border border-ink-200 bg-surface p-8 text-center text-body-md text-ink-700">
         Meja tidak ditemukan.
         <br />
-        <Link href="/meja" className="font-bold text-ink-950 hover:underline">
-          ← Kembali ke peta meja
+        <Link href="/meja" className="inline-flex items-center gap-1 font-bold text-ink-950 hover:underline">
+          <ArrowLeft className="h-4 w-4" /> Kembali ke peta meja
         </Link>
       </div>
     );
@@ -59,8 +60,8 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link href="/meja" className="text-label-md text-ink-500 transition-colors hover:text-ink-950">
-          ← Peta meja
+        <Link href="/meja" className="inline-flex items-center gap-1 text-label-md text-ink-500 transition-colors hover:text-ink-950">
+          <ArrowLeft className="h-4 w-4" /> Peta meja
         </Link>
         <h1 className="text-headline-md text-ink-950">Meja {meja.nomor}</h1>
         <span
@@ -76,10 +77,11 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
       {!bill && (
         <div className="rounded-2xl border border-ink-200 bg-surface p-6">
           {!shift && (
-            <p className="mb-4 rounded-xl border border-danger/30 bg-danger-bg px-4 py-2.5 text-body-sm font-semibold text-danger">
-              ⚠️ Belum ada shift terbuka — buka shift dulu sebelum membuka bill.{" "}
-              <Link href="/shift" className="underline">
-                Buka shift →
+            <p className="mb-4 flex items-center gap-2 rounded-xl border border-danger/30 bg-danger-bg px-4 py-2.5 text-body-sm font-semibold text-danger">
+              <TriangleAlert className="h-4 w-4 shrink-0" />
+              Belum ada shift terbuka — buka shift dulu sebelum membuka bill.{" "}
+              <Link href="/shift" className="inline-flex items-center gap-1 underline">
+                Buka shift <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </p>
           )}
@@ -119,7 +121,7 @@ export default async function MejaDetailPage(props: { params: Promise<{ id: stri
 
               {bill.items.length === 0 ? (
                 <p className="px-4 py-8 text-center text-body-sm text-ink-500">
-                  Belum ada item. Tambahkan pesanan di bawah 👇
+                  Belum ada item. Tambahkan pesanan di bawah.
                 </p>
               ) : (
                 <div className="px-4 py-2">

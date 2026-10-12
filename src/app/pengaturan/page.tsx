@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check, ReceiptText, TriangleAlert } from "lucide-react";
 
 export default function PengaturanPage() {
   const [enabled, setEnabled] = useState(true);
@@ -29,14 +30,16 @@ export default function PengaturanPage() {
     }).catch(() => null);
     if (!res) return setError("Tidak bisa hubungi server.");
     if (!res.ok) return setError("Gagal menyimpan.");
-    setSaved("Tersimpan ✓ Berlaku untuk struk berikutnya.");
+    setSaved("Tersimpan — berlaku untuk struk berikutnya.");
   }
 
   return (
     <div className="max-w-md">
       <h1 className="mb-4 text-headline-md text-ink-950">Pengaturan</h1>
       <form onSubmit={simpan} className="rounded-2xl border border-ink-200 bg-surface p-4">
-        <h2 className="mb-3 text-headline-sm text-ink-950">🧾 Pajak otomatis (PB1)</h2>
+        <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+          <ReceiptText className="h-4 w-4" /> Pajak otomatis (PB1)
+        </h2>
         <label className="flex cursor-pointer items-center justify-between rounded-xl bg-ink-100 px-3 py-2.5 text-body-sm text-ink-950">
           <span className="text-label-lg">Kenakan pajak di setiap struk</span>
           <button
@@ -67,8 +70,8 @@ export default function PengaturanPage() {
         <p className="mt-2 text-caption text-ink-500">
           Pajak dihitung otomatis dari (subtotal − diskon) dan tercatat per transaksi + struk.
         </p>
-        {error && <p className="mt-2 text-body-sm text-danger">⚠️ {error}</p>}
-        {saved && <p className="mt-2 text-body-sm text-success">{saved}</p>}
+        {error && <p className="mt-2 flex items-center gap-1.5 text-body-sm text-danger"><TriangleAlert className="h-4 w-4 shrink-0" /> {error}</p>}
+        {saved && <p className="mt-2 flex items-center gap-1.5 text-body-sm text-success"><Check className="h-4 w-4 shrink-0" /> {saved}</p>}
         <button className="mt-3 w-full rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
           Simpan
         </button>

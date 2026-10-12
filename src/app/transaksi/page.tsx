@@ -1,7 +1,24 @@
 import Link from "next/link";
+import {
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  CloudCheck,
+  CloudUpload,
+  CreditCard,
+  Printer,
+  QrCode,
+  ReceiptText,
+  RefreshCw,
+  Search,
+  Send,
+  Trash2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { prisma } from "@/server/db";
 import { rupiah } from "@/shared/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { PAYMENT_LABEL, shortId } from "@/shared/icons";
 import { currentWarungId } from "@/server/tenant";
 
 export const dynamic = "force-dynamic";
@@ -27,13 +44,28 @@ function formatTanggalPanjang(d: Date): string {
   });
 }
 
-// Icon glyph Material Symbols (font dimuat di layout).
+// Peta nama ikon → komponen Lucide (dulu Material Symbols; kini SVG inline
+// agar konsisten lintas OS & offline-safe).
+const ICON: Record<string, LucideIcon> = {
+  search: Search,
+  calendar_today: Calendar,
+  expand_more: ChevronDown,
+  sync: RefreshCw,
+  receipt_long: ReceiptText,
+  qr_code_2: QrCode,
+  cloud_done: CloudCheck,
+  cloud_upload: CloudUpload,
+  chevron_right: ChevronRight,
+  close: X,
+  print: Printer,
+  send_to_mobile: Send,
+  delete: Trash2,
+  credit_card: CreditCard,
+};
+
 function Icon({ name, className = "" }: { name: string; className?: string }) {
-  return (
-    <span className={`material-symbols-outlined ${className}`} data-icon={name} aria-hidden>
-      {name}
-    </span>
-  );
+  const C = ICON[name] ?? Search;
+  return <C className={`h-5 w-5 ${className}`} aria-hidden />;
 }
 
 export default async function TransaksiPage() {
@@ -209,7 +241,7 @@ export default async function TransaksiPage() {
 
           {trx.length === 0 && (
             <div className="p-8 text-center text-body-md font-body-md text-ink-500">
-              Belum ada transaksi. Mulai jualan di halaman Kasir 🛒
+              Belum ada transaksi. Mulai jualan di halaman Kasir
             </div>
           )}
         </div>

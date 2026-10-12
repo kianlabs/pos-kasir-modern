@@ -73,7 +73,9 @@ export async function GET(req: Request) {
     });
     const topById = new Map(topProducts.map((p) => [p.id, p]));
     const top = topItems.map((t) => ({
+      id: t.productId,
       name: topById.get(t.productId)?.name ?? "?",
+      price: topById.get(t.productId)?.price ?? 0,
       qty: t._sum.qty ?? 0,
       omzet: (topById.get(t.productId)?.price ?? 0) * (t._sum.qty ?? 0),
     }));

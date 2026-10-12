@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { WifiOff } from "lucide-react";
 
 // Chat owner "KRING! Insight" (lampiran AI §6, §8, §9).
 //
@@ -160,8 +161,8 @@ export default function ChatPanel() {
 
   if (!online) {
     return (
-      <p className="rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
-        📶 {PESAN_OFFLINE}
+      <p className="flex items-center gap-2 rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
+        <WifiOff className="h-4 w-4 shrink-0" /> {PESAN_OFFLINE}
       </p>
     );
   }

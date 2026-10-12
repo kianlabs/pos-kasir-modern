@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeftRight, Banknote, QrCode } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 
 // Blok kontrol pembayaran yang IDENTIK dipakai di dua tempat:
@@ -14,7 +15,8 @@ type Payment = "CASH" | "QRIS";
 const QUICK_CASH = [10000, 20000, 50000, 100000];
 
 // Segmented control metode bayar: Tunai / QRIS.
-// Tab aktif = ink-950 solid (mockup "modal_pembayaran_tunai_qris"); tab pasif =
+// Tab aktif = warna sinyal beda per metode (Tunai = hijau/uang fisik,
+// QRIS = hitam/ink) supaya kasir tak salah pilih saat buru-buru; tab pasif =
 // surface + border ink-200 dengan hover ink-100.
 export function PaymentMethods({
   payment,
@@ -32,15 +34,13 @@ export function PaymentMethods({
         onClick={() => onChange("CASH")}
         className={`h-12 rounded-xl flex items-center justify-center gap-2 text-label-lg font-label-lg active:scale-[0.98] transition-all ${
           payment === "CASH"
-            ? "bg-ink-950 text-surface shadow-sm"
+            ? "bg-success text-surface shadow-sm"
             : "border border-ink-200 bg-surface text-ink-950 hover:bg-ink-100"
         }`}
       >
-        <span className="material-symbols-outlined text-[20px]" aria-hidden>
-          payments
-        </span>
+        <Banknote className="h-5 w-5" />
         <span>Tunai</span>
-        {payment === "CASH" && <span className="h-2 w-2 rounded-full bg-success" />}
+        {payment === "CASH" && <span className="h-2 w-2 rounded-full bg-surface/80" />}
       </button>
       <button
         type="button"
@@ -53,9 +53,7 @@ export function PaymentMethods({
             : "border border-ink-200 bg-surface text-ink-950 hover:bg-ink-100"
         }`}
       >
-        <span className="material-symbols-outlined text-[20px]" aria-hidden>
-          qr_code_2
-        </span>
+        <QrCode className="h-5 w-5" />
         <span>QRIS</span>
         {payment === "QRIS" ? (
           <span className="h-2 w-2 rounded-full bg-success" />
@@ -113,6 +111,61 @@ export function QuickCash({
   );
 }
 
+// Papan angka (keypad) untuk input nominal tunai — target sentuh 48px+,
+// gampang dipencet di layar kasir. Mendukung: angka, 000 (tiga nol cepat),
+// backspace, dan C (hapus semua). Nilai diperlakukan sebagai digit mentah
+// (tanpa titik) supaya konsisten dengan input manual di halaman kasir.
+export function CashKeypad({
+  onDigit,
+  onBackspace,
+  onClear,
+}: {
+  onDigit: (d: string) => void;
+  onBackspace: () => void;
+  onClear: () => void;
+}) {
+  const keys: { label: string; kind: "digit" | "back" | "clear"; value?: string }[] = [
+    { label: "1", kind: "digit", value: "1" },
+    { label: "2", kind: "digit", value: "2" },
+    { label: "3", kind: "digit", value: "3" },
+    { label: "4", kind: "digit", value: "4" },
+    { label: "5", kind: "digit", value: "5" },
+    { label: "6", kind: "digit", value: "6" },
+    { label: "7", kind: "digit", value: "7" },
+    { label: "8", kind: "digit", value: "8" },
+    { label: "9", kind: "digit", value: "9" },
+    { label: "000", kind: "digit", value: "000" },
+    { label: "0", kind: "digit", value: "0" },
+    { label: "⌫", kind: "back" },
+  ];
+  return (
+    <div className="mt-2 grid grid-cols-3 gap-1.5">
+      {keys.map((k) => (
+        <button
+          type="button"
+          key={k.label}
+          aria-label={k.kind === "back" ? "Hapus satu digit" : k.label}
+          onClick={() => {
+            if (k.kind === "digit") onDigit(k.value!);
+            else onBackspace();
+          }}
+          className="h-12 rounded-xl border border-ink-200 bg-surface text-numeral-md font-numeral-md tabular-nums text-ink-950 hover:bg-ink-100 hover:border-ink-950 active:scale-[0.97] transition-all"
+        >
+          {k.label}
+        </button>
+      ))}
+      <button
+        type="button"
+        aria-label="Hapus semua nominal"
+        onClick={onClear}
+        className="col-span-3 h-11 rounded-xl border border-ink-200 bg-ink-100 text-label-md font-label-md text-ink-700 hover:bg-ink-200 hover:text-danger active:scale-[0.98] transition-all"
+      >
+        Hapus (C)
+      </button>
+    </div>
+  );
+}
+
 // Kotak keterangan kembalian (mockup "KOTAK KALKULASI OTOMATIS KEMBALIAN").
 // Tampilkan "—" bila nominal tunai belum diisi. Kembalian negatif (uang kurang)
 // diberi warna danger agar kasir waspada.
@@ -126,19 +179,17 @@ export function Kembalian({
   const kurang = kembalian < 0;
   return (
     <div
-      className={`mt-3 p-3 rounded-xl bg-surface border-2 flex items-center justify-between ${
-        kurang ? "border-danger" : "border-ink-950"
+      className={`mt-3 p-3 rounded-xl border-2 flex items-center justify-between ${
+        kurang ? "border-danger bg-danger-bg" : "border-success bg-success-bg"
       }`}
     >
       <div className="flex items-center gap-2.5">
         <span
           className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-            kurang ? "bg-danger text-surface" : "bg-ink-950 text-surface"
+            kurang ? "bg-danger text-surface" : "bg-success text-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]" aria-hidden>
-            currency_exchange
-          </span>
+          <ArrowLeftRight className="h-[22px] w-[22px]" />
         </span>
         <div className="flex flex-col">
           <span className="text-label-lg font-label-lg uppercase tracking-wider text-ink-950 block leading-tight">
@@ -151,7 +202,7 @@ export function Kembalian({
       </div>
       <span
         className={`text-numeral-lg font-numeral-lg tabular-nums tracking-tight ${
-          kurang ? "text-danger" : "text-ink-950"
+          kurang ? "text-danger" : "text-success"
         }`}
       >
         {cash ? rupiah(Math.abs(kembalian)) : "—"}

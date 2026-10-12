@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { rupiah } from "@/shared/rupiah";
-import { PAYMENT_LABEL, shortId } from "@/shared/category-icon";
+import { PAYMENT_LABEL, shortId } from "@/shared/icons";
 
 // Komponen presentasional murni — dipakai bersama oleh:
 // struk/[id] (server), struk/offline/[id] (client), dan modal kasir (client).
@@ -119,7 +119,7 @@ export default function ReceiptView({
         <div className="my-3 border-t border-dashed border-ink-200" />
 
         <p className="text-center text-caption font-caption text-ink-500">
-          Terima kasih & sampai jumpa 🙏
+          Terima kasih & sampai jumpa
           {footerNote && (
             <>
               <br />

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { rupiah } from "@/shared/rupiah";
-import { productIcon, ICON_CHOICES } from "@/shared/category-icon";
+import { productIcon, PRODUCT_ICON_CHOICES, PRODUCT_ICON_MAP } from "@/shared/icons";
+import { ClipboardList, Pencil, Plus, Search, TriangleAlert, UtensilsCrossed } from "lucide-react";
 
 type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 
@@ -103,15 +104,18 @@ export default function ProdukPage() {
           <span className="rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700">
             Nilai stok <b className="text-ink-950 tabular-nums">{rupiah(totalNilai)}</b>
           </span>
-          <a href="/stok" className="rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700 hover:bg-ink-100">
-            📋 Riwayat stok
+          <a href="/stok" className="inline-flex items-center gap-1.5 rounded-xl border border-ink-200 bg-surface px-3 py-1.5 text-ink-700 hover:bg-ink-100">
+            <ClipboardList className="h-4 w-4" /> Riwayat stok
           </a>
         </div>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
         <form onSubmit={submit} className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-3 text-headline-sm text-ink-950">{editingId ? "✏️ Edit produk" : "➕ Tambah produk"}</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+            {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {editingId ? "Edit produk" : "Tambah produk"}
+          </h2>
           <label className="mb-1 block text-caption text-ink-500">Nama</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="mis. Ayam Goreng" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950" />
@@ -131,23 +135,27 @@ export default function ProdukPage() {
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
             placeholder="Nasi / Mie / Lauk / Sayur / Gorengan / Minuman" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950" />
           <label className="mb-1 block text-caption text-ink-500">
-            Ikon {form.icon && <span className="text-base">{form.icon}</span>}
+            Ikon {form.icon && PRODUCT_ICON_MAP[form.icon] && (() => { const I = PRODUCT_ICON_MAP[form.icon]; return <I className="inline h-4 w-4 align-text-bottom" />; })()}
           </label>
           <div className="mb-2 flex flex-wrap gap-1 rounded-xl border border-ink-200 bg-ink-100 p-2">
-            {ICON_CHOICES.map((ic) => (
-              <button
-                type="button"
-                key={ic}
-                onClick={() => setForm({ ...form, icon: form.icon === ic ? "" : ic })}
-                className={`rounded-md px-1.5 py-0.5 text-lg hover:bg-surface ${
-                  form.icon === ic ? "bg-surface ring-2 ring-ink-950" : ""
-                }`}
-              >
-                {ic}
-              </button>
-            ))}
+            {PRODUCT_ICON_CHOICES.map((ic) => {
+              const Ic = PRODUCT_ICON_MAP[ic];
+              return (
+                <button
+                  type="button"
+                  key={ic}
+                  aria-label={ic}
+                  onClick={() => setForm({ ...form, icon: form.icon === ic ? "" : ic })}
+                  className={`flex h-8 w-8 items-center justify-center rounded-md text-ink-700 hover:bg-surface ${
+                    form.icon === ic ? "bg-surface ring-2 ring-ink-950 text-ink-950" : ""
+                  }`}
+                >
+                  <Ic className="h-[18px] w-[18px]" />
+                </button>
+              );
+            })}
           </div>
-          {error && <p className="mb-2 text-body-sm text-danger">⚠️ {error}</p>}
+          {error && <p className="mb-2 flex items-center gap-1.5 text-body-sm text-danger"><TriangleAlert className="h-4 w-4 shrink-0" /> {error}</p>}
           <div className="flex gap-2">
             <button className="flex-1 rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
               {editingId ? "Simpan" : "Tambah"}
@@ -164,7 +172,7 @@ export default function ProdukPage() {
         <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
           <div className="border-b border-ink-200 p-3">
             <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="🔍 Cari produk…"
+              placeholder="Cari produk…"
               className="w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950 sm:max-w-xs" />
           </div>
           <div className="overflow-x-auto">
@@ -182,9 +190,11 @@ export default function ProdukPage() {
                 {filtered.map((p) => (
                   <tr key={p.id} className={`border-b border-ink-200 last:border-0 hover:bg-ink-100 ${editingId === p.id ? "bg-ink-100" : ""}`}>
                     <td className="p-3">
-                      <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-lg">
-                        {productIcon(p)}
-                      </span>
+                      {(() => { const Icon = productIcon(p); return (
+                        <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-700">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                      ); })()}
                       <span className="text-label-lg text-ink-950">{p.name}</span>
                     </td>
                     <td className="p-3">

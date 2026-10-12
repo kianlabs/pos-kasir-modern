@@ -15,11 +15,40 @@ import { PrismaClient } from "@prisma/client";
 // DIRECT_URL = direct/session (5432); DATABASE_URL hanya dipakai sebagai
 // fallback bila DIRECT_URL tak tersedia (mis. env yang cuma punya satu URL).
 //
-// Catatan skala: koneksi direct punya kuota lebih kecil dari pooler. Untuk
-// deploy serverless trafik tinggi, pertimbangkan Supabase *session pooler*
-// (juga 5432, mode session) sebagai DIRECT_URL agar transaksi tetap valid tanpa
-// menghabiskan kuota koneksi langsung.
-const datasourceUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+// ── Tuning pool (perbaikan P1001 "Can't reach database server") ──────────
+// Gejala: sebagian request PARALEL gagal P1001 (uji: 30 paralel → 6 gagal;
+// 20 berurutan → 0 gagal). Sebabnya default Prisma untuk runtime:
+//   • connection_limit = 2×CPU+1 (di mesin 8-core = 17) → burst koneksi
+//     menabrak batas pooler Supabase → koneksi baru ditolak.
+//   • connect_timeout = 5s → cold-connect ke Supabase (region Sydney) sering
+//     >5s saat pooler sibuk → langsung P1001, tanpa menunggu.
+// Obat: batasi jumlah koneksi (5 cukup untuk satu instance; di serverless tiap
+// instance punya pool sendiri), perpanjang connect_timeout, dan beri
+// pool_timeout agar query MENUNGGU koneksi bebas alih-alih langsung error.
+// Nilai bisa ditimpa lewat env (mis. deploy multi-instance → naikkan limit).
+const POOL_PARAMS: Record<string, string> = {
+  connection_limit: process.env.DB_CONNECTION_LIMIT ?? "5",
+  connect_timeout: process.env.DB_CONNECT_TIMEOUT ?? "15",
+  pool_timeout: process.env.DB_POOL_TIMEOUT ?? "20",
+};
+
+// Sisipkan parameter pool ke URL koneksi bila belum ada (tanpa menimpa yang
+// sudah didefinisikan manual di env).
+function withPoolParams(raw: string | undefined): string | undefined {
+  if (!raw) return raw;
+  try {
+    const u = new URL(raw);
+    for (const [k, v] of Object.entries(POOL_PARAMS)) {
+      if (!u.searchParams.has(k)) u.searchParams.set(k, v);
+    }
+    return u.toString();
+  } catch {
+    // URL tak terparse — kembalikan apa adanya (biar Prisma yang mengeluh).
+    return raw;
+  }
+}
+
+const datasourceUrl = withPoolParams(process.env.DIRECT_URL ?? process.env.DATABASE_URL);
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

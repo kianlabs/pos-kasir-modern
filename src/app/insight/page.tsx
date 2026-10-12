@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { MessageSquare, Sparkles, WifiOff, ArrowRight } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import InsightList, { type Insight, type StatusKirim } from "./InsightList";
 
@@ -141,15 +142,17 @@ export default function InsightPage() {
   return (
     <div>
       <div className="mb-4">
-        <h1 className="text-headline-md text-ink-950">✨ Insight</h1>
+        <h1 className="flex items-center gap-2 text-headline-md text-ink-950">
+          <Sparkles className="h-5 w-5" /> Insight
+        </h1>
         <p className="mt-0.5 text-body-sm text-ink-500">
           Ringkasan otomatis, deteksi anomali, dan tanya-laporan untuk owner.
         </p>
       </div>
 
       {!online ? (
-        <p className="rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
-          📶 {PESAN_OFFLINE}
+        <p className="flex items-center gap-2 rounded-2xl border border-ink-300 bg-ink-100 p-4 text-body-sm text-ink-700">
+          <WifiOff className="h-4 w-4 shrink-0" /> {PESAN_OFFLINE}
         </p>
       ) : (
         <>
@@ -158,15 +161,16 @@ export default function InsightPage() {
               type="button"
               onClick={ringkasHariIni}
               disabled={sibuk}
-              className="rounded-xl bg-ink-950 px-4 py-2 text-label-lg text-surface hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-ink-950 px-4 py-2 text-label-lg text-surface hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {sibuk ? "Menyusun ringkasan…" : "✨ Lihat ringkasan hari ini"}
+              <Sparkles className="h-4 w-4" />
+              {sibuk ? "Menyusun ringkasan…" : "Lihat ringkasan hari ini"}
             </button>
             <Link
               href="/insight/chat"
-              className="rounded-xl border border-ink-200 px-4 py-2 text-label-lg text-ink-950 hover:bg-ink-100"
+              className="inline-flex items-center gap-2 rounded-xl border border-ink-200 px-4 py-2 text-label-lg text-ink-950 hover:bg-ink-100"
             >
-              💬 Tanya owner
+              <MessageSquare className="h-4 w-4" /> Tanya owner
             </Link>
           </div>
 
@@ -205,9 +209,9 @@ export default function InsightPage() {
               {preview.source && (
                 <Link
                   href={preview.source}
-                  className="mt-2 inline-block text-body-sm text-label-lg text-ink-950 hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-body-sm text-label-lg text-ink-950 hover:underline"
                 >
-                  Lihat sumber angka →
+                  Lihat sumber angka <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               )}
             </div>

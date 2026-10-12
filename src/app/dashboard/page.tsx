@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { LineChart, ReceiptText, WifiOff, ArrowRight } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 
 // Interval polling snapshot live (ms). Cukup responsif untuk "pantau live",
@@ -118,8 +119,8 @@ export default function DashboardPage() {
   return (
     <div>
       {!online && (
-        <div className="mb-3 rounded-xl border border-ink-300 bg-ink-100 px-3 py-2 text-body-sm text-ink-700">
-          📵 Butuh internet — data mungkin tidak terbaru.
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-ink-300 bg-ink-100 px-3 py-2 text-body-sm text-ink-700">
+          <WifiOff className="h-4 w-4 shrink-0" /> Butuh internet — data mungkin tidak terbaru.
         </div>
       )}
 
@@ -143,7 +144,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-4 rounded-2xl border border-ink-200 bg-surface p-4">
-        <h2 className="mb-3 text-headline-sm text-ink-950">📈 Omzet per jam (12 jam WIB terakhir)</h2>
+        <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+          <LineChart className="h-4 w-4" /> Omzet per jam (12 jam WIB terakhir)
+        </h2>
         <div className="flex h-32 items-stretch gap-1.5">
           {snap.omzetPerJam.map((j) => (
             <div key={j.jam} className="flex flex-1 flex-col items-center gap-1">
@@ -164,7 +167,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-4 rounded-2xl border border-ink-200 bg-surface p-4">
-        <h2 className="mb-2 text-headline-sm text-ink-950">🧾 Transaksi terakhir</h2>
+        <h2 className="mb-2 flex items-center gap-2 text-headline-sm text-ink-950">
+          <ReceiptText className="h-4 w-4" /> Transaksi terakhir
+        </h2>
         {snap.transaksiTerakhir.length === 0 ? (
           <p className="text-body-sm text-ink-500">Belum ada penjualan.</p>
         ) : (
@@ -186,8 +191,8 @@ export default function DashboardPage() {
             </Link>
           ))
         )}
-        <Link href="/transaksi" className="mt-2 inline-block text-label-lg text-ink-950 hover:underline">
-          Semua transaksi →
+        <Link href="/transaksi" className="mt-2 inline-flex items-center gap-1 text-label-lg text-ink-950 hover:underline">
+          Semua transaksi <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </div>

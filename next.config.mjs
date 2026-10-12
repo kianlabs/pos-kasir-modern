@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Next 16 memblokir resource dev (/_next/hmr) dari origin selain localhost →
+  // akses via 127.0.0.1 dianggap cross-origin, HMR mati, dan hidrasi React GAGAL
+  // di dev (gejala: halaman render SSR tapi semua useEffect/data client tak jalan).
+  // Izinkan host yang kita pakai untuk development. Tidak berdampak di produksi.
+  allowedDevOrigins: ["127.0.0.1", "localhost", "192.168.1.9"],
   // Header keamanan dasar (audit LOW-4). Sengaja TIDAK memakai CSP ketat karena
   // Next.js menyuntikkan inline script (hydration) yang butuh nonce/hash —
   // memasang `script-src 'self'` tanpa itu akan memecah aplikasi. Header di bawah

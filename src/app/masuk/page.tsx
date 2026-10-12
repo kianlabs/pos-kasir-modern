@@ -11,7 +11,11 @@ export const dynamic = "force-dynamic";
 // di /masuk/<slug> untuk tablet masing-masing warung.
 export default async function MasukPage() {
   const session = await getSession();
-  if (session) redirect("/");
+  if (session) redirect("/kasir");
 
-  return <LoginTunggal />;
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <LoginTunggal />
+    </div>
+  );
 }

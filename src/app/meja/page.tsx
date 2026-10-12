@@ -37,8 +37,8 @@ export default async function MejaPage(props: {
 
   const chips: { key: Filter; label: string; count: number; dot: string }[] = [
     { key: "semua", label: "Semua Meja", count: total, dot: "" },
-    { key: "terisi", label: "Meja Terisi", count: terisi, dot: "bg-ink-950" },
-    { key: "kosong", label: "Meja Kosong", count: kosong, dot: "bg-ink-300" },
+    { key: "terisi", label: "Meja Terisi", count: terisi, dot: "bg-warning" },
+    { key: "kosong", label: "Meja Kosong", count: kosong, dot: "bg-success" },
   ];
 
   return (
@@ -91,7 +91,7 @@ export default async function MejaPage(props: {
               </span>
             </div>
             <Link
-              href="/"
+              href="/kasir"
               className="flex h-12 shrink-0 items-center gap-2 rounded-xl border border-ink-200 bg-surface px-4 text-label-md text-ink-950 transition-all hover:bg-ink-100 active:scale-[0.98]"
             >
               <span>+ Bawa pulang / jual langsung</span>
@@ -119,7 +119,7 @@ export default async function MejaPage(props: {
                   <Link
                     key={m.id}
                     href={`/meja/${m.id}`}
-                    className={`flex min-h-[200px] flex-col justify-between rounded-2xl border p-5 transition-colors ${
+                    className={`group flex min-h-[200px] flex-col justify-between rounded-2xl border p-5 transition-colors ${
                       isTerisi
                         ? "border-ink-950 bg-ink-950 text-surface"
                         : "border-ink-200 bg-surface text-ink-950 hover:border-ink-300"
@@ -135,13 +135,13 @@ export default async function MejaPage(props: {
                         <div
                           className={`mt-2 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-caption ${
                             isTerisi
-                              ? "bg-primary-container text-surface"
-                              : "border border-ink-200 bg-canvas text-ink-500"
+                              ? "bg-warning-bg text-warning border border-warning/30"
+                              : "border border-success/30 bg-success-bg text-success"
                           }`}
                         >
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${
-                              isTerisi ? "bg-success" : "bg-ink-300"
+                              isTerisi ? "bg-warning" : "bg-success"
                             }`}
                           />
                           <span>{isTerisi ? "Terisi" : "Kosong"}</span>
@@ -170,7 +170,7 @@ export default async function MejaPage(props: {
                       ) : (
                         <>
                           <span className="text-caption text-ink-500">Siap digunakan</span>
-                          <span className="flex h-12 items-center gap-1.5 rounded-xl bg-ink-950 px-4 text-label-md text-surface transition-all hover:opacity-90">
+                          <span className="flex h-12 items-center gap-1.5 rounded-xl border border-ink-300 bg-surface px-4 text-label-md text-ink-950 transition-all group-hover:border-ink-950 group-hover:bg-ink-950 group-hover:text-surface">
                             Buka Pesanan
                           </span>
                         </>

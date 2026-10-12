@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { productIcon } from "@/shared/category-icon";
+import { productIcon } from "@/shared/icons";
 
 type Move = {
   id: string;
@@ -51,7 +51,7 @@ export default function StokPage() {
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="🔍 Cari produk / alasan…"
+          placeholder="Cari produk / alasan…"
           className="ml-auto w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950 sm:max-w-xs"
         />
       </div>
@@ -107,7 +107,11 @@ export default function StokPage() {
                       })}
                     </td>
                     <td className="p-3 text-label-lg text-ink-950">
-                      <span className="mr-2">{productIcon(m.product)}</span>
+                      {(() => { const Icon = productIcon(m.product); return (
+                        <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-ink-100 align-middle text-ink-700">
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                      ); })()}
                       {m.product.name}
                     </td>
                     <td className="p-3">

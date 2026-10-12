@@ -18,6 +18,8 @@ export type AuditAction =
   | "SETTING_CHANGE"
   | "DELETE_PRODUCT"
   | "SEED_WARUNG"
+  // Pendaftaran warung baru (self-serve signup di /daftar).
+  | "DAFTAR_WARUNG"
   // Manajemen meja / bill DRAFT (Tahap 3)
   | "MEJA_BUKA"
   | "MEJA_BAYAR"

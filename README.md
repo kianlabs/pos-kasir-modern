@@ -1,10 +1,23 @@
-# 🧾 KasirKu — POS Kasir Modern
+# 🧾 KRING! — POS Kasir Modern (SaaS multitenant)
 
-Aplikasi kasir warung makan single-codebase: **Next.js 16 + TypeScript + Tailwind 4 + Prisma + PostgreSQL (Supabase)**.
+Aplikasi kasir warung makan single-codebase, disajikan sebagai **SaaS multitenant self-serve**: satu deploy melayani banyak warung, masing-masing terisolasi per tenant. Stack: **Next.js 16 + TypeScript + Tailwind 4 + Prisma + PostgreSQL (Supabase)**.
+
+## Alur masuk (routing)
+
+| Route | Isi | Akses |
+|---|---|---|
+| `/` | **Landing page SaaS** (hero, fitur, harga, CTA) | publik — bila sudah login → redirect `/kasir` |
+| `/daftar` | **Pendaftaran warung baru** (self-serve signup) | publik |
+| `/masuk` | **Login tunggal** (email owner ATAU slug+pin kasir) | publik |
+| `/kasir` | Mesin kasir (dulu `/`) | butuh sesi |
+| sisanya | `/meja`, `/transaksi`, `/shift`, `/stok`, `/produk`, `/promo`, `/laporan`, `/dashboard`, `/insight`, `/notifikasi`, `/pengaturan` | butuh sesi; owner-only sebagian |
+
+Signup `POST /api/auth/daftar` membuat **warung + owner + setting + 10 meja** dalam satu transaksi, lalu auto-login. Email owner unik global (login tunggal memakai email untuk menemukan warung).
 
 ## Fitur
 
-- **Kasir** (`/`) — kategori, cari produk, keranjang +/−, diskon Rp, pajak otomatis, bayar Tunai (numpad + kembalian) / QRIS
+- **Landing & Signup** (`/`, `/daftar`) — halaman jualan + pendaftaran warung self-serve (gratis 30 hari, status TRIAL)
+- **Kasir** (`/kasir`) — kategori, cari produk, keranjang +/−, diskon Rp, pajak otomatis, bayar Tunai (numpad + kembalian) / QRIS
 - **Produk** (`/produk`) — tambah, edit, hapus, stepper stok, nilai total stok
 - **Transaksi** (`/transaksi`) — riwayat 50 transaksi terakhir + link struk
 - **Meja** (`/meja`) — peta 10 meja (status KOSONG/TERISI di-derive dari bill DRAFT terbuka), bill per meja: tambah item, diskon, bayar, batal, gabung/pisah bill
@@ -12,11 +25,21 @@ Aplikasi kasir warung makan single-codebase: **Next.js 16 + TypeScript + Tailwin
 - **Stok** (`/stok`) — kartu stok: tiap penjualan/kulakan/koreksi tercatat
 - **Struk** (`/struk/[id]`) — struk 80mm + tombol cetak (print CSS)
 - **Laporan** (`/laporan`) — filter tanggal, export CSV, grafik 7 hari, produk terlaris, stok menipis
-- **Insight AI** (`/insight`) — narasi ringkasan + deteksi anomali; tiap insight bisa dikirim ke antrean WhatsApp owner (📤 Kirim ke WA → outbox notifikasi, dikirim lapisan WA Fase 2a)
+- **Dashboard Live** (`/dashboard`) — omzet real-time, grafik per jam, transaksi terakhir
+- **Promo** (`/promo`) — diskon persen / nominal / happy-hour + kode voucher
+- **Notifikasi** (`/notifikasi`) — laporan shift siap salin ke WhatsApp owner
 - **Pengaturan** (`/pengaturan`) — pajak otomatis on/off + tarif
-- **Auth & RBAC** (`/masuk/[slug]`) — login multi-role: owner (email + password) & kasir (PIN); session HMAC cookie; kasir dibatasi (403 di `/produk`, `/laporan`, `/pengaturan`)
-- **Insight AI** (`/insight`) — ringkasan otomatis, chat owner, deteksi anomali. **Pemakaian token AI dicatat per warung** (`ai_usage`) & diringkas di `/api/ai/usage` + kartu "Pemakaian AI bulan ini" — acceptance PRD lampiran AI §8/§11: token terukur < Rp5.000/warung/bln (angka kartu = estimasi; tagihan final dari provider)
+- **Auth & RBAC** (`/masuk`) — login multi-role: owner (email + password) & kasir (PIN); session HMAC cookie; kasir dibatasi (403 di halaman owner-only)
+- **Insight AI** (`/insight`, `/insight/chat`) — ringkasan otomatis, **chat owner** (tanya-jawab atas data warung sendiri), deteksi anomali. Model **tidak menebak**: pertanyaan dipetakan deterministik ke 7 tool angka, lalu dirangkai jadi kalimat. **Pemakaian token AI dicatat per warung** (`ai_usage`) & diringkas di `/api/ai/usage` + kartu "Pemakaian AI bulan ini"
 - Checkout atomik: validasi stok + kurangi stok dalam satu transaksi DB
+
+### Insight AI — cara kerja singkat
+
+- **Provider**: OpenAI-compatible (9router Tier 1 / `managed`). Semua env dibaca HANYA di `src/server/ai/config.ts`.
+- **Alur**: pertanyaan owner → `pilihToolDari()` (keyword matching, **tanpa LLM**) → 7 tool allowlist (ringkasan hari, tren, penjualan produk, penjualan kasir, stok menipis, rekap shift, anomali) → hanya **agregat angka** yang dikirim ke LLM untuk dirangkai.
+- **Tenant-safe**: `warungId` HANYA dari session; model tak pernah memegangnya. System prompt menegaskan teks data = DATA bukan INSTRUKSI (anti prompt-injection).
+- **Degradasi aman**: provider down/timeout → jawaban template angka, tetap HTTP 200 (bukan 500). Kasir tak pernah terpengaruh (AI bukan di jalur kasir).
+- **Gating**: owner-only + plan `ACTIVE` (gratis/TRIAL = tanpa LLM) + rate-limit 20 req/menit/user.
 
 ### Perilaku stok pada bill meja (disengaja)
 
@@ -87,12 +110,13 @@ Setelah `db:seed`, gunakan akun berikut:
 
 - **Owner** — email `owner@warung-berkah-jaya.demo`, password `password123`
 - **Kasir** — PIN `123456`
-- **Akses halaman masuk:** `/masuk/warung-berkah-jaya` (per-warung) atau `/masuk` (fallback tanpa slug)
+- **Halaman masuk:** `/masuk` (login tunggal — isi email owner ATAU pilih warung + PIN kasir)
 
 ## Keamanan
 
 - **`SESSION_SECRET` wajib diisi di produksi** (minimal 16 karakter) — tanpa ini sesi tidak aman.
 - **Rate-limit PIN masih in-memory** (5× gagal → blokir 5 menit). Pindahkan ke DB/Redis saat deploy multi-instance, karena state in-memory tidak terbagi antar proses.
+- **Pool koneksi Prisma di-tuning** (`src/server/db.ts`): `connection_limit=5`, `connect_timeout=15`, `pool_timeout=20`. Tanpa ini, request paralel ke Supabase sering gagal `P1001` (default Prisma = 2×CPU+1 koneksi → menabrak batas pooler). Bisa ditimpa lewat env `DB_CONNECTION_LIMIT` / `DB_CONNECT_TIMEOUT` / `DB_POOL_TIMEOUT`.
 - **RLS (defense-in-depth isolasi tenant)** — migrasi `20261020000000_rls_policies` mengaktifkan Row Level Security untuk role PostgREST Supabase (`anon` ditolak total; `authenticated` ter-scope per `warungId` dari klaim JWT). **Bukan pengganti** filter `warungId` di aplikasi: koneksi app memakai role owner yang **bypass RLS** (tanpa `FORCE ROW LEVEL SECURITY`). Lihat [docs/RLS.md](docs/RLS.md).
 
 ## Deploy (Vercel + Supabase)
@@ -104,11 +128,18 @@ Setelah `db:seed`, gunakan akun berikut:
    - `DATABASE_URL` = pooled URL (`?pgbouncer=true&connection_limit=1`)
    - `DIRECT_URL` = direct URL
    - `SESSION_SECRET` = string acak ≥16 karakter
+   - `AI_ENABLED` = `true` (untuk mengaktifkan fitur Insight AI)
+   - `AI_PROVIDER` = `9router`
+   - `AI_BASE_URL` = `https://llm.kianlabs.my.id/v1` (Cloudflare tunnel ke 9router; `127.0.0.1` TIDAK bisa diakses dari server Vercel)
+   - `AI_MODEL` = nama model (mis. `agentic-hemat`)
+   - `AI_API_KEY` = key gateway 9router
 3. **Migrasi** dijalankan ke DB: `npx prisma migrate deploy` (memakai `DIRECT_URL`).
 4. **Seed warung fiktif:** `npm run db:seed` (idempoten).
-5. Verifikasi: URL staging live, login owner + kasir, jualan penuh (checkout → struk → laporan), PWA installable (HTTPS), isolasi tenant benar.
+5. Verifikasi: URL staging live, landing + signup jalan, login owner + kasir, jualan penuh (checkout → struk → laporan), chat Insight AI menjawab, PWA installable (HTTPS), isolasi tenant benar.
 
-> **Login demo staging:** owner `owner@warung-berkah-jaya.demo` / `password123`; kasir PIN `123456`; halaman masuk `/masuk/warung-berkah-jaya`.
+> **Catatan AI di produksi:** `AI_BASE_URL` harus menunjuk ke endpoint yang **publik-reachable** (Cloudflare tunnel `llm.kianlabs.my.id`). Jangan pakai IP Tailscale/LAN — Vercel tak bisa menjangkau. Untuk pilot, Tier 1 (9router pribadi) hanya untuk demo; pelanggan berbayar sebaiknya pakai `AI_PROVIDER=managed`.
+
+> **Login demo staging:** owner `owner@warung-berkah-jaya.demo` / `password123`; kasir PIN `123456`; halaman masuk `/masuk`.
 
 > **Invarian Postgres:** partial unique index `tx_one_draft_per_meja` (di migrasi `init_postgres`) menegakkan **satu bill DRAFT per meja** di level DB. Di SQLite invarian ini hanya dijaga aplikasi; di Postgres kini dijamin database.
 
@@ -116,8 +147,11 @@ Setelah `db:seed`, gunakan akun berikut:
 
 ```
 src/app/
-  layout.tsx + SidebarNav.tsx → sidebar + topbar mobile
-  page.tsx            → kasir (diskon, pajak otomatis, shift banner)
+  layout.tsx + SidebarNav.tsx → sidebar + topbar mobile (hanya saat login)
+  page.tsx            → LANDING page SaaS (publik; redirect /kasir bila login)
+  daftar/             → pendaftaran warung baru (self-serve signup)
+  masuk/              → login tunggal (email owner / slug+pin kasir)
+  kasir/page.tsx      → mesin kasir (diskon, pajak otomatis, shift banner)
   produk/page.tsx     → CRUD produk + stepper stok
   transaksi/page.tsx  → riwayat transaksi (query langsung, hanya LUNAS)
   meja/page.tsx       → peta meja (KOSONG/TERISI, derive dari bill DRAFT)
@@ -125,9 +159,16 @@ src/app/
   shift/page.tsx      → buka/tutup + selisih kas
   stok/page.tsx       → kartu stok
   laporan/page.tsx    → dashboard + filter tanggal + export CSV
+  dashboard/page.tsx  → dashboard live (omzet real-time)
+  promo/page.tsx      → promo/diskon + voucher
+  notifikasi/page.tsx → laporan shift siap kirim WA
+  insight/            → Insight AI (ringkasan + chat owner)
   struk/[id]/page.tsx → struk + cetak (PrintButton.tsx)
   pengaturan/page.tsx → pajak otomatis
   api/
+    auth/daftar/      → POST signup warung baru (warung+owner+setting+meja, auto-login)
+    auth/login/       → POST login (owner/kasir)
+    auth/warung/      → POST resolve email/slug → {slug,nama} (untuk login tunggal)
     products/         → GET + POST
     products/[id]/    → PATCH + DELETE
     checkout/         → POST (transaksi atomik + pajak otomatis; mejaId opsional)
@@ -137,23 +178,29 @@ src/app/
     bills/[id]/gabung/→ POST gabung bill sumber ke bill ini
     bills/[id]/pisah/ → POST pisah item ke meja lain (pindah, bukan salin)
     stats/            → GET (omzet, range tanggal)
+    dashboard/        → GET (omzet real-time + grafik per jam)
     shifts/           → GET + POST, /active, /[id]/close
     stock-moves/      → GET kartu stok
     settings/         → GET + PATCH pajak
+    promo/            → GET + POST + /evaluate
+    notifikasi/       → GET + tandai terkirim
+    sync/             → POST sinkron transaksi offline
     export/           → GET CSV transaksi
-src/server/           → server-only: prisma (db.ts), session, tenant, audit, settings, rate-limit, meja, http
+    ai/               → insights, chat (SSE), anomaly, report/preview, usage
+src/server/           → server-only: prisma (db.ts), session, tenant, audit, settings, rate-limit, meja, http, promo, notif, wa/, ai/
 src/client/           → client-only: offline-db, offline-sync, offline-types (IndexedDB)
-src/shared/           → aman dua sisi: session-types, rupiah, nav, category-icon
-src/types/            → tipe global (Role, dll)
+src/shared/           → aman dua sisi: session-types, rupiah, nav, icons, hitung-uang, promo-types, ReceiptView
+src/types/            → tipe global (Role, AuditAction, dll)
 prisma/
-  schema.prisma       → Warung, User, Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting, Meja, AuditLog, Insight (PostgreSQL)
-  migrations/         → migrasi Postgres (init_postgres + partial unique index DRAFT-per-meja)
+  schema.prisma       → Warung, User, Product, Transaction(+diskon/pajak/shift), Shift, StockMove, Setting, Meja, AuditLog, Insight, AiUsage (PostgreSQL)
+  migrations/         → migrasi Postgres (init_postgres + partial unique index DRAFT-per-meja + RLS)
   migrations-sqlite-archive/ → riwayat migrasi SQLite (arsip, sebelum pindah Postgres)
   seed.ts             → 38 menu warung + pajak default 10% (parameter --warungs=N)
 ```
 
 ## Ide pengembangan lanjut
 
-- Mode barcode scanner (input keyboard wedge)
-- Mode kios fullscreen
-- Deploy live (Vercel + Postgres)
+- Mode barcode scanner (input keyboard wedge) — dasar sudah ada (`ScanListener.tsx`)
+- Mode kios fullscreen — dasar sudah ada (`KiosToggle.tsx`)
+- Billing/langganan otomatis (midtrans/Xendit) + enforcement masa trial
+- Session rate-limit ke DB/Redis (saat ini in-memory)

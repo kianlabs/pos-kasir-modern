@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Bell, KeyRound, User } from "lucide-react";
 import SidebarNav from "./SidebarNav";
 import MobileNav from "./MobileNav";
 import LogoutButton from "./LogoutButton";
@@ -30,13 +31,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
             rel="stylesheet"
           />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-            rel="stylesheet"
-          />
         </head>
         <body className="bg-canvas text-ink-950 font-body-md antialiased">
-          <div className="mx-auto max-w-7xl px-4 py-8">{children}</div>
+          {/* Halaman publik (landing "/", "/masuk", "/daftar") full-bleed —
+              masing-masing halaman mengatur padding/lebar sendiri. */}
+          {children}
           <ServiceWorkerRegister />
         </body>
       </html>
@@ -60,19 +59,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="bg-canvas text-ink-950 font-body-md antialiased">
         <div className="flex min-h-screen">
           <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-ink-200 bg-surface text-ink-950 md:flex print:hidden">
             <div className="flex items-center gap-3 px-5 pb-4 pt-5 border-b border-ink-200">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-950 text-surface">
-                <span className="material-symbols-outlined text-[20px]" data-icon="notifications">
-                  notifications
-                </span>
+                <Bell className="h-5 w-5" />
               </span>
               <div className="min-w-0">
                 <div className="text-headline-sm font-headline-sm font-bold tracking-tight text-ink-950 leading-tight">
@@ -87,9 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="mt-auto border-t border-ink-200 p-4">
               <div className="rounded-xl border border-ink-200 bg-ink-100 p-3 text-xs text-ink-700">
                 <div className="truncate font-semibold text-ink-950 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">
-                    {session.role === "OWNER" ? "key" : "person"}
-                  </span>
+                  {session.role === "OWNER" ? <KeyRound className="h-4 w-4" /> : <User className="h-4 w-4" />}
                   <span>{session.name}</span>
                 </div>
                 <div className="mt-0.5 text-caption font-caption text-ink-500">
@@ -104,9 +95,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-ink-200 bg-surface px-4 shrink-0 shadow-xs md:hidden print:hidden">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink-950 text-surface">
-                  <span className="material-symbols-outlined text-[18px]" data-icon="notifications">
-                    notifications
-                  </span>
+                  <Bell className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="text-body-md font-bold leading-tight text-ink-950">

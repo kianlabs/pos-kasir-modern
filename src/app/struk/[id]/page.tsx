@@ -55,7 +55,7 @@ export default async function StrukPage(props: { params: Promise<{ id: string }>
               Riwayat Transaksi
             </Link>
             <Link
-              href="/"
+              href="/kasir"
               className="flex-1 rounded-xl border border-ink-200 bg-surface py-3 text-center text-label-md font-label-md font-semibold text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
             >
               Transaksi Baru

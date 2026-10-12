@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Pencil, Plus, Ticket, TriangleAlert } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import { PROMO_TIPE, type PromoTipe } from "@/shared/promo-types";
 
@@ -156,7 +157,10 @@ export default function PromoPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-[320px_1fr]">
         <form onSubmit={submit} className="rounded-2xl border border-ink-200 bg-surface p-4">
-          <h2 className="mb-3 text-headline-sm text-ink-950">{editingId ? "✏️ Edit promo" : "➕ Tambah promo"}</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-headline-sm text-ink-950">
+            {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {editingId ? "Edit promo" : "Tambah promo"}
+          </h2>
           <label className="mb-1 block text-caption text-ink-500">Nama</label>
           <input
             value={form.nama}
@@ -228,7 +232,7 @@ export default function PromoPage() {
             placeholder="mis. HEMAT10"
             className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm text-ink-950 outline-none focus:border-ink-950"
           />
-          {error && <p className="mb-2 text-body-sm text-danger">⚠️ {error}</p>}
+          {error && <p className="mb-2 flex items-center gap-1.5 text-body-sm text-danger"><TriangleAlert className="h-4 w-4 shrink-0" /> {error}</p>}
           <div className="flex gap-2">
             <button className="flex-1 rounded-xl bg-ink-950 py-2 text-label-lg text-surface hover:opacity-90">
               {editingId ? "Simpan" : "Tambah"}
@@ -267,8 +271,8 @@ export default function PromoPage() {
                     <td className="p-3">
                       <div className="text-label-lg text-ink-950">{p.nama}</div>
                       {p.kode && (
-                        <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
-                          🎟️ {p.kode}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
+                          <Ticket className="h-3 w-3" /> {p.kode}
                         </span>
                       )}
                     </td>

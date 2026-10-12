@@ -1,5 +1,6 @@
 "use client";
 
+import { TriangleAlert } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import { PaymentMethods, QuickCash, Kembalian } from "@/app/_components/PaymentControls";
 
@@ -107,10 +108,13 @@ export default function BayarSection({
       </button>
 
       {kurangStok.length > 0 && (
-        <p className="mt-2 rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-caption font-medium text-danger">
-          ⚠️ Stok kurang untuk:{" "}
-          {kurangStok.map((k) => `${k.name} (butuh ${k.butuh}, ada ${k.ada})`).join(", ")}. Kurangi
-          qty atau kulakan dulu sebelum bayar.
+        <p className="mt-2 flex items-start gap-1.5 rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-caption font-medium text-danger">
+          <TriangleAlert className="h-4 w-4 shrink-0" />
+          <span>
+            Stok kurang untuk:{" "}
+            {kurangStok.map((k) => `${k.name} (butuh ${k.butuh}, ada ${k.ada})`).join(", ")}. Kurangi
+            qty atau kulakan dulu sebelum bayar.
+          </span>
         </p>
       )}
     </section>

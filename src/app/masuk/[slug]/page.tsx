@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ReceiptText } from "lucide-react";
 import { prisma } from "@/server/db";
 import { getSession } from "@/server/tenant";
 import LoginClient from "./LoginClient";
@@ -21,7 +22,7 @@ export default async function MasukPage(props: { params: Promise<{ slug: string 
   if (!warung) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center p-6 text-center">
-        <div className="text-4xl">🧾</div>
+        <ReceiptText className="h-10 w-10 text-ink-950" />
         <h1 className="mt-2 font-display-hero-mobile text-display-hero-mobile tracking-tight text-ink-950">
           KRING!
         </h1>
@@ -38,7 +39,7 @@ export default async function MasukPage(props: { params: Promise<{ slug: string 
   if (warung.status === "SUSPENDED") {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center p-6 text-center">
-        <div className="text-4xl">🧾</div>
+        <ReceiptText className="h-10 w-10 text-ink-950" />
         <h1 className="mt-2 font-display-hero-mobile text-display-hero-mobile tracking-tight text-ink-950">
           KRING!
         </h1>
@@ -60,7 +61,7 @@ export default async function MasukPage(props: { params: Promise<{ slug: string 
       <LoginClient slug={warung.slug} namaWarung={warung.nama} kasir={kasir} />
       <p className="mt-4 text-center font-caption text-caption text-ink-500 print:hidden">
         Salah warung? Hubungi Owner. ·{" "}
-        <Link href="/" className="font-semibold text-ink-950 hover:underline">
+        <Link href="/kasir" className="font-semibold text-ink-950 hover:underline">
           Kembali
         </Link>
       </p>

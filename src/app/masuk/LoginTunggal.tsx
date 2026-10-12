@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, ChevronDown, Delete, KeyRound, Lock, ReceiptText, TriangleAlert, User } from "lucide-react";
 
 type Kasir = { id: string; name: string };
 
@@ -131,7 +132,7 @@ export default function LoginTunggal() {
         setPin("");
         return;
       }
-      router.replace("/");
+      router.replace("/kasir");
       router.refresh();
     } catch {
       setError("Tidak bisa menghubungi server. Coba lagi.");
@@ -144,9 +145,7 @@ export default function LoginTunggal() {
     <main className="mx-auto flex w-full max-w-[520px] flex-col items-center">
       <header className="mb-6 text-center">
         <div className="mb-1.5 inline-flex items-center justify-center gap-2">
-          <span className="text-3xl leading-none" aria-hidden="true">
-            🧾
-          </span>
+          <ReceiptText className="h-8 w-8 text-ink-950" aria-hidden />
           <h1 className="font-display-hero text-display-hero leading-none tracking-tight text-ink-950">
             KRING!
           </h1>
@@ -173,7 +172,7 @@ export default function LoginTunggal() {
                 : "bg-transparent text-ink-500 transition-colors hover:text-ink-950"
             }`}
           >
-            🔑 Owner
+            <KeyRound className="h-5 w-5" /> Owner
           </button>
           <button
             type="button"
@@ -185,7 +184,7 @@ export default function LoginTunggal() {
                 : "bg-transparent text-ink-500 transition-colors hover:text-ink-950"
             }`}
           >
-            👤 Kasir
+            <User className="h-5 w-5" /> Kasir
           </button>
         </section>
 
@@ -246,7 +245,7 @@ export default function LoginTunggal() {
               disabled={loading || slug.trim().length === 0}
               className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 font-headline-sm text-headline-sm text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             >
-              {loading ? "Mencari…" : "LANJUT →"}
+              {loading ? "Mencari…" : <span className="inline-flex items-center gap-2">LANJUT <ArrowRight className="h-5 w-5" /></span>}
             </button>
           </>
         ) : (
@@ -281,7 +280,7 @@ export default function LoginTunggal() {
                     onClick={() => gantiMode("owner")}
                     className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-ink-950 font-label-lg text-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
                   >
-                    🔑 Masuk sebagai Owner
+                    <KeyRound className="h-5 w-5" /> Masuk sebagai Owner
                   </button>
                   <button
                     type="button"
@@ -319,7 +318,7 @@ export default function LoginTunggal() {
                       ))}
                     </select>
                     <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-ink-700">
-                      ▾
+                      <ChevronDown className="h-4 w-4" />
                     </span>
                   </div>
                 </div>
@@ -330,7 +329,7 @@ export default function LoginTunggal() {
                       Masukkan PIN Kasir ({PIN_LEN} digit)
                     </span>
                     <span className="flex items-center gap-1 font-caption text-caption text-ink-500">
-                      🔒 Terenkripsi
+                      <Lock className="h-3.5 w-3.5" /> Terenkripsi
                     </span>
                   </div>
                   <div className="flex items-center justify-center gap-4 py-2" aria-hidden="true">
@@ -388,9 +387,9 @@ export default function LoginTunggal() {
                     type="button"
                     onClick={backspace}
                     aria-label="Hapus satu digit"
-                    className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface text-[24px] text-ink-700 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
+                    className="flex h-[60px] touch-manipulation select-none items-center justify-center rounded-xl border border-ink-200 bg-surface text-ink-700 transition-all duration-100 hover:bg-ink-100 active:scale-[0.98] active:bg-ink-200"
                   >
-                    ⌫
+                    <Delete className="h-6 w-6" />
                   </button>
                 </div>
               </>
@@ -399,8 +398,8 @@ export default function LoginTunggal() {
         )}
 
         {error && (
-          <p className="mb-3 rounded-xl bg-danger-bg px-3 py-2 font-body-md font-medium text-danger">
-            ⚠️ {error}
+          <p className="mb-3 flex items-center gap-2 rounded-xl bg-danger-bg px-3 py-2 font-body-md font-medium text-danger">
+            <TriangleAlert className="h-4 w-4 shrink-0" /> {error}
           </p>
         )}
 
@@ -411,11 +410,13 @@ export default function LoginTunggal() {
             disabled={!canSubmit}
             className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink-950 font-headline-sm text-headline-sm text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
           >
-            {loading
-              ? "Memproses…"
-              : mode === "owner"
-                ? "MASUK SEBAGAI OWNER →"
-                : "MASUK SEBAGAI KASIR →"}
+            {loading ? (
+              "Memproses…"
+            ) : mode === "owner" ? (
+              <span className="inline-flex items-center gap-2">MASUK SEBAGAI OWNER <ArrowRight className="h-5 w-5" /></span>
+            ) : (
+              <span className="inline-flex items-center gap-2">MASUK SEBAGAI KASIR <ArrowRight className="h-5 w-5" /></span>
+            )}
           </button>
         )}
       </form>

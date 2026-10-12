@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TriangleAlert } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import AddItemSection from "./_sections/AddItemSection";
 import DiskonSection from "./_sections/DiskonSection";
@@ -263,8 +264,8 @@ export default function BillPanel({
   }
 
   const err = error && (
-    <p role="alert" aria-live="assertive" className="rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-body-sm font-medium text-danger">
-      ⚠️ {error}
+    <p role="alert" aria-live="assertive" className="flex items-start gap-1.5 rounded-xl border border-danger/30 bg-danger-bg px-3 py-2 text-body-sm font-medium text-danger">
+      <TriangleAlert className="h-4 w-4 shrink-0" /> {error}
     </p>
   );
 

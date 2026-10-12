@@ -10,6 +10,7 @@
 // pertama identik (null). IndexedDB hanya disentuh di dalam useEffect.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshCw, WifiOff } from "lucide-react";
 import { countOutbox } from "@/client/offline-db";
 import { syncOutbox } from "@/client/offline-sync";
 
@@ -87,15 +88,15 @@ export default function ConnectionBanner() {
 
   if (!online) {
     return (
-      <div className="sticky top-0 z-30 border-b border-warning bg-warning-bg px-4 py-2 text-center text-sm font-semibold text-warning print:hidden">
-        ⚠️ Mode offline — {count} transaksi tersimpan lokal
+      <div className="sticky top-0 z-30 flex items-center justify-center gap-2 border-b border-warning bg-warning-bg px-4 py-2 text-center text-sm font-semibold text-warning print:hidden">
+        <WifiOff className="h-4 w-4 shrink-0" /> Mode offline — {count} transaksi tersimpan lokal
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-30 border-b border-success bg-success-bg px-4 py-2 text-center text-sm font-semibold text-success print:hidden">
-      🔄 Menyinkronkan… ({count})
+    <div className="sticky top-0 z-30 flex items-center justify-center gap-2 border-b border-success bg-success-bg px-4 py-2 text-center text-sm font-semibold text-success print:hidden">
+      <RefreshCw className="h-4 w-4 shrink-0 animate-spin" /> Menyinkronkan… ({count})
     </div>
   );
 }

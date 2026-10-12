@@ -7,7 +7,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { shortId } from "@/shared/category-icon";
+import { shortId } from "@/shared/icons";
 import ReceiptView from "@/shared/ReceiptView";
 import { hitungUang } from "@/shared/hitung-uang";
 import { getCache, getOutbox } from "@/client/offline-db";
@@ -123,7 +123,7 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
           Transaksi ini mungkin sudah tersinkron ke server.
         </p>
         <Link
-          href="/"
+          href="/kasir"
           className="mt-4 inline-block rounded-xl bg-ink-950 px-4 py-2.5 text-label-md font-label-md font-semibold text-surface transition-all hover:opacity-90 active:scale-[0.98]"
         >
           Transaksi Baru
@@ -156,7 +156,7 @@ export default function StrukOfflinePage(props: { params: Promise<{ id: string }
         actions={
           <div className="mx-auto mt-4 flex max-w-sm gap-2 print:hidden">
             <Link
-              href="/"
+              href="/kasir"
               className="flex-1 rounded-xl border border-ink-200 bg-surface py-3 text-center text-label-md font-label-md font-semibold text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
             >
               Transaksi Baru

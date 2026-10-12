@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Monitor } from "lucide-react";
 
 // Mode kios fullscreen (PRD §7a: "Mode kios fullscreen") — untuk tablet kasir
 // yang hanya menampilkan halaman kasir tanpa menu navigasi.
@@ -46,13 +47,14 @@ export default function KiosToggle() {
       aria-pressed={kios}
       aria-label={kios ? "Keluar dari mode kios" : "Masuk mode kios fullscreen"}
       title={kios ? "Keluar mode kios" : "Mode kios fullscreen"}
-      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
         kios
           ? "border-primary bg-primary text-white hover:bg-primary-hover"
           : "border-ink-300 bg-surface text-ink-700 hover:bg-ink-100"
       }`}
     >
-      {kios ? "🖥️ Keluar kios" : "🖥️ Mode kios"}
+      <Monitor className="h-3.5 w-3.5" />
+      {kios ? "Keluar kios" : "Mode kios"}
     </button>
   );
 }
