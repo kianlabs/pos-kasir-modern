@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { hitungUang } from "@/shared/hitung-uang";
 import { PaymentMethods, QuickCash, CashKeypad, Kembalian } from "../_components/PaymentControls";
+import MoneyInput from "@/app/_components/MoneyInput";
 import ScanListener from "../ScanListener";
 import KiosToggle from "../KiosToggle";
 import { getCache, putCache } from "@/client/offline-db";
@@ -630,10 +631,9 @@ export default function KasirPage() {
 
             {/* Diskon (input digit mentah — perilaku tidak berubah) */}
             <div className="pt-1">
-              <input
+              <MoneyInput
                 value={discount}
-                onChange={(e) => setDiscount(e.target.value.replace(/\D/g, ""))}
-                inputMode="numeric"
+                onValueChange={setDiscount}
                 placeholder="Diskon Rp (opsional)"
                 className="h-10 w-full rounded-lg border border-ink-200 bg-surface px-2.5 text-body-sm text-ink-950 placeholder-ink-500 outline-none focus:border-ink-950 transition-colors tabular-nums"
               />
@@ -682,10 +682,9 @@ export default function KasirPage() {
               {payment === "CASH" ? (
                 <>
                   <QuickCash total={total} onPick={setCash} />
-                  <input
-                    value={cash ? Number(cash).toLocaleString("id-ID") : ""}
-                    onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
-                    inputMode="numeric"
+                  <MoneyInput
+                    value={cash}
+                    onValueChange={setCash}
                     aria-label="Nominal tunai diterima"
                     placeholder="Nominal diterima…"
                     className="mt-3 h-16 w-full rounded-xl border-2 border-ink-950 bg-surface px-4 text-right text-display-hero-mobile font-display-hero-mobile tabular-nums tracking-tight text-ink-950 outline-none focus:ring-2 focus:ring-ink-950/20 placeholder:text-headline-sm placeholder:font-body-md placeholder:tracking-normal placeholder:text-ink-500"

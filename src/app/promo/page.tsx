@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Ticket, TriangleAlert } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import { PROMO_TIPE, type PromoTipe } from "@/shared/promo-types";
+import MoneyInput from "@/app/_components/MoneyInput";
 
 // Halaman owner: CRUD promo (Fase 2 §7a) — beli 1 gratis 1, happy hour, voucher.
 // Mirror struktur src/app/produk/page.tsx (list + form + toggle + hapus).
@@ -183,22 +184,33 @@ export default function PromoPage() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-1 block text-caption text-ink-500">{nilaiLabel}</label>
-              <input
-                value={form.tipe === "BELI_1_GRATIS_1" ? "" : form.nilai}
-                disabled={form.tipe === "BELI_1_GRATIS_1"}
-                onChange={(e) => setForm({ ...form, nilai: e.target.value.replace(/\D/g, "") })}
-                placeholder="10"
-                inputMode="numeric"
-                className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950 disabled:bg-ink-100"
-              />
+              {form.tipe === "NOMINAL" ? (
+                // Nominal rupiah → beri pemisah ribuan otomatis.
+                <MoneyInput
+                  value={form.nilai}
+                  onValueChange={(digits) => setForm({ ...form, nilai: digits })}
+                  placeholder="10.000"
+                  className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950"
+                />
+              ) : (
+                // PERSEN / HAPPY_HOUR: angka mentah (persen atau nominal) —
+                // biarkan apa adanya agar tak membingungkan (mis. "10" = 10%).
+                <input
+                  value={form.tipe === "BELI_1_GRATIS_1" ? "" : form.nilai}
+                  disabled={form.tipe === "BELI_1_GRATIS_1"}
+                  onChange={(e) => setForm({ ...form, nilai: e.target.value.replace(/\D/g, "") })}
+                  placeholder="10"
+                  inputMode="numeric"
+                  className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950 disabled:bg-ink-100"
+                />
+              )}
             </div>
             <div>
               <label className="mb-1 block text-caption text-ink-500">Min. subtotal (Rp)</label>
-              <input
+              <MoneyInput
                 value={form.minSubtotal}
-                onChange={(e) => setForm({ ...form, minSubtotal: e.target.value.replace(/\D/g, "") })}
+                onValueChange={(digits) => setForm({ ...form, minSubtotal: digits })}
                 placeholder="0"
-                inputMode="numeric"
                 className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950"
               />
             </div>

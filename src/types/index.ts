@@ -26,6 +26,9 @@ export type AuditAction =
   | "MEJA_BATAL"
   | "MEJA_GABUNG"
   | "MEJA_PISAH"
+  // Manajemen meja: owner menambah / menghapus meja (Tahap 3 lanjutan).
+  | "MEJA_TAMBAH"
+  | "MEJA_HAPUS"
   // Sinkronisasi offline (Tahap 4)
   | "SYNC_BATCH" // batch transaksi offline diterima server
   | "SYNC_CONFLICT" // transaksi offline diterima tapi stok kurang saat sync

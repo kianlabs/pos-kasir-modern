@@ -1,6 +1,7 @@
 "use client";
 
 import { rupiah } from "@/shared/rupiah";
+import MoneyInput from "@/app/_components/MoneyInput";
 
 // Section "Diskon" bill meja. Diekstrak dari BillPanel (murni struktural —
 // nilai & handler tetap di BillPanel, dioper lewat props).
@@ -30,10 +31,9 @@ export default function DiskonSection({
     <section className="rounded-2xl border border-ink-200 bg-surface p-4">
       <h3 className="mb-2 text-headline-sm text-ink-950">Diskon</h3>
       <div className="flex gap-2">
-        <input
+        <MoneyInput
           value={discountInput}
-          onChange={(e) => setDiscountInput(e.target.value.replace(/\D/g, ""))}
-          inputMode="numeric"
+          onValueChange={setDiscountInput}
           placeholder="Diskon Rp (opsional)"
           className="h-12 min-w-0 flex-1 rounded-xl border border-ink-200 bg-surface px-3 text-body-md text-ink-950 tabular-nums outline-none transition-colors placeholder:text-ink-500 focus:border-ink-950"
         />

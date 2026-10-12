@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Banknote, Calculator, Check, LockKeyhole, Smartphone, TrendingDown, TrendingUp, TriangleAlert, Unlock, Wallet } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import { shortId } from "@/shared/icons";
+import MoneyInput from "@/app/_components/MoneyInput";
 
 type Shift = {
   id: string;
@@ -139,10 +140,9 @@ export default function ShiftPage() {
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-numeral-lg text-numeral-lg text-ink-500">
                   Rp
                 </span>
-                <input
+                <MoneyInput
                   value={modal}
-                  onChange={(e) => setModal(e.target.value.replace(/\D/g, ""))}
-                  inputMode="numeric"
+                  onValueChange={setModal}
                   placeholder="0"
                   className="h-14 w-full rounded-xl border-2 border-ink-200 bg-surface pl-12 pr-4 font-numeral-hero text-numeral-hero tabular-nums tracking-tight text-ink-950 outline-none focus:border-ink-950"
                 />
@@ -317,11 +317,10 @@ export default function ShiftPage() {
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-numeral-lg text-numeral-lg text-ink-500">
                   Rp
                 </span>
-                <input
+                <MoneyInput
                   id="actual-cash-input"
                   value={kasFisik}
-                  onChange={(e) => { setKasFisik(e.target.value.replace(/\D/g, "")); setClosingId(active.id); }}
-                  inputMode="numeric"
+                  onValueChange={(v) => { setKasFisik(v); setClosingId(active.id); }}
                   placeholder="0"
                   className="h-14 w-full rounded-xl border-2 border-ink-950 bg-surface pl-12 pr-4 font-numeral-hero text-numeral-hero tabular-nums tracking-tight text-ink-950 outline-none focus:ring-0"
                 />

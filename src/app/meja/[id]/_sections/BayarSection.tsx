@@ -3,6 +3,7 @@
 import { TriangleAlert } from "lucide-react";
 import { rupiah } from "@/shared/rupiah";
 import { PaymentMethods, QuickCash, Kembalian } from "@/app/_components/PaymentControls";
+import MoneyInput from "@/app/_components/MoneyInput";
 
 // Section "Bayar" bill meja: ringkasan uang, toggle metode, nominal tunai,
 // kembalian, tombol bayar, dan peringatan stok kurang. Diekstrak dari BillPanel
@@ -83,10 +84,9 @@ export default function BayarSection({
           <QuickCash total={total} onPick={setCash} />
           {/* Nilai mentah (digit) agar caret tidak melompat saat edit
               di tengah angka; format rupiah hanya di keterangan. */}
-          <input
+          <MoneyInput
             value={cash}
-            onChange={(e) => setCash(e.target.value.replace(/\D/g, ""))}
-            inputMode="numeric"
+            onValueChange={setCash}
             placeholder="Nominal diterima…"
             aria-label="Nominal tunai diterima"
             className="mt-2 h-12 w-full rounded-xl border border-ink-200 bg-surface px-3 text-right text-numeral-lg text-ink-950 tabular-nums outline-none transition-colors focus:border-ink-950"

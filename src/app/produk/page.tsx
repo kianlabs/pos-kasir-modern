@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { rupiah } from "@/shared/rupiah";
 import { productIcon, PRODUCT_ICON_CHOICES, PRODUCT_ICON_MAP } from "@/shared/icons";
 import { ClipboardList, Pencil, Plus, Search, TriangleAlert, UtensilsCrossed } from "lucide-react";
+import MoneyInput from "@/app/_components/MoneyInput";
 
 type Product = { id: string; name: string; price: number; stock: number; category: string; icon: string };
 
@@ -122,8 +123,12 @@ export default function ProdukPage() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-1 block text-caption text-ink-500">Harga (Rp)</label>
-              <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value.replace(/\D/g, "") })}
-                placeholder="10000" inputMode="numeric" className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950" />
+              <MoneyInput
+                value={form.price}
+                onValueChange={(digits) => setForm({ ...form, price: digits })}
+                placeholder="10.000"
+                className="mb-2 w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-body-sm tabular-nums text-ink-950 outline-none focus:border-ink-950"
+              />
             </div>
             <div>
               <label className="mb-1 block text-caption text-ink-500">Stok</label>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { deriveStatusMeja } from "@/server/meja";
 import { rupiah } from "@/shared/rupiah";
-import { currentWarungId } from "@/server/tenant";
+import { currentWarungId, getSession } from "@/server/tenant";
+import TambahMejaButton from "./TambahMejaButton";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,8 @@ export default async function MejaPage(props: {
     sp.filter === "terisi" ? "terisi" : sp.filter === "kosong" ? "kosong" : "semua";
 
   const warungId = await currentWarungId();
+  const session = await getSession();
+  const isOwner = session?.role === "OWNER";
   const mejas = await deriveStatusMeja(warungId);
 
   const total = mejas.length;
@@ -96,6 +99,7 @@ export default async function MejaPage(props: {
             >
               <span>+ Bawa pulang / jual langsung</span>
             </Link>
+            {isOwner && <TambahMejaButton />}
           </div>
         </div>
       </section>
