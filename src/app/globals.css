@@ -65,6 +65,71 @@ button, input, select {
   border-radius: 999px;
 }
 
+/* ---------------------------------------------------------------
+   GERAK MASUK HERO — DIJALANKAN CSS, bukan JS.
+   Supaya konten pertama langsung tampil tanpa menunggu bundel GSAP.
+   Hanya aktif saat pengguna TIDAK meminta reduced-motion; saat
+   reduced-motion aktif, tidak ada animasi & konten tampil apa adanya
+   (lihat blok override di bawah). Penanda:
+   - `data-fx-hero-copy` → anak-anaknya naik berjenjang (stagger).
+   - `data-fx-hero-side` → mockup produk "settle" dari sedikit kecil.
+   --------------------------------------------------------------- */
+@keyframes kring-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kring-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-fx-hero-copy] > * {
+    animation: kring-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  [data-fx-hero-copy] > *:nth-child(1) {
+    animation-delay: 0s;
+  }
+  [data-fx-hero-copy] > *:nth-child(2) {
+    animation-delay: 0.07s;
+  }
+  [data-fx-hero-copy] > *:nth-child(3) {
+    animation-delay: 0.14s;
+  }
+  [data-fx-hero-copy] > *:nth-child(4) {
+    animation-delay: 0.21s;
+  }
+  [data-fx-hero-copy] > *:nth-child(n + 5) {
+    animation-delay: 0.28s;
+  }
+  [data-fx-hero-side] {
+    animation: kring-settle-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.24s;
+  }
+}
+
+/* Hormati reduced-motion: matikan gerak, JANGAN sembunyikan konten. */
+@media (prefers-reduced-motion: reduce) {
+  [data-fx-hero-copy] > *,
+  [data-fx-hero-side] {
+    animation: none !important;
+  }
+}
+
+
 body.kios-mode > div > aside,
 body.kios-mode > div > div > header,
 body.kios-mode > nav {

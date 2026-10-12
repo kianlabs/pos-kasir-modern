@@ -20,6 +20,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { getSession } from "@/server/tenant";
+import LandingFX from "./LandingFX";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,10 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
+      {/* Efek gerak (GSAP ScrollTrigger + progress bar) — client component.
+          Hero dianimasikan CSS murni; sisanya reveal saat menggulir. */}
+      <LandingFX />
+
       {/* ── Nav atas ── */}
       <header className="sticky top-0 z-30 border-b border-ink-200 bg-canvas/85 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
@@ -109,7 +114,7 @@ export default async function LandingPage() {
       {/* ── Hero ── */}
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 md:pt-20">
         <div className="grid items-center gap-12 md:grid-cols-2">
-          <div>
+          <div data-fx-hero-copy>
             <span className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-surface px-3 py-1.5 text-caption font-caption uppercase tracking-wider text-ink-700">
               <Sparkles className="h-3.5 w-3.5" /> Kasir untuk warung & kafe
             </span>
@@ -142,7 +147,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Mockup produk */}
-          <div className="relative">
+          <div className="relative" data-fx-hero-side>
             <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
               <div className="flex items-center gap-1.5 border-b border-ink-200 bg-ink-100 px-4 py-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
@@ -165,7 +170,7 @@ export default async function LandingPage() {
               </span>
               <span className="flex flex-col">
                 <span className="font-caption text-caption text-ink-500">Omzet hari ini</span>
-                <span className="font-numeral-md text-numeral-md tabular-nums text-ink-950">Rp1.248.000</span>
+                <span className="font-numeral-md text-numeral-md tabular-nums text-ink-950" data-fx-count="1248000" data-fx-count-prefix="Rp">Rp1.248.000</span>
               </span>
             </div>
           </div>
@@ -175,7 +180,7 @@ export default async function LandingPage() {
       {/* ── Fitur ── */}
       <section className="border-t border-ink-200 bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-16">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-2xl text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
               Semua yang warung butuh
             </h2>
@@ -184,7 +189,7 @@ export default async function LandingPage() {
               tetap jalan walau internet mati.
             </p>
           </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-fx-stagger data-fx-child="scale-in" data-fx-step="0.06">
             {FITUR.map((f) => (
               <div
                 key={f.judul}
@@ -204,7 +209,7 @@ export default async function LandingPage() {
       {/* ── Tampilan produk (galeri) ── */}
       <section className="border-t border-ink-200 bg-canvas">
         <div className="mx-auto max-w-6xl px-5 py-16">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-2xl text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
               Sekilas tampilannya
             </h2>
@@ -212,7 +217,7 @@ export default async function LandingPage() {
               Bersih, cepat dibaca, dan ramah layar sentuh — kasir bisa langsung kerja.
             </p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <div className="mt-10 grid gap-5 md:grid-cols-2" data-fx-stagger data-fx-child="scale-in" data-fx-step="0.1">
             <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/preview-dashboard.png" alt="Dashboard live penjualan" className="w-full" />
@@ -234,10 +239,10 @@ export default async function LandingPage() {
       {/* ── Cara mulai ── */}
       <section className="border-t border-ink-200 bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-16">
-          <h2 className="text-center font-headline-lg text-headline-lg tracking-tight text-ink-950">
+          <h2 className="text-center font-headline-lg text-headline-lg tracking-tight text-ink-950" data-fx="rise">
             Mulai dalam 3 langkah
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 md:grid-cols-3" data-fx-stagger data-fx-child="rise" data-fx-step="0.08">
             {LANGKAH.map((l) => (
               <div key={l.n} className="text-center">
                 <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ink-950 font-numeral-lg text-numeral-lg text-surface">
@@ -254,7 +259,7 @@ export default async function LandingPage() {
       {/* ── Harga ── */}
       <section className="border-t border-ink-200 bg-canvas">
         <div className="mx-auto max-w-3xl px-5 py-16">
-          <div className="text-center">
+          <div className="text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
               Harga jujur, tanpa kejutan
             </h2>
@@ -262,7 +267,7 @@ export default async function LandingPage() {
               Semua fitur sudah termasuk. Tanpa biaya tersembunyi.
             </p>
           </div>
-          <div className="mt-10 overflow-hidden rounded-3xl border-2 border-ink-950 bg-surface">
+          <div className="mt-10 overflow-hidden rounded-3xl border-2 border-ink-950 bg-surface" data-fx="scale-in">
             <div className="flex flex-col items-center gap-1 border-b border-ink-200 bg-ink-950 px-6 py-4 text-center">
               <span className="font-label-lg text-label-lg uppercase tracking-wider text-ink-300">
                 Paket Warung
@@ -309,7 +314,7 @@ export default async function LandingPage() {
 
       {/* ── CTA akhir ── */}
       <section className="border-t border-ink-200 bg-ink-950">
-        <div className="mx-auto max-w-3xl px-5 py-16 text-center">
+        <div className="mx-auto max-w-3xl px-5 py-16 text-center" data-fx-stagger data-fx-child="rise" data-fx-step="0.08">
           <Tablet className="mx-auto h-10 w-10 text-ink-300" />
           <h2 className="mt-5 font-headline-lg text-headline-lg tracking-tight text-surface">
             Siap bikin warung kamu lebih rapi?
@@ -328,7 +333,7 @@ export default async function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-ink-200 bg-canvas">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row" data-fx="fade">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-950 text-surface">
               <Bell className="h-4 w-4" />
