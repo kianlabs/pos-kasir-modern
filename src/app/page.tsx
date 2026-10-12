@@ -5,7 +5,6 @@ import {
   BarChart3,
   Bell,
   Check,
-  Clock,
   Cloud,
   Coins,
   LayoutGrid,
@@ -17,7 +16,6 @@ import {
   TrendingUp,
   UtensilsCrossed,
   WifiOff,
-  Wallet,
 } from "lucide-react";
 import { getSession } from "@/server/tenant";
 import LandingFX from "./LandingFX";
@@ -72,6 +70,39 @@ const LANGKAH = [
   { n: "1", judul: "Daftar warung", isi: "Isi nama warung & email. Kurang dari 1 menit." },
   { n: "2", judul: "Atur menu", isi: "Tambah produk, harga, stok. Atau mulai dari menu contoh." },
   { n: "3", judul: "Mulai jualan", isi: "Buka shift, layani pelanggan, pantau omzet dari mana saja." },
+];
+
+// Fitur UNGGULAN (highlights) — tiga hal paling sering dipakai warung.
+// Ditampilkan sebagai baris bergantian (teks ⇄ tangkapan layar) supaya
+// penjelasannya lebih dalam dari sekadar kartu ikon.
+const HIGHLIGHTS = [
+  {
+    eyebrow: "Transaksi",
+    tab: "KRING! · Kasir",
+    judul: "Bayar cepat, antrian lancar",
+    isi: "Pilih menu, kembalian dihitung otomatis, struk langsung jadi. Siap keyboard & barcode scanner — kasir baru pun hafal rutenya dalam sehari.",
+    poin: ["Hitung kembalian otomatis", "Siap barcode scanner", "Struk 58 & 80mm"],
+    gambar: "/preview-kasir.png",
+    alt: "Halaman kasir KRING!",
+  },
+  {
+    eyebrow: "Pantau dari mana saja",
+    tab: "KRING! · Dashboard",
+    judul: "Semua angka penting, dalam satu layar",
+    isi: "Buka dashboard kapan pun untuk lihat omzet hari ini, jumlah transaksi, sampai jam paling ramai — diperbarui otomatis, tanpa perlu telepon kasir.",
+    poin: ["Omzet real-time", "Transaksi terbaru langsung masuk", "Bisa dibuka dari mana saja"],
+    gambar: "/preview-dashboard.png",
+    alt: "Dashboard live KRING!",
+  },
+  {
+    eyebrow: "Untung tanpa hitung manual",
+    tab: "KRING! · Laporan",
+    judul: "Tahu produk terlaris & stok yang menipis",
+    isi: "Laporan harian sampai bulanan tersusun sendiri. Lihat produk paling laku, jam sibuk, dan stok yang perlu segera ditambah.",
+    poin: ["Laporan otomatis", "Produk & jam terlaris", "Peringatan stok menipis"],
+    gambar: "/preview-laporan.png",
+    alt: "Laporan penjualan KRING!",
+  },
 ];
 
 export default async function LandingPage() {
@@ -209,32 +240,63 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Tampilan produk (galeri) ── */}
-      <section id="galeri" className="scroll-mt-20 border-t border-ink-200 bg-canvas">
-        <div className="mx-auto max-w-6xl px-5 py-16">
+      {/* ── Highlights (fitur unggulan) ── */}
+      <section id="highlights" className="scroll-mt-20 border-t border-ink-200 bg-canvas">
+        <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
           <div className="mx-auto max-w-2xl text-center" data-fx="rise">
-            <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
-              Sekilas tampilannya
+            <span className="font-caption text-caption uppercase tracking-[0.2em] text-ink-500">
+              Yang paling sering dipakai
+            </span>
+            <h2 className="mt-3 font-headline-lg text-headline-lg tracking-tight text-ink-950">
+              Tiga hal yang bikin warung lebih ringan
             </h2>
-            <p className="mt-3 font-body-md text-body-md text-ink-700">
-              Bersih, cepat dibaca, dan ramah layar sentuh — kasir bisa langsung kerja.
-            </p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-2" data-fx-stagger data-fx-child="scale-in" data-fx-step="0.1">
-            <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/preview-dashboard.png" alt="Dashboard live penjualan" className="w-full" />
-              <figcaption className="flex items-center gap-2 border-t border-ink-200 px-4 py-3 font-label-md text-label-md text-ink-700">
-                <TrendingUp className="h-4 w-4" /> Dashboard live — pantau omzet dari HP
-              </figcaption>
-            </figure>
-            <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/preview-laporan.png" alt="Laporan penjualan" className="w-full" />
-              <figcaption className="flex items-center gap-2 border-t border-ink-200 px-4 py-3 font-label-md text-label-md text-ink-700">
-                <BarChart3 className="h-4 w-4" /> Laporan — omzet, produk terlaris, jam sibuk
-              </figcaption>
-            </figure>
+
+          <div className="mt-14 flex flex-col gap-16 md:mt-20 md:gap-24">
+            {HIGHLIGHTS.map((h, i) => (
+              <div
+                key={h.judul}
+                className="grid items-center gap-8 md:grid-cols-2 md:gap-14"
+                data-fx="rise"
+              >
+                <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                  <span className="font-caption text-caption uppercase tracking-[0.2em] text-ink-500">
+                    {h.eyebrow}
+                  </span>
+                  <h3 className="mt-3 font-headline-md text-headline-md tracking-tight text-ink-950">
+                    {h.judul}
+                  </h3>
+                  <p className="mt-3 font-body-md text-body-md leading-relaxed text-ink-700">
+                    {h.isi}
+                  </p>
+                  <ul className="mt-5 flex flex-col gap-2.5">
+                    {h.poin.map((p) => (
+                      <li
+                        key={p}
+                        className="flex items-center gap-2.5 font-body-md text-body-md text-ink-950"
+                      >
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-bg text-success">
+                          <Check className="h-3 w-3" />
+                        </span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                  <figure className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
+                    <div className="flex items-center gap-1.5 border-b border-ink-200 bg-ink-100 px-4 py-2.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-ink-300" />
+                      <span className="ml-2 font-caption text-caption text-ink-500">{h.tab}</span>
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={h.gambar} alt={h.alt} className="w-full" />
+                  </figure>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

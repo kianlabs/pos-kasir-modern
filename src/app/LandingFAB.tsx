@@ -17,6 +17,7 @@ const WA_NUMBER = "6281318679190";
 const WA_TEXT = encodeURIComponent("Halo, saya mau tanya soal KRING! kasir warung.");
 
 const SECTION_LINKS = [
+  { id: "highlights", label: "Unggulan", icon: Sparkles },
   { id: "fitur", label: "Fitur", icon: Sparkles },
   { id: "harga", label: "Harga", icon: Tag },
   { id: "cara", label: "Cara mulai", icon: Layers },
@@ -58,7 +59,7 @@ export default function LandingFAB() {
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      window.location.hash = id;
+      window.history.replaceState(null, "", `#${id}`);
     }
   }
 
@@ -79,21 +80,14 @@ export default function LandingFAB() {
           aria-label="Menu interaksi"
           className="flex flex-col items-end gap-2.5"
         >
-          <FabItem
-            onClick={() => jumpTo("fitur")}
-            icon={<Sparkles className="h-[18px] w-[18px]" />}
-            label="Fitur"
-          />
-          <FabItem
-            onClick={() => jumpTo("harga")}
-            icon={<Tag className="h-[18px] w-[18px]" />}
-            label="Harga"
-          />
-          <FabItem
-            onClick={() => jumpTo("cara")}
-            icon={<Layers className="h-[18px] w-[18px]" />}
-            label="Cara mulai"
-          />
+          {SECTION_LINKS.map((s) => (
+            <FabItem
+              key={s.id}
+              onClick={() => jumpTo(s.id)}
+              icon={<s.icon className="h-[18px] w-[18px]" />}
+              label={s.label}
+            />
+          ))}
           <a
             role="menuitem"
             href={`https://wa.me/${WA_NUMBER}?text=${WA_TEXT}`}
