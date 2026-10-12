@@ -14,6 +14,36 @@ import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 const OWNER_ONLY_API = ["/api/settings", "/api/export"];
 const OWNER_ONLY_PAGES = ["/produk", "/laporan", "/pengaturan", "/insight", "/dashboard", "/promo"];
 
+// ── Perlindungan CSRF (audit rekomendasi #2) ────────────────────────────────
+//
+// SameSite=Lax pada cookie sesi sudah menahan CSRF lintas-situs untuk POST
+// (cookie tak dikirim), tapi ia bukan jaminan mutlak: browser lama, klien
+// non-browser, atau regresi konfigurasi bisa membuka celah. Lapisan tambahan:
+// untuk setiap MUTASI (POST/PUT/PATCH/DELETE) ke /api/*, WAJIB header Origin
+// cocok dengan host permintaan (same-origin). Ini menolak permintaan lintas
+// situs sebelum menyentuh handler.
+//
+// Prinsip: HANYA menolak bila Origin ADA dan jelas lintas-situs. Bila Origin
+// tidak dikirim (klien same-origin lama / non-browser yang sah), kita LOLOSKAN
+// agar tidak memutus alur sah — SameSite=Lax tetap menjadi pelindung utama.
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function asalDiizinkan(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true; // tak ada Origin → serahkan ke SameSite=Lax.
+  try {
+    const asal = new URL(origin);
+    // Bandingkan host Origin dengan Host header permintaan (paling andal di
+    // Node runtime; `nextUrl.host` bisa ternormalisasi beda). `x-forwarded-host`
+    // dipakai bila ada (di belakang proxy/CDN) agar tetap cocok.
+    const host =
+      req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+    return asal.host === host;
+  } catch {
+    return false; // Origin cacat → tolak.
+  }
+}
+
 function decodeRoleUnsafe(token: string | undefined): SessionPayload["role"] | null {
   if (!token) return null;
   const dot = token.lastIndexOf(".");
@@ -30,6 +60,13 @@ function decodeRoleUnsafe(token: string | undefined): SessionPayload["role"] | n
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
+
+  // CSRF (rekomendasi audit #2): tolak MUTASI /api/* yang Origin-nya
+  // lintas-situs SEBELUM menyentuh handler. Dicek paling awal agar berlaku juga
+  // untuk endpoint publik (login/daftar) — mencegah login-CSRF.
+  if (pathname.startsWith("/api") && MUTATING_METHODS.has(req.method) && !asalDiizinkan(req)) {
+    return NextResponse.json({ error: "Permintaan lintas-situs ditolak." }, { status: 403 });
+  }
 
   if (
     // Root = landing page SaaS publik (belum login). Setelah login, root

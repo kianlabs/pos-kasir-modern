@@ -4,6 +4,7 @@ import { str } from "@/server/validate";
 import { currentWarungId, requireOwnerResponse } from "@/server/tenant";
 import { handleApiError } from "@/server/api-error";
 import { isAiConfigured } from "@/server/ai/config";
+import { cekKuotaToken } from "@/server/ai/usage";
 import { eligibleUntukAi, tulisInsight } from "@/server/ai/insight";
 import { ToolError } from "@/server/ai/tools";
 import {
@@ -53,6 +54,20 @@ export async function POST(req: Request) {
 
     if (keputusan.aksi === "403") {
       return NextResponse.json({ error: keputusan.pesan }, { status: 403 });
+    }
+
+    // Kuota bulanan (rekomendasi audit #3): hanya relevan di jalur LLM (yang
+    // memakai biaya). Bila kuota habis → 429 jelas, bukan panggil provider.
+    if (keputusan.aksi === "llm") {
+      const kuota = await cekKuotaToken(warungId);
+      if (kuota.habis) {
+        return NextResponse.json(
+          {
+            error: `Kuota AI bulan ini habis (${kuota.terpakai.toLocaleString("id-ID")}/${kuota.kuota.toLocaleString("id-ID")} token). Hubungi admin KRING!.`,
+          },
+          { status: 429 },
+        );
+      }
     }
 
     // Bangun narasi: satu jalur kode, beda sumber data (shift vs hari).

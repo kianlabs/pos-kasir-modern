@@ -38,6 +38,17 @@ function rapikanBaseUrl(v: string): string {
   return v.replace(/\/+$/, "");
 }
 
+// Kuota token AI per warung per bulan (rekomendasi audit #3). Default 0 =
+// TANPA batas (perilaku pilot tidak berubah sampai env diset). Angka negatif /
+// bukan-angka → 0 (tanpa batas). Ini pengaman biaya, bukan jalur kritis.
+const DEFAULT_KUOTA_TOKEN_BULANAN = 0;
+
+function bacaKuotaToken(v: string | undefined): number {
+  const n = Number((v ?? "").trim());
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_KUOTA_TOKEN_BULANAN;
+  return Math.floor(n);
+}
+
 /**
  * Baca konfigurasi AI dari env dan kembalikan bentuk efektif siap-pakai.
  *
@@ -51,11 +62,12 @@ export function getAiConfig(): AiConfig {
   const apiKey = (process.env.AI_API_KEY ?? "").trim();
   const baseUrl = rapikanBaseUrl((process.env.AI_BASE_URL ?? DEFAULT_BASE_URL).trim());
   const model = (process.env.AI_MODEL ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
+  const kuotaTokenBulanan = bacaKuotaToken(process.env.AI_KUOTA_TOKEN_BULANAN);
 
   // Fail-safe OFF: flag tidak aktif, key kosong, atau base URL kosong.
   const enabled = enabledFlag && apiKey.length > 0 && baseUrl.length > 0;
 
-  return { enabled, provider, baseUrl, apiKey, model };
+  return { enabled, provider, baseUrl, apiKey, model, kuotaTokenBulanan };
 }
 
 /**

@@ -45,6 +45,12 @@ export type AiConfig = {
   apiKey: string;
   /** Nama model yang dipilih dari katalog allowlist (§2 aturan 3). */
   model: string;
+  /**
+   * Kuota token AI per warung per bulan (rekomendasi audit #3). 0 = TANPA batas
+   * (default aman untuk pilot). Dipakai untuk menahan penyalahgunaan biaya LLM
+   * oleh owner nakal (mis. spam chat) — dicek di endpoint chat & narasi.
+   */
+  kuotaTokenBulanan: number;
 };
 
 // ── Hasil pemanggilan narasi LLM (lampiran §9: degradasi) ───────────────────

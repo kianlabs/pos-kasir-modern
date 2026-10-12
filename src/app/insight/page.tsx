@@ -26,6 +26,9 @@ type Usage = {
   totalTokens: number;
   calls: number;
   estimasiRupiah: number;
+  /** Kuota token bulanan (0 = tanpa batas) — rekomendasi audit #3. */
+  kuotaTokenBulanan: number;
+  kuotaTerlampaui: boolean;
 };
 
 export default function InsightPage() {
@@ -191,6 +194,24 @@ export default function InsightPage() {
                 <span className="tabular-nums">{usage.calls}</span> panggilan · estimasi{" "}
                 <span className="tabular-nums">{rupiah(usage.estimasiRupiah)}</span>
               </p>
+              {usage.kuotaTokenBulanan > 0 && (
+                <p
+                  className={
+                    usage.kuotaTerlampaui
+                      ? "mt-1 text-caption font-semibold text-red-600"
+                      : "mt-1 text-caption text-ink-500"
+                  }
+                >
+                  Kuota bulan ini:{" "}
+                  <span className="tabular-nums">
+                    {usage.totalTokens.toLocaleString("id-ID")}/{usage.kuotaTokenBulanan.toLocaleString("id-ID")}
+                  </span>{" "}
+                  token
+                  {usage.kuotaTerlampaui
+                    ? " — habis, hubungi admin."
+                    : ` (sisa ${(usage.kuotaTokenBulanan - usage.totalTokens).toLocaleString("id-ID")})`}
+                </p>
+              )}
               <p className="mt-0.5 text-caption text-ink-500">
                 Estimasi untuk pemantauan (target &lt; Rp5.000/warung/bln); angka final dari provider.
               </p>

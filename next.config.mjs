@@ -1,3 +1,26 @@
+// Content-Security-Policy (audit rekomendasi #1). Next menyuntikkan inline
+// script (hydration/bootstrap) TANPA nonce → WAJIB 'unsafe-inline' di
+// script-src; tanpa itu seluruh app pecah. Nonce per-request butuh plumbing
+// middleware yang rapuh + berisiko. 'unsafe-inline' tetap menutup vektor
+// injeksi skrip EKSTERNAL, object/embed, serta pembajakan base-uri/form-action.
+// Di mode dev, Next butuh 'unsafe-eval' + websocket HMR → longgarkan.
+const isDev = process.env.NODE_ENV !== "production";
+const csp = [
+  "default-src 'self'",
+  isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob:",
+  isDev ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Jangan bocorkan header X-Powered-By (info teknologi ke penyerang) — audit LOW.
@@ -7,15 +30,17 @@ const nextConfig = {
   // di dev (gejala: halaman render SSR tapi semua useEffect/data client tak jalan).
   // Izinkan host yang kita pakai untuk development. Tidak berdampak di produksi.
   allowedDevOrigins: ["127.0.0.1", "localhost", "192.168.1.9"],
-  // Header keamanan dasar (audit LOW-4). Sengaja TIDAK memakai CSP ketat karena
-  // Next.js menyuntikkan inline script (hydration) yang butuh nonce/hash —
-  // memasang `script-src 'self'` tanpa itu akan memecah aplikasi. Header di bawah
-  // tidak mengubah perilaku aplikasi, hanya menutup vektor umum.
+  // Header keamanan dasar (audit LOW-4) + CSP (rekomendasi audit #1). CSP
+  // memakai 'unsafe-inline' di script-src karena Next menyuntik inline script
+  // tanpa nonce — lihat catatan di atas. Header lain tidak mengubah perilaku
+  // aplikasi, hanya menutup vektor umum.
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
+          // CSP: batasi asal resource (benteng utama XSS/clickjacking/injeksi).
+          { key: "Content-Security-Policy", value: csp },
           // Cegah clickjacking (halaman login/struk tak boleh di-iframe).
           { key: "X-Frame-Options", value: "DENY" },
           // Cegah MIME sniffing.

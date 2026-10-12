@@ -23,6 +23,7 @@ import { str } from "@/server/validate";
 import { handleApiError } from "@/server/api-error";
 import { getAiConfig } from "@/server/ai/config";
 import { eligibleUntukAi } from "@/server/ai/insight";
+import { cekKuotaToken } from "@/server/ai/usage";
 import { streamNarrative } from "@/server/ai/llm";
 import { currentWarungId, currentKasirId, requireOwnerResponse } from "@/server/tenant";
 import {
@@ -134,6 +135,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Fitur Insight hanya untuk plan berbayar." },
         { status: 403 },
+      );
+    }
+
+    // 3b. KUOTA BULANAN (rekomendasi audit #3): cegah penyalahgunaan biaya LLM.
+    // Fail-open (cekKuotaToken) → hanya blok bila kuota benar-benar terlampaui.
+    const kuota = await cekKuotaToken(warungId);
+    if (kuota.habis) {
+      return NextResponse.json(
+        {
+          error: `Kuota AI bulan ini habis (${kuota.terpakai.toLocaleString("id-ID")}/${kuota.kuota.toLocaleString("id-ID")} token). Hubungi admin KRING!.`,
+        },
+        { status: 429 },
       );
     }
 

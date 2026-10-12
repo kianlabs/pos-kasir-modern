@@ -13,6 +13,7 @@
 //  - `warungId` SELALU dari session (aturan §1.4); tak ada query lintas-tenant.
 
 import { prisma } from "@/server/db";
+import { getAiConfig } from "@/server/ai/config";
 import type { UsageInfo } from "@/server/ai/types";
 
 // ── Jenis panggilan AI (String + const union, konsisten dengan Insight.type) ─
@@ -97,6 +98,41 @@ export async function catatUsage(warungId: string, input: CatatUsageInput): Prom
   }
 }
 
+// ── Kuota token bulanan per warung (rekomendasi audit #3) ───────────────────
+//
+// `kuotaTokenBulanan` dari env (0 = tanpa batas). `cekKuotaToken` menghitung
+// pemakaian bulan berjalan (WIB) lalu membandingkan dengan kuota. FAIL-OPEN:
+// bila agregasi gagal (DB hiccup), izinkan (jangan matikan AI karena billing).
+// Dipakai endpoint AI (chat & narasi) untuk menahan penyalahgunaan biaya.
+export type StatusKuota = {
+  /** true = kuota terlampaui → tolak panggilan LLM. */
+  habis: boolean;
+  /** 0 = tanpa batas. */
+  kuota: number;
+  terpakai: number;
+};
+
+const KUOTA_TERBUKA: StatusKuota = { habis: false, kuota: 0, terpakai: 0 };
+
+export async function cekKuotaToken(warungId: string): Promise<StatusKuota> {
+  const kuota = getAiConfig().kuotaTokenBulanan;
+  if (kuota <= 0) return KUOTA_TERBUKA;
+
+  try {
+    const { mulai, selesai } = rentangBulanWib();
+    const agg = await prisma.aiUsage.aggregate({
+      where: { warungId, createdAt: { gte: mulai, lt: selesai } },
+      _sum: { totalTokens: true },
+    });
+    const terpakai = agg._sum.totalTokens ?? 0;
+    return { habis: terpakai >= kuota, kuota, terpakai };
+  } catch (e) {
+    // Fail-open: kegagalan agregasi tak boleh mematikan AI.
+    console.error("[ai-usage] cekKuotaToken gagal (fail-open):", e);
+    return KUOTA_TERBUKA;
+  }
+}
+
 // ── Ringkasan agregat per bulan (WIB) ───────────────────────────────────────
 
 export type RingkasanJenis = {
@@ -116,6 +152,10 @@ export type RingkasanUsage = {
   perJenis: RingkasanJenis[];
   /** ESTIMASI (bukan tagihan nyata — lihat catatan RUPIAH_PER_1K_TOKEN). */
   estimasiRupiah: number;
+  /** Kuota token bulanan warung ini (0 = tanpa batas) — rekomendasi audit #3. */
+  kuotaTokenBulanan: number;
+  /** true bila pemakaian bulan ini sudah menyentuh kuota (kuota>0). */
+  kuotaTerlampaui: boolean;
 };
 
 // Offset WIB tetap UTC+7 (tanpa DST), konsisten dengan tools.ts & chat.ts.
@@ -185,6 +225,9 @@ export async function ringkasUsage(
   // Urut stabil untuk tampilan (token terbanyak dulu).
   perJenis.sort((a, b) => b.tokens - a.tokens);
 
+  // Kuota bulanan (0 = tanpa batas) — rekomendasi audit #3.
+  const kuotaTokenBulanan = getAiConfig().kuotaTokenBulanan;
+
   return {
     bulan,
     totalTokens,
@@ -193,5 +236,7 @@ export async function ringkasUsage(
     calls,
     perJenis,
     estimasiRupiah: estimasiRupiahDariToken(totalTokens),
+    kuotaTokenBulanan,
+    kuotaTerlampaui: kuotaTokenBulanan > 0 && totalTokens >= kuotaTokenBulanan,
   };
 }
