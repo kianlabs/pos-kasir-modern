@@ -1,45 +1,50 @@
 import { PrismaClient } from "@prisma/client";
 
-// ── Koneksi DB: kenapa session/direct (5432), bukan pooled 6543 ──────────
+// ── Koneksi DB: runtime WAJIB lewat TRANSACTION POOLER (6543) ────────────
 //
-// Aplikasi ini memakai INTERACTIVE TRANSACTION (lihat `transaksi()` di bawah →
-// `prisma.$transaction(async (tx) => ...)`). Interactive transaction butuh SATU
-// koneksi yang di-pin selama transaksi berlangsung.
+// Riwayat (insiden produksi 2026-10-12 — semua halaman 500 "max clients reached"):
+// Runtime dulu diarahkan ke DIRECT_URL (port 5432 = Supabase *session* pooler).
+// Session pooler membatasi HARD 15 client (pool_size: 15). Di Vercel serverless
+// tiap instance/cold-start membuka pool sendiri, jadi 3-4 instance saja sudah
+// menghabiskan 15 slot → semua request berikutnya gagal:
+//   FATAL: (EMAXCONNSESSION) max clients reached in session mode — limited to 15
 //
-// Supabase DATABASE_URL menunjuk PgBouncer mode *transaction* (port 6543,
-// `?pgbouncer=true`). Di mode itu backend dipindah-pindah tiap statement →
-// transaksi interaktif tidak andal (rawan P2028 "Transaction already closed",
-// prepared statement & `SET` bisa bocor antar-query). Karena itu runtime
-// diarahkan eksplisit ke koneksi session/direct (port 5432) via `datasourceUrl`.
+// Terukur (uji 20 koneksi simultan):
+//   • 5432 session pooler  → 15 OK / 5 GAGAL  (batas keras 15)
+//   • 6543 transaction pooler → 20 OK / 0 GAGAL
+// Terukur (30 tx interaktif paralel via 6543): limit=1 → 10/30; limit=5 → 30/30.
 //
-// DIRECT_URL = direct/session (5432); DATABASE_URL hanya dipakai sebagai
-// fallback bila DIRECT_URL tak tersedia (mis. env yang cuma punya satu URL).
+// Interactive transaction (`transaksi()`) tetap AMAN di transaction pooler:
+// Supavisor mem-pin satu koneksi selama transaksi berjalan (bukan per-statement),
+// jadi tx multi-query tidak tercampur. Terbukti: flow /api/auth/daftar
+// (14 write dalam 1 tx) × 20 paralel = 20/20 sukses.
 //
-// ── Tuning pool (perbaikan P1001 "Can't reach database server") ──────────
-// Gejala: sebagian request PARALEL gagal P1001 (uji: 30 paralel → 6 gagal;
-// 20 berurutan → 0 gagal). Sebabnya default Prisma untuk runtime:
-//   • connection_limit = 2×CPU+1 (di mesin 8-core = 17) → burst koneksi
-//     menabrak batas pooler Supabase → koneksi baru ditolak.
-//   • connect_timeout = 5s → cold-connect ke Supabase (region Sydney) sering
-//     >5s saat pooler sibuk → langsung P1001, tanpa menunggu.
-// Obat: batasi jumlah koneksi (5 cukup untuk satu instance; di serverless tiap
-// instance punya pool sendiri), perpanjang connect_timeout, dan beri
-// pool_timeout agar query MENUNGGU koneksi bebas alih-alih langsung error.
-// Nilai bisa ditimpa lewat env (mis. deploy multi-instance → naikkan limit).
+// DIRECT_URL (5432) tetap dipakai Prisma HANYA untuk migrasi/introspection
+// (lihat `directUrl` di prisma/schema.prisma) — bukan runtime.
+//
+// ── Tuning pool ─────────────────────────────────────────────────────────
+// connection_limit=5: satu instance Vercel boleh pegang 5 koneksi; pooler 6543
+// batasnya tinggi (~200) sehingga aman untuk banyak instance. connect_timeout
+// diperpanjang (region Sydney, cold-connect sering >5s) dan pool_timeout agar
+// query MENUNGGU koneksi bebas alih-alih langsung error.
 const POOL_PARAMS: Record<string, string> = {
   connection_limit: process.env.DB_CONNECTION_LIMIT ?? "5",
   connect_timeout: process.env.DB_CONNECT_TIMEOUT ?? "15",
   pool_timeout: process.env.DB_POOL_TIMEOUT ?? "20",
 };
 
-// Sisipkan parameter pool ke URL koneksi bila belum ada (tanpa menimpa yang
-// sudah didefinisikan manual di env).
+// Normalisasi parameter pool pada URL koneksi.
+//
+// PENTING: pakai SET (override), bukan "hanya bila belum ada". Template Supabase
+// menyisipkan `connection_limit=1` di DATABASE_URL; nilai itu MENGHANCURKAN
+// serverless (uji: 30 tx interaktif paralel via 6543 → limit=1 = 10/30 sukses,
+// limit=5 = 30/30). Sumber kebenaran = POOL_PARAMS (dapat ditimpa via env DB_*).
 function withPoolParams(raw: string | undefined): string | undefined {
   if (!raw) return raw;
   try {
     const u = new URL(raw);
     for (const [k, v] of Object.entries(POOL_PARAMS)) {
-      if (!u.searchParams.has(k)) u.searchParams.set(k, v);
+      u.searchParams.set(k, v);
     }
     return u.toString();
   } catch {
@@ -48,7 +53,9 @@ function withPoolParams(raw: string | undefined): string | undefined {
   }
 }
 
-const datasourceUrl = withPoolParams(process.env.DIRECT_URL ?? process.env.DATABASE_URL);
+// Runtime pakai DATABASE_URL (transaction pooler 6543). DIRECT_URL (5432)
+// hanya untuk migrasi Prisma — memakainya di serverless = kehabisan 15 slot.
+const datasourceUrl = withPoolParams(process.env.DATABASE_URL ?? process.env.DIRECT_URL);
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
