@@ -56,3 +56,7 @@ learn-supabase/
 *.bak-*
 *.before-*
 .env*
+# KECUALI template (isinya kosong/placeholder) — WAJIB ikut ter-commit agar
+# kontributor baru tahu env apa saja yang dibutuhkan. Tanpa negasi ini, file
+# template ikut ke-ignore oleh pola `.env*` di atas.
+!.env.example
