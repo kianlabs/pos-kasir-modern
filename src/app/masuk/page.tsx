@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/server/tenant";
+import { sesiWarungAktif } from "@/server/tenant";
 import LoginTunggal from "./LoginTunggal";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 // warung yang diinput user lewat /api/auth/warung. Login per-warung tetap ada
 // di /masuk/<slug> untuk tablet masing-masing warung.
 export default async function MasukPage() {
-  const session = await getSession();
-  if (session) redirect("/kasir");
+  // Sesi yatim (warung terhapus) → tetap tampilkan form login, jangan redirect.
+  if (await sesiWarungAktif()) redirect("/kasir");
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">

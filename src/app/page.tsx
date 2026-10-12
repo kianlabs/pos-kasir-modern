@@ -17,7 +17,7 @@ import {
   UtensilsCrossed,
   WifiOff,
 } from "lucide-react";
-import { getSession } from "@/server/tenant";
+import { sesiWarungAktif } from "@/server/tenant";
 import LandingFX from "./LandingFX";
 import LandingFAB from "./LandingFAB";
 
@@ -120,8 +120,9 @@ const HIGHLIGHTS = [
 ];
 
 export default async function LandingPage() {
-  const session = await getSession();
-  if (session) redirect("/kasir");
+  // Redirect ke /kasir HANYA bila warung masih ada. Sesi yatim (warung
+  // terhapus) → tetap tampilkan landing agar tak crash / loop.
+  if (await sesiWarungAktif()) redirect("/kasir");
 
   return (
     <div className="min-h-screen bg-canvas">

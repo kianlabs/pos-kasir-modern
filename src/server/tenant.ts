@@ -64,6 +64,18 @@ export const currentKasirId = memoize(async (warungId?: string): Promise<string>
   return user.id;
 });
 
+// True bila ada sesi DAN warungnya masih ada di DB. Dipakai halaman publik
+// (/, /masuk, /daftar) untuk memutuskan redirect ke /kasir: sesi yang menunjuk
+// warung terhapus (mis. DB di-reset / warung dihapus) TIDAK boleh memaksa
+// redirect ke /kasir — dulu itu membuat root layout melempar "Warung tidak
+// ditemukan." dan SELURUH situs menampilkan "This page couldn't load".
+export const sesiWarungAktif = memoize(async (): Promise<boolean> => {
+  const session = await getSession();
+  if (!session) return false;
+  const warung = await prisma.warung.findUnique({ where: { id: session.wid }, select: { id: true } });
+  return Boolean(warung);
+});
+
 export const currentWarung = memoize(async () => {
   const wId = await currentWarungId();
   const warung = await prisma.warung.findUnique({ where: { id: wId } });

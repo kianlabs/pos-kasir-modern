@@ -19,31 +19,47 @@ export const viewport: Viewport = {
   themeColor: "#171717",
 };
 
+// Shell HTML publik (tanpa sidebar). Dipakai saat belum login ATAU saat sesi
+// menunjuk warung yang sudah tidak ada — supaya user tak terkunci total dan
+// tetap bisa membuka /masuk untuk login ulang.
+function renderPublik(children: React.ReactNode) {
+  return (
+    <html lang="id">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-canvas text-ink-950 font-body-md antialiased">
+        {/* Halaman publik (landing "/", "/masuk", "/daftar") full-bleed —
+            masing-masing halaman mengatur padding/lebar sendiri. */}
+        {children}
+        <ServiceWorkerRegister />
+      </body>
+    </html>
+  );
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
 
   if (!session) {
-    return (
-      <html lang="id">
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-          />
-        </head>
-        <body className="bg-canvas text-ink-950 font-body-md antialiased">
-          {/* Halaman publik (landing "/", "/masuk", "/daftar") full-bleed —
-              masing-masing halaman mengatur padding/lebar sendiri. */}
-          {children}
-          <ServiceWorkerRegister />
-        </body>
-      </html>
-    );
+    return renderPublik(children);
   }
 
-  const warung = await currentWarung();
+  // Sesi ada TAPI warung sudah tidak ditemukan (mis. warung dihapus / DB
+  // di-reset) → jangan crash seluruh layout. Perlakukan sebagai publik agar
+  // user bisa membuka /masuk dan login ulang. `currentWarung()` melempar
+  // "Warung tidak ditemukan." pada kondisi ini.
+  let warung;
+  try {
+    warung = await currentWarung();
+  } catch {
+    return renderPublik(children);
+  }
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
