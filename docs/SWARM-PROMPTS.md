@@ -104,7 +104,7 @@ PERIKSA:
    runtime memakai pooled (pgbouncer=true).
 5. Partial unique index tx_one_draft_per_meja: pastikan ada di migrasi.
 6. SESSION_SECRET: produksi harus bukan default dev.
-7. .gitignore: .kilo/, learn-supabase/, .omo/, .env, .vercel harus ter-ignore.
+7. .gitignore: .kilo/, .omo/, .env, .vercel harus ter-ignore.
 
 OUTPUT: daftar temuan severity (BLOCKER/MAJOR/MINOR) + lokasi file:line + bukti,
 diakhiri verdict: APPROVE / APPROVE WITH NITS / REQUEST CHANGES.

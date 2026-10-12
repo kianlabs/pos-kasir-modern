@@ -24,7 +24,7 @@ import { currentWarungId } from "@/server/tenant";
 export const dynamic = "force-dynamic";
 
 // Warm Monochrome POS — Riwayat Transaksi + drawer detail struk.
-// Struktur & token mengikuti stitch_custom_design_system/riwayat_transaksi_struk/code.html.
+// Struktur & token mengikuti sistem desain Warm Monochrome (lihat DESIGN.md).
 // Query transaksi TIDAK berubah (aturan #12: hanya LUNAS yang tampil).
 
 function formatJam(d: Date): string {
