@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronDown, Delete, KeyRound, Lock, ReceiptText, TriangleAlert, User } from "lucide-react";
+import { emailError } from "@/shared/validasi";
 
 type Kasir = { id: string; name: string };
 
@@ -32,14 +33,28 @@ export default function LoginTunggal() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Field owner yang sudah disentuh → tampilkan error merah di bawahnya.
+  const [sentuh, setSentuh] = useState<{ [k: string]: boolean }>({});
+  const tandai = (k: string) => setSentuh((s) => (s[k] ? s : { ...s, [k]: true }));
+
+  const errEmail = emailError(email);
+  const errPw = password.length === 0 ? "Kata sandi wajib diisi." : null;
+
+  // Kelas input: border merah bila invalid & sudah disentuh.
+  function inputCls(invalid: boolean, extra = "") {
+    return `h-12 w-full rounded-xl border px-3.5 font-body-md text-body-md text-ink-950 outline-none transition-colors ${
+      invalid ? "border-danger bg-danger-bg/40 focus:border-danger" : "border-ink-200 focus:border-ink-950"
+    } ${extra}`;
+  }
+
   // Langkah kasir: false = input kode warung, true = pilih kasir + PIN.
   const kasirLangkahDua = namaWarung.length > 0;
 
   const canSubmit = useMemo(() => {
     if (loading) return false;
-    if (mode === "owner") return email.trim().length > 0 && password.length > 0;
+    if (mode === "owner") return !errEmail && !errPw;
     return kasirLangkahDua && !!userId && pin.length === PIN_LEN;
-  }, [mode, email, password, kasirLangkahDua, userId, pin, loading]);
+  }, [mode, errEmail, errPw, kasirLangkahDua, userId, pin, loading]);
 
   function gantiMode(next: "kasir" | "owner") {
     setMode(next);
@@ -198,10 +213,18 @@ export default function LoginTunggal() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => tandai("email")}
               placeholder="owner@warung.demo"
               autoComplete="username"
-              className="mb-3 h-12 w-full rounded-xl border border-ink-200 px-3.5 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
+              aria-invalid={sentuh.email && !!errEmail}
+              className={inputCls(sentuh.email && !!errEmail, "mb-1")}
             />
+            {sentuh.email && errEmail && (
+              <p className="mb-3 flex items-center gap-1.5 font-caption text-caption text-danger">
+                <TriangleAlert className="h-3.5 w-3.5 shrink-0" /> {errEmail}
+              </p>
+            )}
+            {!(sentuh.email && errEmail) && <div className="mb-3" />}
             <label
               className="mb-1 block font-label-md text-label-md text-ink-700"
               htmlFor="password"
@@ -213,10 +236,18 @@ export default function LoginTunggal() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => tandai("password")}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="mb-4 h-12 w-full rounded-xl border border-ink-200 px-3.5 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
+              aria-invalid={sentuh.password && !!errPw}
+              className={inputCls(sentuh.password && !!errPw, "mb-1")}
             />
+            {sentuh.password && errPw && (
+              <p className="mb-3 flex items-center gap-1.5 font-caption text-caption text-danger">
+                <TriangleAlert className="h-3.5 w-3.5 shrink-0" /> {errPw}
+              </p>
+            )}
+            {!(sentuh.password && errPw) && <div className="mb-3" />}
             <p className="mb-4 rounded-xl border border-ink-200 bg-ink-100 px-3 py-2 font-caption text-caption text-ink-500">
               Masuk dengan email owner Anda. Owner bisa mengelola produk, laporan, dan pengaturan.
             </p>

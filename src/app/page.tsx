@@ -55,6 +55,11 @@ const FITUR = [
     isi: "Omzet harian, produk terlaris, jam sibuk, sampai ringkasan otomatis — tanpa hitung manual.",
   },
   {
+    icon: Sparkles,
+    judul: "Asisten AI",
+    isi: "Tanya langsung soal penjualan, dapat ringkasan otomatis & peringatan anomali — seperti punya manajer 24 jam.",
+  },
+  {
     icon: TrendingUp,
     judul: "Dashboard live",
     isi: "Pantau penjualan real-time dari HP di rumah. Tahu kondisi warung tanpa harus ke lokasi.",
@@ -72,7 +77,7 @@ const LANGKAH = [
   { n: "3", judul: "Mulai jualan", isi: "Buka shift, layani pelanggan, pantau omzet dari mana saja." },
 ];
 
-// Fitur UNGGULAN (highlights) — tiga hal paling sering dipakai warung.
+// Fitur UNGGULAN (highlights) — empat hal paling sering dipakai warung.
 // Ditampilkan sebagai baris bergantian (teks ⇄ tangkapan layar) supaya
 // penjelasannya lebih dalam dari sekadar kartu ikon.
 const HIGHLIGHTS = [
@@ -84,6 +89,15 @@ const HIGHLIGHTS = [
     poin: ["Hitung kembalian otomatis", "Siap barcode scanner", "Struk 58 & 80mm"],
     gambar: "/preview-kasir.png",
     alt: "Halaman kasir KRING!",
+  },
+  {
+    eyebrow: "Asisten AI",
+    tab: "KRING! · Insight",
+    judul: "Tanya warungmu, dijawab AI",
+    isi: "Ketik pertanyaan biasa — “produk apa yang paling laku minggu ini?” — dan AI membaca angka penjualanmu lalu menjawabnya. Ringkasan harian & peringatan anomali tersusun sendiri, tinggal dibaca.",
+    poin: ["Tanya-jawab soal penjualan", "Ringkasan harian otomatis", "Deteksi kejanggalan & stok menipis"],
+    gambar: "/preview-ai.png",
+    alt: "Asisten AI KRING! Insight",
   },
   {
     eyebrow: "Pantau dari mana saja",
@@ -248,7 +262,7 @@ export default async function LandingPage() {
               Yang paling sering dipakai
             </span>
             <h2 className="mt-3 font-headline-lg text-headline-lg tracking-tight text-ink-950">
-              Tiga hal yang bikin warung lebih ringan
+              Empat hal yang bikin warung lebih ringan
             </h2>
           </div>
 

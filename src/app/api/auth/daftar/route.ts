@@ -8,7 +8,8 @@ import { issueSession } from "@/server/session";
 import { SESSION_COOKIE } from "@/shared/session-types";
 import { checkSlugRate, recordSlugProbe } from "@/server/rate-limit";
 import { handleApiError } from "@/server/api-error";
-import { str, passwordError } from "@/server/validate";
+import { str } from "@/server/validate";
+import { namaWarungError, emailError, passwordError } from "@/shared/validasi";
 import { ipKlien } from "@/server/ip";
 
 export const dynamic = "force-dynamic";
@@ -78,11 +79,15 @@ export async function POST(req: Request) {
     const email = str(body.email, 200).toLowerCase();
     const password = str(body.password, 200);
 
-    if (nama.length < 2) {
-      return NextResponse.json({ error: "Nama warung minimal 2 karakter." }, { status: 400 });
+    // Validasi otoritatif (server) — pakai validator BERSAMA agar pesan & aturan
+    // identik dengan yang tampil di form (tidak ada drift klien vs server).
+    const namaErr = namaWarungError(nama);
+    if (namaErr) {
+      return NextResponse.json({ error: namaErr }, { status: 400 });
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
+    const emailErr = emailError(email);
+    if (emailErr) {
+      return NextResponse.json({ error: emailErr }, { status: 400 });
     }
     const pwErr = passwordError(password);
     if (pwErr) {
