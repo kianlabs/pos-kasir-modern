@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/server/db";
 import { SESSION_COOKIE, type SessionPayload } from "@/shared/session-types";
 import { verifySession } from "@/server/session";
+import { ApiError } from "@/server/api-error";
 
 // Tenant SELALU dari session login (lampiran skema §2 aturan #8):
 // warungId tidak pernah diterima dari body/query/header.
@@ -40,16 +41,18 @@ export async function requireSession(): Promise<
 }
 
 // warungId turunan session — satu-satunya pintu masuk tenant.
+// Lempar ApiError(401) agar route yang tak sempat memasang guard sesi tetap
+// membalas 401 "Belum login" (bukan 500) lewat handleApiError.
 export const currentWarungId = memoize(async (): Promise<string> => {
   const session = await getSession();
-  if (!session) throw new Error("Tidak ada session. Login dulu.");
+  if (!session) throw new ApiError("Belum login. Tidak ada session.", 401);
   return session.wid;
 });
 
 // Kasir/user yang sedang login (untuk audit: siapa).
 export const currentKasirId = memoize(async (warungId?: string): Promise<string> => {
   const session = await getSession();
-  if (!session) throw new Error("Tidak ada session. Login dulu.");
+  if (!session) throw new ApiError("Belum login. Tidak ada session.", 401);
   const wId = warungId ?? session.wid;
 
   // Validasi user masih ada, aktif, dan berada di warung yang sama.
@@ -57,7 +60,7 @@ export const currentKasirId = memoize(async (warungId?: string): Promise<string>
     where: { id: session.uid, warungId: wId, aktif: true },
     select: { id: true },
   });
-  if (!user) throw new Error("User tidak aktif atau tidak ditemukan.");
+  if (!user) throw new ApiError("Sesi tidak valid. Login ulang.", 401);
   return user.id;
 });
 

@@ -195,9 +195,11 @@ describe("stats & export — invarian LUNAS + RBAC export (aturan #12)", () => {
     expect(json.trxHariIni).toBe(1);
   });
 
-  it("stats: tanpa sesi → ditolak (belum login)", async () => {
+  it("stats: tanpa sesi → ditolak 401 (belum login)", async () => {
     setSessionCookie(undefined);
-    await expect(callStats()).rejects.toThrow(/session|login/i);
+    const res = await callStats();
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toMatch(/login/i);
   });
 
   // ── /api/export ───────────────────────────────────────────────────────────
