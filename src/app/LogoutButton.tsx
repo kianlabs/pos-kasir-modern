@@ -12,7 +12,9 @@ export default function LogoutButton() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      router.replace("/masuk");
+      // Kembali ke landing page publik (bukan form login) supaya user melihat
+      // halaman jualan dulu, sesuai alur "pertama kali masuk = landing".
+      router.replace("/");
       router.refresh();
     }
   }

@@ -13,7 +13,9 @@
 
 // Naikkan versi ini setiap kali daftar pre-cache atau logika berubah supaya
 // event `activate` membersihkan cache lama.
-const CACHE_VERSION = "v1";
+// v2: manifest.webmanifest di-pre-cache & cache-first, jadi `start_url` lama
+// bisa nyangkut di PWA yang sudah ter-install → bump versi memaksa refresh.
+const CACHE_VERSION = "v2";
 const SHELL_CACHE = `kring-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `kring-runtime-${CACHE_VERSION}`;
 const API_CACHE = `kring-api-${CACHE_VERSION}`;

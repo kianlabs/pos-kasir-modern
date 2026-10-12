@@ -2,7 +2,7 @@
   "name": "KRING! Kasir",
   "short_name": "KRING!",
   "description": "Aplikasi kasir modern: kasir, produk, transaksi, laporan.",
-  "start_url": "/kasir",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#faf6f0",
