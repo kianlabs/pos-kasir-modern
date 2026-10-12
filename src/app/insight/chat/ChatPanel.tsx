@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { WifiOff } from "lucide-react";
+import MarkdownMini from "./MarkdownMini";
 
 // Chat owner "KRING! Insight" (lampiran AI §6, §8, §9).
 //
@@ -202,7 +203,11 @@ export default function ChatPanel() {
             </div>
           ) : (
             <div key={i} className="self-start rounded-2xl border border-ink-200 bg-surface px-4 py-2">
-              <p className="whitespace-pre-wrap text-body-sm text-ink-700">{p.content || "…"}</p>
+              {p.content ? (
+                <MarkdownMini text={p.content} />
+              ) : (
+                <p className="text-body-sm text-ink-700">…</p>
+              )}
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 {p.tool && TOOL_LABEL[p.tool] && (
                   <span className="rounded-full bg-ink-100 px-2 py-0.5 text-caption text-ink-700">
