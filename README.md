@@ -121,7 +121,7 @@ Setelah `db:seed`, gunakan akun berikut:
 
 ## Deploy (Vercel + Supabase)
 
-**Staging live:** https://pos-kasir-modern-sigma.vercel.app
+**Staging live:** https://kringkasir.vercel.app
 
 1. **Supabase** → buat project → ambil dua connection string: pooled (6543) dan direct (5432).
 2. **Vercel** → import repo → set env:

@@ -173,4 +173,86 @@ export async function __resetRateLimit(): Promise<void> {
   await prisma.loginAttempt.deleteMany({});
 }
 
-export const RATE_LIMIT = { MAX_FAILURES, BLOCK_MS };
+// ── Rate-limit login per-IP (anti password-spray + anti account-lockout) ─────
+//
+// Rate-limit per-akun (di atas) membatasi tebak-password pada SATU akun, tapi
+// penyerang bisa menyebar percobaan ke BANYAK email (password spraying) dan
+// setiap email punya hitungan sendiri → lolos. Selain itu, karena limit
+// per-akun, orang yang tahu email owner bisa sengaja salah 5× → mengunci owner
+// (denial-of-service pada akun).
+//
+// Lapis per-IP menutup keduanya: total KEGAGALAN login dari satu IP dibatasi,
+// apa pun akun yang dicoba. Ini melindungi owner dari penguncian oleh IP asing
+// (IP owner sendiri tetap punya jatah penuh) dan menahan spray lintas-akun.
+//
+// Fixed-window, state di tabel yang SAMA (`login_attempts`) dengan prefix
+// khusus agar tak bentrok. FAIL-OPEN seperti rate-limit lain (pelindung
+// tambahan, bukan jalur kritis) — DB hiccup tidak boleh mematikan login.
+const LOGIN_IP_PREFIX = "login-ip:";
+const LOGIN_IP_MAX = 20; // maksimum kegagalan per window per IP
+const LOGIN_IP_WINDOW_MS = 10 * 60 * 1000; // 10 menit
+
+export type LoginIpStatus = {
+  blocked: boolean;
+  retryAfterSeconds: number;
+};
+
+export function loginIpKey(ip: string): string {
+  return `${LOGIN_IP_PREFIX}${ip}`;
+}
+
+const LOGIN_IP_OPEN: LoginIpStatus = { blocked: false, retryAfterSeconds: 0 };
+
+export async function checkLoginIpRate(ip: string): Promise<LoginIpStatus> {
+  const key = loginIpKey(ip);
+  const nowMs = Date.now();
+  try {
+    const row = await prisma.loginAttempt.findUnique({
+      where: { key },
+      select: { failures: true, blockedUntil: true },
+    });
+    if (!row || !row.blockedUntil || row.blockedUntil.getTime() <= nowMs) {
+      return LOGIN_IP_OPEN;
+    }
+    const remaining = Math.max(0, LOGIN_IP_MAX - row.failures);
+    return {
+      blocked: remaining <= 0,
+      retryAfterSeconds: remaining <= 0 ? Math.ceil((row.blockedUntil.getTime() - nowMs) / 1000) : 0,
+    };
+  } catch (e) {
+    console.error("[rate-limit] checkLoginIpRate gagal (fail-open):", e);
+    return LOGIN_IP_OPEN;
+  }
+}
+
+export async function recordLoginIpFailure(ip: string): Promise<LoginIpStatus> {
+  const key = loginIpKey(ip);
+  const nowMs = Date.now();
+  try {
+    const row = await prisma.loginAttempt.findUnique({
+      where: { key },
+      select: { blockedUntil: true },
+    });
+    if (!row || !row.blockedUntil || row.blockedUntil.getTime() <= nowMs) {
+      await prisma.loginAttempt.upsert({
+        where: { key },
+        create: { key, failures: 1, blockedUntil: new Date(nowMs + LOGIN_IP_WINDOW_MS) },
+        update: { failures: 1, blockedUntil: new Date(nowMs + LOGIN_IP_WINDOW_MS) },
+      });
+    } else {
+      await prisma.loginAttempt.update({ where: { key }, data: { failures: { increment: 1 } } });
+    }
+  } catch (e) {
+    console.error("[rate-limit] recordLoginIpFailure gagal (fail-open):", e);
+    return LOGIN_IP_OPEN;
+  }
+  return checkLoginIpRate(ip);
+}
+
+// Hapus hitungan IP saat login sukses (agar IP warung yang sah tak menumpuk
+// kegagalan lama). Dipanggil bersama recordLoginSuccess per-akun.
+export async function recordLoginIpSuccess(ip: string): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { key: loginIpKey(ip) } }).catch(() => {});
+}
+
+export const RATE_LIMIT = { MAX_FAILURES, BLOCK_MS, LOGIN_IP_MAX, LOGIN_IP_WINDOW_MS };

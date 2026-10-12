@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Jangan bocorkan header X-Powered-By (info teknologi ke penyerang) — audit LOW.
+  poweredByHeader: false,
   // Next 16 memblokir resource dev (/_next/hmr) dari origin selain localhost →
   // akses via 127.0.0.1 dianggap cross-origin, HMR mati, dan hidrasi React GAGAL
   // di dev (gejala: halaman render SSR tapi semua useEffect/data client tak jalan).

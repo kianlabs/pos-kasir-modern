@@ -6,7 +6,8 @@ import { readJson } from "@/server/http";
 import { catat } from "@/server/audit";
 import { issueSession } from "@/server/session";
 import { SESSION_COOKIE } from "@/shared/session-types";
-import { checkLoginRate, recordLoginFailure, recordLoginSuccess } from "@/server/rate-limit";
+import { checkLoginRate, recordLoginFailure, recordLoginSuccess, checkLoginIpRate, recordLoginIpFailure, recordLoginIpSuccess } from "@/server/rate-limit";
+import { ipKlien } from "@/server/ip";
 import { handleApiError } from "@/server/api-error";
 import { str } from "@/server/validate";
 
@@ -24,6 +25,18 @@ export async function POST(req: Request) {
   const mode = body.mode === "owner" ? "owner" : body.mode === "kasir" ? "kasir" : null;
   if (!slug || !mode) {
     return NextResponse.json({ error: "Warung / peran tidak valid." }, { status: 400 });
+  }
+
+  // Rate-limit per-IP (lapis pertama): batasi total kegagalan login dari satu
+  // sumber, apa pun akunnya. Menahan password-spray lintas-akun sekaligus
+  // mencegah owner dikunci dari jarak jauh (IP owner sendiri punya jatah penuh).
+  const ip = ipKlien(req);
+  const ipRate = await checkLoginIpRate(ip);
+  if (ipRate.blocked) {
+    return NextResponse.json(
+      { error: `Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam ${ipRate.retryAfterSeconds} detik.` },
+      { status: 429, headers: { "Retry-After": String(ipRate.retryAfterSeconds) } }
+    );
   }
 
   let warung: { id: string; slug: string; status: string } | null = null;
@@ -69,7 +82,14 @@ export async function POST(req: Request) {
       const ok = owner && owner.password ? await bcrypt.compare(password, owner.password) : false;
       if (!owner || !ok) {
         const after = await recordLoginFailure(ownerKey);
+        const ipAfter = await recordLoginIpFailure(ip);
         await catat({ warungId: warung.id, userId: owner?.id ?? null, action: "LOGIN_FAIL", meta: { mode } });
+        if (ipAfter.blocked) {
+          return NextResponse.json(
+            { error: `Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam ${ipAfter.retryAfterSeconds} detik.` },
+            { status: 429, headers: { "Retry-After": String(ipAfter.retryAfterSeconds) } }
+          );
+        }
         if (after.blocked) {
           return NextResponse.json(
             { error: `Terlalu banyak percobaan. Diblokir ${Math.ceil(after.retryAfterSeconds / 60)} menit.` },
@@ -80,6 +100,7 @@ export async function POST(req: Request) {
       }
 
       await recordLoginSuccess(ownerKey);
+      await recordLoginIpSuccess(ip);
       await catat({ warungId: warung.id, userId: owner.id, action: "LOGIN_OK", meta: { mode } });
       return await finish(owner);
     }
@@ -109,7 +130,14 @@ export async function POST(req: Request) {
     });
     if (!kasir) {
       const after = await recordLoginFailure(userId);
+      const ipAfter = await recordLoginIpFailure(ip);
       await catat({ warungId: warung.id, userId: null, action: "LOGIN_FAIL", meta: { mode, alasan: "kasir_tidak_ditemukan" } });
+      if (ipAfter.blocked) {
+        return NextResponse.json(
+          { error: `Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam ${ipAfter.retryAfterSeconds} detik.` },
+          { status: 429, headers: { "Retry-After": String(ipAfter.retryAfterSeconds) } }
+        );
+      }
       if (after.blocked) {
         return NextResponse.json(
           { error: `Percobaan berlebih. Diblokir ${Math.ceil(after.retryAfterSeconds / 60)} menit.` },
@@ -122,7 +150,14 @@ export async function POST(req: Request) {
     const ok = kasir.pin ? await bcrypt.compare(pin, kasir.pin) : false;
     if (!ok) {
       const after = await recordLoginFailure(userId);
+      const ipAfter = await recordLoginIpFailure(ip);
       await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_FAIL", meta: { mode } });
+      if (ipAfter.blocked) {
+        return NextResponse.json(
+          { error: `Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam ${ipAfter.retryAfterSeconds} detik.` },
+          { status: 429, headers: { "Retry-After": String(ipAfter.retryAfterSeconds) } }
+        );
+      }
       if (after.blocked) {
         return NextResponse.json(
           { error: `PIN salah 5×. Diblokir ${Math.ceil(after.retryAfterSeconds / 60)} menit.` },
@@ -136,6 +171,7 @@ export async function POST(req: Request) {
     }
 
     await recordLoginSuccess(userId);
+    await recordLoginIpSuccess(ip);
     await catat({ warungId: warung.id, userId: kasir.id, action: "LOGIN_OK", meta: { mode } });
     return await finish(kasir);
   } catch (e) {

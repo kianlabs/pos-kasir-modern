@@ -17,7 +17,7 @@ export default function DaftarClient() {
   const [loading, setLoading] = useState(false);
 
   const canSubmit = useMemo(
-    () => !loading && nama.trim().length >= 2 && email.trim().length > 0 && password.length >= 6,
+    () => !loading && nama.trim().length >= 2 && email.trim().length > 0 && password.length >= 8,
     [loading, nama, email, password],
   );
 
@@ -101,7 +101,7 @@ export default function DaftarClient() {
             type={lihatSandi ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minimal 6 karakter"
+            placeholder="Minimal 8 karakter"
             autoComplete="new-password"
             className="h-12 w-full rounded-xl border border-ink-200 px-3.5 pr-11 font-body-md text-body-md text-ink-950 outline-none focus:border-ink-950"
           />

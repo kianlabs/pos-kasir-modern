@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { getSession } from "@/server/tenant";
 import LandingFX from "./LandingFX";
+import LandingFAB from "./LandingFAB";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,8 @@ export default async function LandingPage() {
       {/* Efek gerak (GSAP ScrollTrigger + progress bar) — client component.
           Hero dianimasikan CSS murni; sisanya reveal saat menggulir. */}
       <LandingFX />
+      {/* Menu interaksi melayang: WhatsApp, lompat antar-seksi, ke atas. */}
+      <LandingFAB />
 
       {/* ── Nav atas ── */}
       <header className="sticky top-0 z-30 border-b border-ink-200 bg-canvas/85 backdrop-blur-sm">
@@ -112,13 +115,13 @@ export default async function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 md:pt-20">
+      <section className="mx-auto max-w-6xl px-5 pb-12 pt-12 md:pb-16 md:pt-20">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div data-fx-hero-copy>
             <span className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-surface px-3 py-1.5 text-caption font-caption uppercase tracking-wider text-ink-700">
               <Sparkles className="h-3.5 w-3.5" /> Kasir untuk warung & kafe
             </span>
-            <h1 className="mt-5 font-display-hero text-display-hero leading-[1.05] tracking-tight text-ink-950">
+            <h1 className="mt-5 font-display-hero text-display-hero-mobile leading-[1.1] tracking-tight text-ink-950 sm:text-display-hero sm:leading-[1.05]">
               Kasir bunyi,
               <br />
               cuan masuk.
@@ -127,16 +130,16 @@ export default async function LandingPage() {
               KRING! bantu warung kamu jualan lebih rapi: transaksi cepat, stok
               terjaga, laporan omzet otomatis. Pantau penjualan dari HP, kapan pun.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 href="/daftar"
-                className="inline-flex h-14 items-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
               >
                 Mulai Gratis 30 Hari <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 href="/masuk"
-                className="inline-flex h-14 items-center gap-2 rounded-xl border border-ink-200 bg-surface px-6 py-3.5 text-label-lg font-label-lg text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-ink-200 bg-surface px-6 py-3.5 text-label-lg font-label-lg text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
               >
                 Sudah punya akun
               </Link>
@@ -178,7 +181,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Fitur ── */}
-      <section className="border-t border-ink-200 bg-surface">
+      <section id="fitur" className="scroll-mt-20 border-t border-ink-200 bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-16">
           <div className="mx-auto max-w-2xl text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
@@ -207,7 +210,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Tampilan produk (galeri) ── */}
-      <section className="border-t border-ink-200 bg-canvas">
+      <section id="galeri" className="scroll-mt-20 border-t border-ink-200 bg-canvas">
         <div className="mx-auto max-w-6xl px-5 py-16">
           <div className="mx-auto max-w-2xl text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
@@ -237,7 +240,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Cara mulai ── */}
-      <section className="border-t border-ink-200 bg-surface">
+      <section id="cara" className="scroll-mt-20 border-t border-ink-200 bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-16">
           <h2 className="text-center font-headline-lg text-headline-lg tracking-tight text-ink-950" data-fx="rise">
             Mulai dalam 3 langkah
@@ -257,7 +260,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Harga ── */}
-      <section className="border-t border-ink-200 bg-canvas">
+      <section id="harga" className="scroll-mt-20 border-t border-ink-200 bg-canvas">
         <div className="mx-auto max-w-3xl px-5 py-16">
           <div className="text-center" data-fx="rise">
             <h2 className="font-headline-lg text-headline-lg tracking-tight text-ink-950">
@@ -333,7 +336,7 @@ export default async function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-ink-200 bg-canvas">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row" data-fx="fade">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 pb-24 pt-8 sm:flex-row sm:pb-8" data-fx="fade">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-950 text-surface">
               <Bell className="h-4 w-4" />

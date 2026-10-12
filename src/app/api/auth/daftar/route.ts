@@ -8,7 +8,8 @@ import { issueSession } from "@/server/session";
 import { SESSION_COOKIE } from "@/shared/session-types";
 import { checkSlugRate, recordSlugProbe } from "@/server/rate-limit";
 import { handleApiError } from "@/server/api-error";
-import { str } from "@/server/validate";
+import { str, passwordError } from "@/server/validate";
+import { ipKlien } from "@/server/ip";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,7 @@ export const dynamic = "force-dynamic";
 //  - Password di-hash bcrypt; tak pernah dikembalikan.
 
 function ambilIpKlien(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim() || "unknown";
-  return req.headers.get("x-real-ip")?.trim() || "unknown";
+  return ipKlien(req);
 }
 
 function slugify(text: string): string {
@@ -85,8 +84,9 @@ export async function POST(req: Request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
     }
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Kata sandi minimal 6 karakter." }, { status: 400 });
+    const pwErr = passwordError(password);
+    if (pwErr) {
+      return NextResponse.json({ error: pwErr }, { status: 400 });
     }
 
     // Email owner unik GLOBAL (login tunggal me-resolve warung dari email).

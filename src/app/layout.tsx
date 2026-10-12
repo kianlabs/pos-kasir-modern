@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bell, KeyRound, User } from "lucide-react";
 import SidebarNav from "./SidebarNav";
 import MobileNav from "./MobileNav";
+import QuickActions from "./QuickActions";
 import LogoutButton from "./LogoutButton";
 import ServiceWorkerRegister from "./ServiceWorkerRegister";
 import OfflineShell from "./OfflineShell";
@@ -120,7 +121,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </div>
               </div>
             </header>
-            <div className="mx-auto w-full max-w-7xl px-4 py-6 pb-28 md:px-6 md:pb-6 flex-1">
+            <div className="mx-auto w-full max-w-7xl px-4 py-6 pb-36 md:px-6 md:pb-6 flex-1">
               <p className="mb-4 text-xs font-medium uppercase tracking-wider text-ink-500 print:hidden">
                 {today}
               </p>
@@ -129,6 +130,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
         </div>
         <MobileNav role={session.role} />
+        <QuickActions role={session.role} />
         <ServiceWorkerRegister />
       </body>
     </html>
