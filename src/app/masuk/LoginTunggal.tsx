@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronDown, Delete, KeyRound, Lock, ReceiptText, TriangleAlert, User } from "lucide-react";
 import { emailError } from "@/shared/validasi";
+import DemoButton from "@/app/_components/DemoButton";
 
 type Kasir = { id: string; name: string };
 
@@ -167,6 +168,23 @@ export default function LoginTunggal() {
         </div>
         <p className="font-body-md text-body-md text-ink-500">Kring! Kasir bunyi, cuan masuk.</p>
       </header>
+
+      {/* 1-Click Demo untuk Rekruter & Pengunjung */}
+      <div className="mb-6 w-full">
+        <DemoButton
+          variant="card"
+          label="⚡ Coba Demo Langsung (Tanpa Daftar)"
+        />
+      </div>
+
+      <div className="relative mb-6 flex w-full items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-ink-200" />
+        </div>
+        <span className="relative bg-canvas px-4 font-caption text-caption uppercase tracking-wider text-ink-500">
+          atau masuk dengan akun terdaftar
+        </span>
+      </div>
 
       <form
         onSubmit={submit}

@@ -20,6 +20,7 @@ import {
 import { sesiWarungAktif } from "@/server/tenant";
 import LandingFX from "./LandingFX";
 import LandingFAB from "./LandingFAB";
+import DemoButton from "./_components/DemoButton";
 
 export const dynamic = "force-dynamic";
 
@@ -144,6 +145,11 @@ export default async function LandingPage() {
             </span>
           </div>
           <nav className="flex items-center gap-2">
+            <DemoButton
+              variant="nav"
+              label="Coba Demo"
+              className="hidden sm:inline-flex"
+            />
             <Link
               href="/masuk"
               className="rounded-xl px-4 py-2.5 text-label-lg font-label-lg text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950"
@@ -177,6 +183,11 @@ export default async function LandingPage() {
               terjaga, laporan omzet otomatis. Pantau penjualan dari HP, kapan pun.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <DemoButton
+                variant="hero"
+                label="⚡ Coba Demo Langsung"
+                className="order-first sm:order-none"
+              />
               <Link
                 href="/daftar"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
@@ -191,7 +202,7 @@ export default async function LandingPage() {
               </Link>
             </div>
             <p className="mt-4 flex items-center gap-1.5 font-caption text-caption text-ink-500">
-              <Check className="h-3.5 w-3.5 text-success" /> Tanpa kartu kredit · Setup 1 menit · Batalkan kapan saja
+              <Check className="h-3.5 w-3.5 text-success" /> 1-Klik Demo tanpa daftar · Akses penuh simulasi kasir & produk
             </p>
           </div>
 
@@ -402,12 +413,19 @@ export default async function LandingPage() {
           <p className="mt-3 font-body-md text-body-md text-ink-300">
             Daftar hari ini, mulai jualan dalam 1 menit. Gratis 30 hari.
           </p>
-          <Link
-            href="/daftar"
-            className="mt-7 inline-flex h-14 items-center gap-2 rounded-xl bg-surface px-7 py-3.5 text-label-lg font-label-lg text-ink-950 transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            Daftar Warung <ArrowRight className="h-5 w-5" />
-          </Link>
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <DemoButton
+              variant="inverted"
+              label="⚡ Coba Demo Langsung"
+              className="w-full sm:w-auto"
+            />
+            <Link
+              href="/daftar"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-surface px-7 py-3.5 text-label-lg font-label-lg text-ink-950 transition-all hover:opacity-90 active:scale-[0.98] sm:w-auto"
+            >
+              Daftar Warung <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
