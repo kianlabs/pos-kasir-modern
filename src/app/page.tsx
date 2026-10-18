@@ -186,17 +186,17 @@ export default async function LandingPage() {
               <DemoButton
                 variant="hero"
                 label="⚡ Coba Demo Langsung"
-                className="order-first sm:order-none"
+                className="order-first sm:order-none w-full sm:w-auto"
               />
               <Link
                 href="/daftar"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
+                className="inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-ink-950 px-6 py-3.5 text-label-lg font-label-lg text-surface transition-all hover:opacity-90 active:scale-[0.98]"
               >
                 Mulai Gratis 30 Hari <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
                 href="/masuk"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-ink-200 bg-surface px-6 py-3.5 text-label-lg font-label-lg text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
+                className="inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-ink-200 bg-surface px-6 py-3.5 text-label-lg font-label-lg text-ink-950 transition-colors hover:bg-ink-100 active:scale-[0.98]"
               >
                 Sudah punya akun
               </Link>

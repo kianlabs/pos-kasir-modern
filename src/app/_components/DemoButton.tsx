@@ -85,7 +85,7 @@ export default function DemoButton({
           onClick={handleDemo}
           disabled={loading}
           aria-busy={loading}
-          className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-surface font-headline-sm text-headline-sm text-ink-950 shadow-sm transition-all hover:bg-ink-100 active:scale-[0.98] disabled:opacity-60"
+          className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-surface font-headline-sm text-xs sm:text-base font-bold text-ink-950 shadow-sm transition-all hover:bg-ink-100 active:scale-[0.98] disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -94,8 +94,8 @@ export default function DemoButton({
             </>
           ) : (
             <>
-              <span>{label}</span>
-              <ArrowRight className="h-5 w-5" />
+              <span className="text-xs sm:text-base font-bold">{label}</span>
+              <ArrowRight className="h-5 w-5 shrink-0" />
             </>
           )}
         </button>
@@ -112,7 +112,7 @@ export default function DemoButton({
           onClick={handleDemo}
           disabled={loading}
           aria-busy={loading}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-ink-950 bg-surface px-6 py-3.5 font-label-lg text-label-lg text-ink-950 shadow-sm transition-all hover:bg-ink-950 hover:text-surface active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-ink-950 bg-surface px-6 py-3.5 font-label-lg text-sm sm:text-base text-ink-950 shadow-sm transition-all hover:bg-ink-950 hover:text-surface active:scale-[0.98] disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -214,7 +214,7 @@ export default function DemoButton({
           onClick={handleDemo}
           disabled={loading}
           aria-busy={loading}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-ink-700 bg-ink-900 px-6 py-3.5 font-label-lg text-label-lg text-surface shadow-sm transition-all hover:bg-ink-800 active:scale-[0.98] disabled:opacity-60"
+          className="inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-ink-700 bg-ink-900 px-6 py-3.5 font-label-lg text-sm sm:text-base text-surface shadow-sm transition-all hover:bg-ink-800 active:scale-[0.98] disabled:opacity-60"
         >
           {loading ? (
             <>
