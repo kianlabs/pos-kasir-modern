@@ -23,6 +23,8 @@ const csp = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Hanya gunakan standalone output jika bukan di Vercel (misal: Docker / local)
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   // Jangan bocorkan header X-Powered-By (info teknologi ke penyerang) — audit LOW.
   poweredByHeader: false,
   // Next 16 memblokir resource dev (/_next/hmr) dari origin selain localhost →
