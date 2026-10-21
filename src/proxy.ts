@@ -88,6 +88,11 @@ export function proxy(req: NextRequest) {
     // karena dipanggil SEBELUM sesi ada. Handler tak pernah membocorkan daftar
     // warung lintas-tenant; rate-limit per-IP menahan enumerasi.
     pathname.startsWith("/api/auth/warung") ||
+    // 1-Click Demo: membuat sesi demo TANPA kredensial — wajib publik karena
+    // justru dipanggil saat pengunjung BELUM punya sesi. Tanpa pengecualian
+    // ini, POST /api/auth/demo selalu kena 401 "Belum login." dari gate di
+    // bawah dan tombol "Coba Demo" tidak pernah bisa masuk.
+    pathname.startsWith("/api/auth/demo") ||
     pathname.startsWith("/_next") ||
     // Aset statis publik (gambar landing, dsb.) — tanpa sesi. File di public/
     // dilayani langsung; tanpa pengecualian ini mereka kena gate sesi → 307 →
