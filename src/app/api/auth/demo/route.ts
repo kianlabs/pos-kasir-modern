@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/server/db";
 import { catat } from "@/server/audit";
 import { issueSession } from "@/server/session";
@@ -8,12 +8,82 @@ import { handleApiError } from "@/server/api-error";
 
 export const dynamic = "force-dynamic";
 
+// Rate limiter sederhana: 3 request per menit per IP
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 menit
+const RATE_LIMIT_MAX = 3;
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIP(headersList: Headers): string {
+  const forwarded = headersList.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  const realIP = headersList.get("x-real-ip");
+  if (realIP) {
+    return realIP.trim();
+  }
+  return "unknown";
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    const resetIn = Math.max(0, entry.resetAt - now);
+    return { allowed: false, remaining: 0, resetIn };
+  }
+
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count, resetIn: entry.resetAt - now };
+}
+
 // POST /api/auth/demo
 // Fitur 1-Click Demo / Tamu untuk memudahkan peninjau, rekruter, dan calon
 // pengguna mencoba fitur lengkap KRING! tanpa harus mengisi kredensial manual.
+// Rate limit: 3 request per menit per IP. Disable di production via DISABLE_DEMO_LOGIN=true.
 export async function POST() {
   try {
-    // 1. Cari warung demo (prioritas slug "warung-berkah-jaya", atau warung aktif pertama)
+    // 0. Cek apakah demo login disabled di production
+    if (process.env.DISABLE_DEMO_LOGIN === "true") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Demo login dinonaktifkan di environment production.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 1. Rate limit check: 3 request per menit per IP
+    const headersList = await headers();
+    const clientIP = getClientIP(headersList);
+    const rateLimitResult = checkRateLimit(clientIP);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak permintaan. Coba lagi dalam ${Math.ceil(rateLimitResult.resetIn / 1000)} detik.`,
+          retryAfter: Math.ceil(rateLimitResult.resetIn / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(RATE_LIMIT_MAX),
+            "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+            "Retry-After": String(Math.ceil(rateLimitResult.resetIn / 1000)),
+          },
+        }
+      );
+    }
+
+    // 2. Cari warung demo (prioritas slug "warung-berkah-jaya", atau warung aktif pertama)
     let warung = await prisma.warung.findUnique({
       where: { slug: "warung-berkah-jaya" },
       select: { id: true, slug: true, status: true, nama: true },
